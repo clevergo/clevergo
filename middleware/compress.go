@@ -19,9 +19,7 @@ const (
 
 // Gzip gzip compress middleware.
 type Gzip struct {
-	skipper         Skipper
-	level           int
-	compressHandler fasthttp.RequestHandler
+	level int
 }
 
 // NewGzip returns a Gzip middleware instance.
@@ -33,27 +31,18 @@ type Gzip struct {
 //     * CompressBestCompression
 //     * CompressDefaultCompression
 func NewGzip(level int) *Gzip {
-	return NewGzipWithSkipper(level, defaultSkipper)
-}
-
-// NewGzipWithSkipper returns a Gzip middleware instance using
-// the given level and skipper.
-func NewGzipWithSkipper(level int, skipper Skipper) *Gzip {
 	return &Gzip{
-		level:   level,
-		skipper: skipper,
+		level: level,
 	}
 }
 
 // Handle implements Middleware's Handle function.
 func (g *Gzip) Handle(next gem.Handler) gem.Handler {
 	return gem.HandlerFunc(func(c *gem.Context) {
-		if !g.skipper(c) {
-			defer fasthttp.CompressHandlerLevel(
-				func(ctx *fasthttp.RequestCtx) {},
-				g.level,
-			)(c.RequestCtx)
-		}
+		defer fasthttp.CompressHandlerLevel(
+			func(ctx *fasthttp.RequestCtx) {},
+			g.level,
+		)(c.RequestCtx)
 		next.Handle(c)
 	})
 }
