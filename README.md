@@ -20,6 +20,8 @@ go get github.com/go-gem/gem
 
 ### Example
 
+The documentation is completed, please see the documentation for more usages.
+
 ```
 package main
 

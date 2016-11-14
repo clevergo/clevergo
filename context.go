@@ -59,8 +59,8 @@ func (c *Context) Logger() log.Logger {
 }
 
 // SessionStore returns server's sessions store.
-func (c *Context) SessionStore() sessions.Store {
-	return c.server.sessionStore
+func (c *Context) SessionsStore() sessions.Store {
+	return c.server.sessionsStore
 }
 
 // newContext returns a Context instance.

@@ -145,43 +145,43 @@ func (r *Router) registerMiddlewares(h Handler, ms ...Middleware) HandlerFunc {
 }
 
 // GET is a shortcut for router.Handle("GET", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) GET(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("GET", path, handle, ms...)
 }
 
 // HEAD is a shortcut for router.Handle("HEAD", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) HEAD(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("HEAD", path, handle, ms...)
 }
 
 // OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) OPTIONS(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("OPTIONS", path, handle, ms...)
 }
 
 // POST is a shortcut for router.Handle("POST", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) POST(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("POST", path, handle, ms...)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) PUT(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("PUT", path, handle, ms...)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) PATCH(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("PATCH", path, handle, ms...)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handle)
-// Register specific middlewares through fourth parameter.
+// Register specific middlewares through third parameter.
 func (r *Router) DELETE(path string, handle HandlerFunc, ms ...Middleware) {
 	r.Handle("DELETE", path, handle, ms...)
 }

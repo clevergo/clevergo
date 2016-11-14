@@ -48,8 +48,8 @@ type Server struct {
 	// logger
 	logger log.Logger
 
-	// session store
-	sessionStore sessions.Store
+	// sessions store
+	sessionsStore sessions.Store
 }
 
 // New returns a new Server instance.
@@ -67,9 +67,9 @@ func (s *Server) SetLogger(logger log.Logger) {
 	s.logger = logger
 }
 
-// SetSessionStore set session store.
-func (s *Server) SetSessionStore(store sessions.Store) {
-	s.sessionStore = store
+// SetSessionStore set sessions store.
+func (s *Server) SetSessionsStore(store sessions.Store) {
+	s.sessionsStore = store
 }
 
 // Init for testing, should not invoke this method anyway.
