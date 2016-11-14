@@ -50,9 +50,6 @@ type Server struct {
 
 	// session store
 	sessionStore sessions.Store
-
-	// server level middlewares
-	middlewares []Middleware
 }
 
 // New returns a new Server instance.
@@ -61,8 +58,7 @@ func New() *Server {
 		Server: &fasthttp.Server{
 			Name: name,
 		},
-		middlewares: make([]Middleware, 0),
-		logger:      defaultLogger,
+		logger: defaultLogger,
 	}
 }
 
@@ -74,11 +70,6 @@ func (s *Server) SetLogger(logger log.Logger) {
 // SetSessionStore set session store.
 func (s *Server) SetSessionStore(store sessions.Store) {
 	s.sessionStore = store
-}
-
-// Use register middleware.
-func (s *Server) Use(m Middleware) {
-	s.middlewares = append(s.middlewares, m)
 }
 
 // init initialize server.

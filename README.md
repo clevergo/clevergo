@@ -6,7 +6,6 @@ Gem
 [![Build Status](https://img.shields.io/travis/go-gem/gem.svg)](https://travis-ci.org/go-gem/gem) 
 [![Go Report Card](https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat-square)](https://goreportcard.com/report/github.com/go-gem/gem) 
 [![Coverage Status](https://img.shields.io/coveralls/go-gem/gem.svg)](https://coveralls.io/github/go-gem/gem?branch=master) 
-[![license](https://img.shields.io/github/license/go-gem/gem.svg?style=flat-square)](LICENSE)
 
 Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
 

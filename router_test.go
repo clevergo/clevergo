@@ -812,6 +812,56 @@ func TestRouterLookup(t *testing.T) {
 	}
 }
 
+type testMiddleware struct {
+	key string
+	val string
+}
+
+func (m testMiddleware) Handle(next Handler) Handler {
+	return HandlerFunc(func(c *Context) {
+		c.Response.Header.Set(m.key, m.val)
+
+		next.Handle(c)
+	})
+}
+
+func TestMiddleware(t *testing.T) {
+	s := New()
+
+	router := NewRouter()
+	router.Use(testMiddleware{key: "Test-Middleware", val: "Test-Middleware"})
+
+	router.GET("/", func(c *Context) {
+		c.Write([]byte("Hello"))
+	})
+
+	s.init(router.Handler)
+
+	rw := &readWriter{}
+	br := bufio.NewReader(&rw.w)
+	var resp fasthttp.Response
+	ch := make(chan error)
+
+	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
+	go func() {
+		ch <- s.Server.ServeConn(rw)
+	}()
+	select {
+	case err := <-ch:
+		if err != nil {
+			t.Fatalf("return error %s", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout")
+	}
+	if err := resp.Read(br); err != nil {
+		t.Fatalf("Unexpected error when reading response: %s", err)
+	}
+	if !strings.EqualFold("Test-Middleware", string(resp.Header.Peek("Test-Middleware"))) {
+		t.Errorf("Expected Test-Middleware value %q, got %q", "Test-Middleware", resp.Header.Peek("Test-Middleware"))
+	}
+}
+
 type mockFileSystem struct {
 	opened bool
 }
