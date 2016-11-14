@@ -25,8 +25,9 @@ go get github.com/go-gem/gem
 package main
 
 import (
+	"log"
+	
 	"github.com/go-gem/gem"
-	"github.com/labstack/gommon/log"
 	"github.com/valyala/fasthttp"
 )
 
