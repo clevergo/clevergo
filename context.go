@@ -18,19 +18,19 @@ import (
 var (
 	contentType = []byte("Content-Type")
 
-	// ContextTypeDefault default Content-Type
-	ContextTypeDefault = []byte("text/plain; charset=utf-8")
+	// ContentTypeDefault default Content-Type
+	ContentTypeDefault = []byte("text/plain; charset=utf-8")
 
-	// ContextTypeDefault HTML Content-Type
+	// ContentTypeHTML HTML Content-Type
 	ContentTypeHTML = []byte("text/html; charset=utf-8")
 
-	// ContextTypeDefault JSON Content-Type
+	// ContentTypeJSON JSON Content-Type
 	ContentTypeJSON = []byte("application/json; charset=utf-8")
 
-	// ContextTypeDefault JSONP Content-Type
+	// ContentTypeJSONP JSONP Content-Type
 	ContentTypeJSONP = []byte("application/javascript; charset=utf-8")
 
-	// ContextTypeDefault XML Content-Type
+	// ContentTypeXML XML Content-Type
 	ContentTypeXML = []byte("application/xml; charset=utf-8")
 )
 
@@ -53,10 +53,12 @@ type Context struct {
 	server *Server
 }
 
+// Logger returns server's logger.
 func (c *Context) Logger() log.Logger {
 	return c.server.logger
 }
 
+// SessionStore returns server's sessions store.
 func (c *Context) SessionStore() sessions.Store {
 	return c.server.sessionStore
 }
@@ -95,6 +97,7 @@ func (c *Context) PathString() string {
 	return bytes2String(c.RequestCtx.Request.URI().Path())
 }
 
+// IsAjax returns whether this is an AJAX (XMLHttpRequest) request.
 func (c *Context) IsAjax() bool {
 	return bytes.Equal(c.RequestCtx.Request.Header.Peek("X-Requested-With"), bytesXMLHttpRequest)
 }
@@ -106,7 +109,7 @@ func (c *Context) HTML(code int, body string) {
 	c.Response.SetBodyString(body)
 }
 
-// JSONWithCode responses JSON data and custom status code to client.
+// JSON responses JSON data and custom status code to client.
 func (c *Context) JSON(code int, v interface{}) {
 	c.Response.SetStatusCode(code)
 	data, err := json.Marshal(v)
@@ -118,7 +121,7 @@ func (c *Context) JSON(code int, v interface{}) {
 	c.Response.SetBody(data)
 }
 
-// JSONPWithCode responses JSONP data and custom status code to client.
+// JSONP responses JSONP data and custom status code to client.
 func (c *Context) JSONP(code int, v interface{}, callback []byte) {
 	c.Response.SetStatusCode(code)
 	data, err := json.Marshal(v)
@@ -133,7 +136,7 @@ func (c *Context) JSONP(code int, v interface{}, callback []byte) {
 	c.Response.SetBody(callback)
 }
 
-// XMLWithCode responses XML data and custom status code to client.
+// XML responses XML data and custom status code to client.
 func (c *Context) XML(code int, v interface{}, headers ...string) {
 	c.Response.SetStatusCode(code)
 	xmlBytes, err := xml.MarshalIndent(v, "", `   `)

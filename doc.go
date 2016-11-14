@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 
 /*
-Package gem, a simple and fast web framework,
+Package gem is a simple and fast web framework,
 for building web or restful application.
 
 Install

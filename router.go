@@ -22,7 +22,7 @@ var (
 	// handleMethodNotAllowed default handle of Method Not Allowed.
 	handleMethodNotAllowed = func(c *Context) {
 		c.SetStatusCode(fasthttp.StatusMethodNotAllowed)
-		c.SetContentTypeBytes(ContextTypeDefault)
+		c.SetContentTypeBytes(ContentTypeDefault)
 		c.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusMethodNotAllowed))
 	}
 
@@ -30,7 +30,7 @@ var (
 	handlePanic = func(c *Context, v interface{}) {
 		c.Logger().Errorf("Panic: %+v\n", v)
 		c.SetStatusCode(fasthttp.StatusInternalServerError)
-		c.SetContentTypeBytes(ContextTypeDefault)
+		c.SetContentTypeBytes(ContentTypeDefault)
 		c.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusInternalServerError))
 	}
 )
@@ -112,7 +112,7 @@ type Router struct {
 	PanicHandler func(*Context, interface{})
 }
 
-// New returns a new initialized Router.
+// NewRouter returns a new initialized Router.
 func NewRouter() *Router {
 	return &Router{
 		RedirectTrailingSlash:  true,
