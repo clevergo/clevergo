@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.5
+  - 1.6
+  - 1.7
+  - tip
+
+before_install:
+  - go get github.com/go-gem/log
+  - go get github.com/go-gem/sessions
+  - go get github.com/mattn/goveralls
+  - go get github.com/valyala/fasthttp
+
+script:
+  - $HOME/gopath/bin/goveralls -service=travis-ci
