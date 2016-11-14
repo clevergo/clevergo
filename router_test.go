@@ -592,6 +592,44 @@ func TestRouterNotAllowed(t *testing.T) {
 	}
 }
 
+func TestConvert(t *testing.T) {
+	s := New()
+
+	router := NewRouter()
+
+	fastHandler := func(ctx *fasthttp.RequestCtx) {
+		ctx.Write([]byte("Hello"))
+	}
+
+	router.GET("/", Convert(fastHandler))
+
+	s.init(router.Handler)
+
+	rw := &readWriter{}
+	br := bufio.NewReader(&rw.w)
+	var resp fasthttp.Response
+	ch := make(chan error)
+
+	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
+	go func() {
+		ch <- s.Server.ServeConn(rw)
+	}()
+	select {
+	case err := <-ch:
+		if err != nil {
+			t.Fatalf("return error %s", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout")
+	}
+	if err := resp.Read(br); err != nil {
+		t.Fatalf("Unexpected error when reading response: %s", err)
+	}
+	if !strings.EqualFold("Hello", string(resp.Body())) {
+		t.Errorf("Expected response body %q, got %q", "Hello", resp.Body())
+	}
+}
+
 func TestRouterNotFound(t *testing.T) {
 	s := New()
 	handlerFunc := func(_ *Context) {}

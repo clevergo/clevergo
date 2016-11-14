@@ -49,6 +49,13 @@ func (hf HandlerFunc) Handle(c *Context) {
 	hf(c)
 }
 
+// Convert convert fasthttp.RequestHandler to HandlerFunc.
+func Convert(h fasthttp.RequestHandler) HandlerFunc {
+	return func(c *Context) {
+		h(c.RequestCtx)
+	}
+}
+
 // Router is a http.Handler which can be used to dispatch requests to different
 // handler functions via configurable routes
 type Router struct {
