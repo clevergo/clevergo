@@ -72,6 +72,11 @@ func (s *Server) SetSessionStore(store sessions.Store) {
 	s.sessionStore = store
 }
 
+// Init for testing, should not invoke this method anyway.
+func (s *Server) Init(handler HandlerFunc) {
+	s.init(handler)
+}
+
 // init initialize server.
 func (s *Server) init(handler HandlerFunc) {
 	// Initialize fasthttp.Server's Handler.
