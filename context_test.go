@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ type project struct {
 	Name string `json:"name" xml:"name"`
 }
 
-func TestContext_HTML(t *testing.T) {
+func TestContext(t *testing.T) {
 	s := New()
 
 	router := NewRouter()
@@ -201,5 +202,59 @@ func TestContext_HTML(t *testing.T) {
 	}
 	if p2.Name != p.Name {
 		t.Errorf("unexpected project's name got %q want %q", p2.Name, p.Name)
+	}
+}
+
+func TestContext2(t *testing.T) {
+	s := New()
+
+	router := NewRouter()
+
+	router.GET("/", func(c *Context) {
+		if !c.IsAjax() {
+			t.Errorf("Expected c.IsAjax() = %t, got %t", true, c.IsAjax())
+		}
+
+		if !strings.EqualFold(string(c.Method()), c.MethodString()) {
+			t.Errorf("Expected method %q, got %q", c.Method(), c.MethodString())
+		}
+
+		if !strings.EqualFold(string(c.Path()), c.PathString()) {
+			t.Errorf("Expected path %q, got %q", c.Path(), c.PathString())
+		}
+
+		if !strings.EqualFold(string(c.Host()), c.HostString()) {
+			t.Errorf("Expected host %q, got %q", c.Host(), c.HostString())
+		}
+	})
+
+	s.init(router.Handler)
+
+	// HTML
+	rw1 := &readWriter{}
+	rw1.r.WriteString("GET http://127.0.0.1/ HTTP/1.1\r\nX-Requested-With: XMLHttpRequest\r\n\r\n")
+
+	ch1 := make(chan error)
+	go func() {
+		ch1 <- s.Server.ServeConn(rw1)
+	}()
+
+	select {
+	case err := <-ch1:
+		if err != nil {
+			t.Fatalf("return error %s", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout")
+	}
+
+	br1 := bufio.NewReader(&rw1.w)
+	var resp1 fasthttp.Response
+	if err := resp1.Read(br1); err != nil {
+		t.Fatalf("Unexpected error when reading response: %s", err)
+	}
+	if !(resp1.Header.StatusCode() == fasthttp.StatusOK) {
+		t.Errorf("Regular routing failed with router chaining.")
+		t.FailNow()
 	}
 }

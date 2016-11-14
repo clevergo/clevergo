@@ -87,9 +87,9 @@ func (c *Context) MethodString() string {
 	return bytes2String(c.RequestCtx.Request.Header.Method())
 }
 
-// HostString returns Host header value.
+// HostString returns requested host.
 func (c *Context) HostString() string {
-	return bytes2String(c.RequestCtx.Request.Header.Host())
+	return bytes2String(c.RequestCtx.URI().Host())
 }
 
 // PathString returns URI path.
