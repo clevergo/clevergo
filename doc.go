@@ -119,7 +119,7 @@ Context provides some convenient methods:
 Middleware
 
 Middleware is an useful feature, you can use it to implement some useful functions,
-such as BasicAuth, Gzip compress, response body limit, IP white list or blacklist etc.
+such as BasicAuth, Gzip compress, request body limit, IP white list or blacklist etc.
 
 It is easy to write a middleware, you just need to implement the Handle method:
 
