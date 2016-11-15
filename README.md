@@ -9,10 +9,21 @@ Gem
 
 Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
 
+currently, Gem API is **unstable** until the version v1.0.0 being released,
+see [milestone](https://github.com/go-gem/gem/milestone/1) for more details.
+
 The project inspired by third party packages, such as [fasthttp](https://github.com/valyala/fasthttp), [fasthttprouter](https://github.com/buaazp/fasthttprouter) and
 [echo](https://github.com/labstack/echo), thier LICENSE can be found in LICENSE file.
 
+
+### About Name
+
+The name means that this project aims to be Gem, maybe it's a bit out of reach, 
+but it is good for learning. If you have interest in this project, please join us.
+
+
 ### Install
+
 ```
 go get github.com/go-gem/gem
 ```
@@ -51,6 +62,24 @@ Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080)
 ### Semantic Versioning
 
 Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitHub releases.
+
+
+### Support Us
+
+- :star: the project.
+
+- Spread the word.
+
+- [Contribute](#contribute) to the project.
+
+
+### Contribute
+
+- [Report issues](https://github.com/go-gem/gem/issues/new)
+
+- Send PRs.
+
+- Improve/fix documentation.
 
 
 ### Related Projects
