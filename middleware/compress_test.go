@@ -15,12 +15,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func newContext() *gem.Context {
-	return &gem.Context{
-		RequestCtx: &fasthttp.RequestCtx{},
-	}
-}
-
 func TestGzip(t *testing.T) {
 	s := gem.New()
 
