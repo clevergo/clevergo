@@ -49,6 +49,12 @@ func (hf HandlerFunc) Handle(c *Context) {
 	hf(c)
 }
 
+// HandlerConfig defines specific configuration of handler,
+// such as specific middlewares.
+type HandlerConfig struct {
+	Middlewares []Middleware
+}
+
 // Convert convert fasthttp.RequestHandler to HandlerFunc.
 func Convert(h fasthttp.RequestHandler) HandlerFunc {
 	return func(c *Context) {
@@ -130,13 +136,18 @@ func (r *Router) Use(m Middleware) {
 	r.middlewares = append(r.middlewares, m)
 }
 
-// registerMiddlewares handler wrapped by middlewares.
-func (r *Router) registerMiddlewares(h Handler, ms ...Middleware) HandlerFunc {
-	var middlewares []Middleware
-	middlewares = append(middlewares, r.middlewares...)
-	middlewares = append(middlewares, ms...)
-	for i := len(middlewares) - 1; i >= 0; i-- {
-		h = middlewares[i].Handle(h)
+// initHandler initialize handler.
+//
+// The original handler will wrapped by middlewares.
+func (r *Router) initHandler(h Handler, configs ...HandlerConfig) HandlerFunc {
+	ms := append([]Middleware{}, r.middlewares...)
+
+	if len(configs) > 0 {
+		ms = append(ms, configs[0].Middlewares...)
+	}
+
+	for i := len(ms) - 1; i >= 0; i-- {
+		h = ms[i].Handle(h)
 	}
 
 	return func(c *Context) {
@@ -146,44 +157,44 @@ func (r *Router) registerMiddlewares(h Handler, ms ...Middleware) HandlerFunc {
 
 // GET is a shortcut for router.Handle("GET", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) GET(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("GET", path, handle, ms...)
+func (r *Router) GET(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("GET", path, handle, configs...)
 }
 
 // HEAD is a shortcut for router.Handle("HEAD", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) HEAD(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("HEAD", path, handle, ms...)
+func (r *Router) HEAD(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("HEAD", path, handle, configs...)
 }
 
 // OPTIONS is a shortcut for router.Handle("OPTIONS", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) OPTIONS(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("OPTIONS", path, handle, ms...)
+func (r *Router) OPTIONS(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("OPTIONS", path, handle, configs...)
 }
 
 // POST is a shortcut for router.Handle("POST", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) POST(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("POST", path, handle, ms...)
+func (r *Router) POST(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("POST", path, handle, configs...)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) PUT(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("PUT", path, handle, ms...)
+func (r *Router) PUT(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("PUT", path, handle, configs...)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) PATCH(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("PATCH", path, handle, ms...)
+func (r *Router) PATCH(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("PATCH", path, handle, configs...)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handle)
 // Register specific middlewares through third parameter.
-func (r *Router) DELETE(path string, handle HandlerFunc, ms ...Middleware) {
-	r.Handle("DELETE", path, handle, ms...)
+func (r *Router) DELETE(path string, handle HandlerFunc, configs ...HandlerConfig) {
+	r.Handle("DELETE", path, handle, configs...)
 }
 
 // Handle registers a new request handle with the given path and method.
@@ -196,7 +207,7 @@ func (r *Router) DELETE(path string, handle HandlerFunc, ms ...Middleware) {
 // communication with a proxy).
 //
 // Register specific middlewares through fourth parameter.
-func (r *Router) Handle(method, path string, handle HandlerFunc, ms ...Middleware) {
+func (r *Router) Handle(method, path string, handle HandlerFunc, configs ...HandlerConfig) {
 	if path[0] != '/' {
 		panic("path must begin with '/' in path '" + path + "'")
 	}
@@ -211,7 +222,7 @@ func (r *Router) Handle(method, path string, handle HandlerFunc, ms ...Middlewar
 		r.trees[method] = root
 	}
 
-	root.addRoute(path, r.registerMiddlewares(HandlerFunc(handle), ms...))
+	root.addRoute(path, r.initHandler(HandlerFunc(handle), configs...))
 }
 
 // ServeFiles serves files from the given file system root.
@@ -221,7 +232,7 @@ func (r *Router) Handle(method, path string, handle HandlerFunc, ms ...Middlewar
 // "/etc/passwd" would be served.
 // Internally a http.FileServer is used, therefore http.NotFound is used instead
 // of the Router's NotFound handler.
-func (r *Router) ServeFiles(path string, rootPath string, ms ...Middleware) {
+func (r *Router) ServeFiles(path string, rootPath string, configs ...HandlerConfig) {
 	if len(path) < 10 || path[len(path)-10:] != "/*filepath" {
 		panic("path must end with /*filepath in path '" + path + "'")
 	}
@@ -233,7 +244,7 @@ func (r *Router) ServeFiles(path string, rootPath string, ms ...Middleware) {
 		fileHandler(c.RequestCtx)
 	}
 
-	r.GET(path, r.registerMiddlewares(HandlerFunc(handle), ms...))
+	r.GET(path, r.initHandler(HandlerFunc(handle), configs...))
 }
 
 func (r *Router) recv(c *Context) {
