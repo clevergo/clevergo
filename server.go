@@ -67,7 +67,7 @@ func (s *Server) SetLogger(logger log.Logger) {
 	s.logger = logger
 }
 
-// SetSessionStore set sessions store.
+// SetSessionsStore set sessions store.
 func (s *Server) SetSessionsStore(store sessions.Store) {
 	s.sessionsStore = store
 }

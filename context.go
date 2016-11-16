@@ -58,7 +58,7 @@ func (c *Context) Logger() log.Logger {
 	return c.server.logger
 }
 
-// SessionStore returns server's sessions store.
+// SessionsStore returns server's sessions store.
 func (c *Context) SessionsStore() sessions.Store {
 	return c.server.sessionsStore
 }
