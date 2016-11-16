@@ -38,7 +38,7 @@ func (bl *BodyLimit) Handle(next gem.Handler) gem.Handler {
 			return
 		}
 
-		if c.Request.Header.ContentLength() > bl.Limit || c.Request.Header.ContentLength() > bl.Limit {
+		if c.Request.Header.ContentLength() > bl.Limit || len(c.RequestCtx.Request.Body()) > bl.Limit {
 			c.RequestCtx.SetStatusCode(fasthttp.StatusRequestEntityTooLarge)
 			c.RequestCtx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusRequestEntityTooLarge))
 			return
