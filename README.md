@@ -16,12 +16,6 @@ The project inspired by third party packages, such as [fasthttp](https://github.
 [echo](https://github.com/labstack/echo), thier LICENSE can be found in LICENSE file.
 
 
-### About Name
-
-The name means that this project aims to be Gem, maybe it's a bit out of reach, 
-but it is good for learning. If you have interest in this project, please join us.
-
-
 ### Install
 
 ```
@@ -31,7 +25,7 @@ go get github.com/go-gem/gem
 
 ### Example
 
-The documentation is completed, please see the documentation for more usages.
+See the [documentation](https://godoc.org/github.com/go-gem/gem) for more usages.
 
 ```
 package main
@@ -91,6 +85,11 @@ Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitH
 3. [echo](https://github.com/labstack/echo) Fast and unfancy HTTP server framework.
 
 4. [fasthttprouter](https://github.com/buaazp/fasthttprouter) A high performance fasthttp request router.
+
+
+### About Name
+
+The name means that this project aims to be Gem.
 
 ### LICENSE
 

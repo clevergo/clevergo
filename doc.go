@@ -78,13 +78,18 @@ Router
 		c.Write([]byte("Hello world."))
 	})
 
-4. Register specific middlewares:
+4. Specific configuration:
 
-All of router's APIs can registers specific middlewares through the last parameters.
+All of router's APIs can registers specific configuration through the last parameters.
 
 	router.GET("/specific-middleware", func(c *gem.Context) {
 		c.Write([]byte("Hello world."))
-	}, middlewareOne, middlewareTwo ...)
+	}, gem.HandlerConfig{
+		Middlewares:[]Middleware{
+			specificMiddlewareOne{},
+			specificMiddlewareTwo{},
+		},
+	})
 
 5. Static resource files:
 
@@ -119,7 +124,7 @@ Context provides some convenient methods:
 Middleware
 
 Middleware is an useful feature, you can use it to implement some useful functions,
-such as BasicAuth, Gzip compress, request body limit, IP white list or blacklist etc.
+such as BasicAuth, Gzip compress, Request Body Limit, IP white list or blacklist etc.
 
 It is easy to write a middleware, you just need to implement the Handle method:
 
@@ -127,9 +132,11 @@ It is easy to write a middleware, you just need to implement the Handle method:
 
 Built-in middlewares:
 
-1. Compress(Gzip) Middleware.
+- Compress(Gzip) Middleware.
 
-2. ...
+- Request Body Limit Middleware.
+
+- ...
 
 Logger
 
