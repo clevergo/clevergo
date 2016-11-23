@@ -15,10 +15,10 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func TestGzip(t *testing.T) {
+func TestCompress(t *testing.T) {
 
 	router := gem.NewRouter()
-	router.Use(NewGzip(CompressBestCompression))
+	router.Use(NewCompress(CompressBestCompression))
 	router.GET("/", func(c *gem.Context) {
 		c.HTML(fasthttp.StatusOK, "Compress")
 	})

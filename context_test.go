@@ -24,8 +24,8 @@ func TestContext(t *testing.T) {
 
 	router := NewRouter()
 	respHtml := "OK"
-	router.GET("/html", func(c *Context) {
-		c.HTML(fasthttp.StatusOK, respHtml)
+	router.GET("/html", func(ctx *Context) {
+		ctx.HTML(fasthttp.StatusOK, respHtml)
 	})
 
 	p := project{Name: "GEM"}
@@ -34,8 +34,8 @@ func TestContext(t *testing.T) {
 		t.Fatalf("json.Marshal error %s", err)
 	}
 
-	router.GET("/json", func(c *Context) {
-		c.JSON(fasthttp.StatusOK, p)
+	router.GET("/json", func(ctx *Context) {
+		ctx.JSON(fasthttp.StatusOK, p)
 	})
 
 	jsonpCallback := []byte("callback")
@@ -45,12 +45,12 @@ func TestContext(t *testing.T) {
 	respJsonp = append(respJsonp, respJson...)
 	respJsonp = append(respJsonp, ")"...)
 
-	router.GET("/jsonp", func(c *Context) {
-		c.JSONP(fasthttp.StatusOK, p, jsonpCallback)
+	router.GET("/jsonp", func(ctx *Context) {
+		ctx.JSONP(fasthttp.StatusOK, p, jsonpCallback)
 	})
 
-	router.GET("/xml", func(c *Context) {
-		c.XML(fasthttp.StatusOK, p, xml.Header)
+	router.GET("/xml", func(ctx *Context) {
+		ctx.XML(fasthttp.StatusOK, p, xml.Header)
 	})
 
 	s := New("", router.Handler)
@@ -207,21 +207,21 @@ func TestContext(t *testing.T) {
 func TestContext2(t *testing.T) {
 	router := NewRouter()
 
-	router.GET("/", func(c *Context) {
-		if !c.IsAjax() {
-			t.Errorf("Expected c.IsAjax() = %t, got %t", true, c.IsAjax())
+	router.GET("/", func(ctx *Context) {
+		if !ctx.IsAjax() {
+			t.Errorf("Expected c.IsAjax() = %t, got %t", true, ctx.IsAjax())
 		}
 
-		if !strings.EqualFold(string(c.Method()), c.MethodString()) {
-			t.Errorf("Expected method %q, got %q", c.Method(), c.MethodString())
+		if !strings.EqualFold(string(ctx.Method()), ctx.MethodString()) {
+			t.Errorf("Expected method %q, got %q", ctx.Method(), ctx.MethodString())
 		}
 
-		if !strings.EqualFold(string(c.Path()), c.PathString()) {
-			t.Errorf("Expected path %q, got %q", c.Path(), c.PathString())
+		if !strings.EqualFold(string(ctx.Path()), ctx.PathString()) {
+			t.Errorf("Expected path %q, got %q", ctx.Path(), ctx.PathString())
 		}
 
-		if !strings.EqualFold(string(c.Host()), c.HostString()) {
-			t.Errorf("Expected host %q, got %q", c.Host(), c.HostString())
+		if !strings.EqualFold(string(ctx.Host()), ctx.HostString()) {
+			t.Errorf("Expected host %q, got %q", ctx.Host(), ctx.HostString())
 		}
 	})
 

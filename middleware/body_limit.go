@@ -32,18 +32,18 @@ func (bl *BodyLimit) Handle(next gem.Handler) gem.Handler {
 		bl.Skipper = defaultSkipper
 	}
 
-	return gem.HandlerFunc(func(c *gem.Context) {
-		if bl.Skipper(c) {
-			next.Handle(c)
+	return gem.HandlerFunc(func(ctx *gem.Context) {
+		if bl.Skipper(ctx) {
+			next.Handle(ctx)
 			return
 		}
 
-		if c.Request.Header.ContentLength() > bl.Limit || len(c.RequestCtx.Request.Body()) > bl.Limit {
-			c.RequestCtx.SetStatusCode(fasthttp.StatusRequestEntityTooLarge)
-			c.RequestCtx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusRequestEntityTooLarge))
+		if ctx.Request.Header.ContentLength() > bl.Limit || len(ctx.RequestCtx.Request.Body()) > bl.Limit {
+			ctx.RequestCtx.SetStatusCode(fasthttp.StatusRequestEntityTooLarge)
+			ctx.RequestCtx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusRequestEntityTooLarge))
 			return
 		}
 
-		next.Handle(c)
+		next.Handle(ctx)
 	})
 }

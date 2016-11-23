@@ -26,13 +26,13 @@ func TestRouter(t *testing.T) {
 	routed := false
 
 	router := NewRouter()
-	router.Handle("GET", "/user/:name", func(c *Context) {
+	router.Handle("GET", "/user/:name", func(ctx *Context) {
 		routed = true
 		want := "gem"
-		if !reflect.DeepEqual(c.UserValue("name"), want) {
-			t.Fatalf("wrong wildcard values: want %v, got %v", want, c.UserValue("name"))
+		if !reflect.DeepEqual(ctx.UserValue("name"), want) {
+			t.Fatalf("wrong wildcard values: want %v, got %v", want, ctx.UserValue("name"))
 		}
-		c.Success("foo/bar", []byte("success"))
+		ctx.Success("foo/bar", []byte("success"))
 	})
 
 	s := New("", router.Handler)
@@ -64,25 +64,25 @@ func TestRouterAPI(t *testing.T) {
 
 	router := NewRouter()
 
-	router.GET("/GET", func(c *Context) {
+	router.GET("/GET", func(ctx *Context) {
 		get = true
 	})
-	router.HEAD("/GET", func(c *Context) {
+	router.HEAD("/GET", func(ctx *Context) {
 		head = true
 	})
-	router.OPTIONS("/GET", func(c *Context) {
+	router.OPTIONS("/GET", func(ctx *Context) {
 		options = true
 	})
-	router.POST("/POST", func(c *Context) {
+	router.POST("/POST", func(ctx *Context) {
 		post = true
 	})
-	router.PUT("/PUT", func(c *Context) {
+	router.PUT("/PUT", func(ctx *Context) {
 		put = true
 	})
-	router.PATCH("/PATCH", func(c *Context) {
+	router.PATCH("/PATCH", func(ctx *Context) {
 		patch = true
 	})
-	router.DELETE("/DELETE", func(c *Context) {
+	router.DELETE("/DELETE", func(ctx *Context) {
 		deleted = true
 	})
 
@@ -218,20 +218,20 @@ func TestRouterChaining(t *testing.T) {
 	router := NewRouter()
 
 	router2 := NewRouter()
-	router.NotFound = func(c *Context) {
-		router2.Handler(c)
+	router.NotFound = func(ctx *Context) {
+		router2.Handler(ctx)
 	}
 
 	fooHit := false
-	router.POST("/foo", func(c *Context) {
+	router.POST("/foo", func(ctx *Context) {
 		fooHit = true
-		c.SetStatusCode(fasthttp.StatusOK)
+		ctx.SetStatusCode(fasthttp.StatusOK)
 	})
 
 	barHit := false
-	router2.POST("/bar", func(c *Context) {
+	router2.POST("/bar", func(ctx *Context) {
 		barHit = true
-		c.SetStatusCode(fasthttp.StatusOK)
+		ctx.SetStatusCode(fasthttp.StatusOK)
 	})
 
 	s := New("", router.Handler)
@@ -554,9 +554,9 @@ func TestRouterNotAllowed(t *testing.T) {
 	}
 
 	responseText := "custom method"
-	router.MethodNotAllowed = func(c *Context) {
-		c.SetStatusCode(fasthttp.StatusTeapot)
-		c.Write([]byte(responseText))
+	router.MethodNotAllowed = func(ctx *Context) {
+		ctx.SetStatusCode(fasthttp.StatusTeapot)
+		ctx.Write([]byte(responseText))
 	}
 	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
 	go func() {
@@ -673,8 +673,8 @@ func TestRouterNotFound(t *testing.T) {
 
 	// Test custom not found handler
 	var notFound bool
-	router.NotFound = func(c *Context) {
-		c.SetStatusCode(404)
+	router.NotFound = func(ctx *Context) {
+		ctx.SetStatusCode(404)
 		notFound = true
 	}
 	rw.r.WriteString("GET /nope HTTP/1.1\r\n\r\n")
@@ -746,7 +746,7 @@ func TestRouterPanicHandler(t *testing.T) {
 	panicHandled := false
 
 	router := NewRouter()
-	router.PanicHandler = func(c *Context, p interface{}) {
+	router.PanicHandler = func(ctx *Context, p interface{}) {
 		panicHandled = true
 	}
 
@@ -789,13 +789,13 @@ func TestRouterLookup(t *testing.T) {
 		routed = true
 	}
 
-	c := &Context{
+	ctx := &Context{
 		RequestCtx: &fasthttp.RequestCtx{},
 	}
 
 	router := NewRouter()
 	// try empty router first
-	handle, tsr := router.Lookup("GET", "/nope", c)
+	handle, tsr := router.Lookup("GET", "/nope", ctx)
 	if handle != nil {
 		t.Fatalf("Got handle for unregistered pattern: %v", handle)
 	}
@@ -806,7 +806,7 @@ func TestRouterLookup(t *testing.T) {
 	// insert route and try again
 	router.GET("/user/:name", wantHandle)
 
-	handle, tsr = router.Lookup("GET", "/user/gopher", c)
+	handle, tsr = router.Lookup("GET", "/user/gopher", ctx)
 	if handle == nil {
 		t.Fatal("Got no handle!")
 	} else {
@@ -816,11 +816,11 @@ func TestRouterLookup(t *testing.T) {
 		}
 	}
 
-	if !reflect.DeepEqual(c.UserValue("name"), "gopher") {
-		t.Fatalf("Wrong parameter values: want %v, got %v", "gopher", c.UserValue("name"))
+	if !reflect.DeepEqual(ctx.UserValue("name"), "gopher") {
+		t.Fatalf("Wrong parameter values: want %v, got %v", "gopher", ctx.UserValue("name"))
 	}
 
-	handle, tsr = router.Lookup("GET", "/user/gopher/", c)
+	handle, tsr = router.Lookup("GET", "/user/gopher/", ctx)
 	if handle != nil {
 		t.Fatalf("Got handle for unregistered pattern: %v", handle)
 	}
@@ -828,7 +828,7 @@ func TestRouterLookup(t *testing.T) {
 		t.Error("Got no TSR recommendation!")
 	}
 
-	handle, tsr = router.Lookup("GET", "/nope", c)
+	handle, tsr = router.Lookup("GET", "/nope", ctx)
 	if handle != nil {
 		t.Fatalf("Got handle for unregistered pattern: %v", handle)
 	}
@@ -843,10 +843,10 @@ type testMiddleware struct {
 }
 
 func (m testMiddleware) Handle(next Handler) Handler {
-	return HandlerFunc(func(c *Context) {
-		c.Response.Header.Set(m.key, m.val)
+	return HandlerFunc(func(ctx *Context) {
+		ctx.Response.Header.Set(m.key, m.val)
 
-		next.Handle(c)
+		next.Handle(ctx)
 	})
 }
 
@@ -854,8 +854,8 @@ func TestMiddleware(t *testing.T) {
 	router := NewRouter()
 	router.Use(testMiddleware{key: "Test-Middleware", val: "Test-Middleware"})
 
-	router.GET("/", func(c *Context) {
-		c.Write([]byte("Hello"))
+	router.GET("/", func(ctx *Context) {
+		ctx.Write([]byte("Hello"))
 	})
 
 	s := New("", router.Handler)

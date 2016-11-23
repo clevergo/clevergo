@@ -24,18 +24,18 @@ func TestName(t *testing.T) {
 
 func TestServer_SetLogger(t *testing.T) {
 	var logger Logger
-	s := New("", func(ctx *Context) {})
-	s.SetLogger(logger)
-	if s.logger != logger {
+	srv := New("", func(ctx *Context) {})
+	srv.SetLogger(logger)
+	if srv.logger != logger {
 		t.Errorf("Failed to set logger")
 	}
 }
 
 func TestServer_SetSessionsStoret(t *testing.T) {
 	var store sessions.Store
-	s := New("", func(ctx *Context) {})
-	s.SetSessionsStore(store)
-	if s.sessionsStore != store {
+	srv := New("", func(ctx *Context) {})
+	srv.SetSessionsStore(store)
+	if srv.sessionsStore != store {
 		t.Errorf("Failed to set sessions store")
 	}
 }

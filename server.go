@@ -29,6 +29,11 @@ const (
 	version = "0.0.1"
 )
 
+// Headers
+var (
+	HeaderAuthorization = []byte("Authorization")
+)
+
 // Name returns name.
 func Name() string {
 	return name
@@ -79,7 +84,6 @@ func init() {
 		serversAddr = strings.Split(addrs, ",")
 		for i, addr := range serversAddr {
 			serversFdOffset[addr] = uint(i)
-			fmt.Println("addr-offset:", addr, i)
 		}
 	}
 }
@@ -122,6 +126,7 @@ func New(addr string, handler HandlerFunc) *Server {
 	return srv
 }
 
+// Server
 type Server struct {
 	server        *fasthttp.Server
 	addr          string

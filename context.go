@@ -66,10 +66,10 @@ func (ctx *Context) SessionsStore() sessions.Store {
 //
 // It will try to get Context instance from contextPool,
 // returns a new Context instance when failure.
-func acquireContext(server *Server, reqCtx *fasthttp.RequestCtx) *Context {
+func acquireContext(srv *Server, reqCtx *fasthttp.RequestCtx) *Context {
 	ctx := contextPool.Get().(*Context)
 	ctx.RequestCtx = reqCtx
-	ctx.server = server
+	ctx.server = srv
 	return ctx
 }
 
@@ -96,7 +96,8 @@ func (ctx *Context) PathString() string {
 	return bytes2String(ctx.RequestCtx.Request.URI().Path())
 }
 
-// IsAjax returns whether this is an AJAX (XMLHttpRequest) request.
+// IsAjax returns bool to indicate whether the current request
+// is an AJAX (XMLHttpRequest) request.
 func (ctx *Context) IsAjax() bool {
 	return bytes.Equal(ctx.RequestCtx.Request.Header.Peek("X-Requested-With"), bytesXMLHttpRequest)
 }

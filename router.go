@@ -14,24 +14,24 @@ import (
 
 var (
 	// handleNotFound default handle of NOT FOUND.
-	handleNotFound = func(c *Context) {
-		c.Error(fasthttp.StatusMessage(fasthttp.StatusNotFound),
+	handleNotFound = func(ctx *Context) {
+		ctx.Error(fasthttp.StatusMessage(fasthttp.StatusNotFound),
 			fasthttp.StatusNotFound)
 	}
 
 	// handleMethodNotAllowed default handle of Method Not Allowed.
-	handleMethodNotAllowed = func(c *Context) {
-		c.SetStatusCode(fasthttp.StatusMethodNotAllowed)
-		c.SetContentTypeBytes(ContentTypeDefault)
-		c.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusMethodNotAllowed))
+	handleMethodNotAllowed = func(ctx *Context) {
+		ctx.SetStatusCode(fasthttp.StatusMethodNotAllowed)
+		ctx.SetContentTypeBytes(ContentTypeDefault)
+		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusMethodNotAllowed))
 	}
 
 	// handlePanic default handle of panic.
-	handlePanic = func(c *Context, v interface{}) {
-		c.Logger().Errorf("Panic: %+v\n", v)
-		c.SetStatusCode(fasthttp.StatusInternalServerError)
-		c.SetContentTypeBytes(ContentTypeDefault)
-		c.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusInternalServerError))
+	handlePanic = func(ctx *Context, v interface{}) {
+		ctx.Logger().Errorf("Panic: %+v\n", v)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetContentTypeBytes(ContentTypeDefault)
+		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusInternalServerError))
 	}
 )
 
@@ -44,9 +44,9 @@ type Handler interface {
 // ordinary functions as HTTP handlers.
 type HandlerFunc func(*Context)
 
-// Handle calls hf(c).
-func (hf HandlerFunc) Handle(c *Context) {
-	hf(c)
+// Handle calls hf(ctx).
+func (hf HandlerFunc) Handle(ctx *Context) {
+	hf(ctx)
 }
 
 // HandlerConfig defines specific configuration of handler,
@@ -57,8 +57,8 @@ type HandlerConfig struct {
 
 // Convert convert fasthttp.RequestHandler to HandlerFunc.
 func Convert(h fasthttp.RequestHandler) HandlerFunc {
-	return func(c *Context) {
-		h(c.RequestCtx)
+	return func(ctx *Context) {
+		h(ctx.RequestCtx)
 	}
 }
 
@@ -150,8 +150,8 @@ func (r *Router) initHandler(h Handler, configs ...HandlerConfig) HandlerFunc {
 		h = ms[i].Handle(h)
 	}
 
-	return func(c *Context) {
-		h.Handle(c)
+	return func(ctx *Context) {
+		h.Handle(ctx)
 	}
 }
 
@@ -240,16 +240,16 @@ func (r *Router) ServeFiles(path string, rootPath string, configs ...HandlerConf
 
 	fileHandler := fasthttp.FSHandler(rootPath, strings.Count(prefix, "/"))
 
-	handle := func(c *Context) {
-		fileHandler(c.RequestCtx)
+	handle := func(ctx *Context) {
+		fileHandler(ctx.RequestCtx)
 	}
 
 	r.GET(path, r.initHandler(HandlerFunc(handle), configs...))
 }
 
-func (r *Router) recv(c *Context) {
+func (r *Router) recv(ctx *Context) {
 	if rcv := recover(); rcv != nil {
-		r.PanicHandler(c, rcv)
+		r.PanicHandler(ctx, rcv)
 	}
 }
 
@@ -258,14 +258,14 @@ func (r *Router) recv(c *Context) {
 // If the path was found, it returns the handle function and the path parameter
 // values. Otherwise the third return value indicates whether a redirection to
 // the same path with an extra / without the trailing slash should be performed.
-func (r *Router) Lookup(method, path string, c *Context) (HandlerFunc, bool) {
+func (r *Router) Lookup(method, path string, ctx *Context) (HandlerFunc, bool) {
 	if root := r.trees[method]; root != nil {
-		return root.getValue(path, c)
+		return root.getValue(path, ctx)
 	}
 	return nil, false
 }
 
-func (r *Router) allowed(path, reqMethod string, c *Context) (allow string) {
+func (r *Router) allowed(path, reqMethod string, ctx *Context) (allow string) {
 	if path == "*" || path == "/*" {
 		// server-wide
 		for method := range r.trees {
@@ -288,7 +288,7 @@ func (r *Router) allowed(path, reqMethod string, c *Context) (allow string) {
 				continue
 			}
 
-			handle, _ := r.trees[method].getValue(path, c)
+			handle, _ := r.trees[method].getValue(path, ctx)
 			if handle != nil {
 				// add request method to list of allowed methods
 				if len(allow) == 0 {
@@ -306,16 +306,16 @@ func (r *Router) allowed(path, reqMethod string, c *Context) (allow string) {
 }
 
 // Handler handle incoming requests.
-func (r *Router) Handler(c *Context) {
+func (r *Router) Handler(ctx *Context) {
 	if r.PanicHandler != nil {
-		defer r.recv(c)
+		defer r.recv(ctx)
 	}
 
-	path := bytes2String(c.RequestCtx.URI().Path())
-	method := bytes2String(c.RequestCtx.Request.Header.Method())
+	path := bytes2String(ctx.RequestCtx.URI().Path())
+	method := bytes2String(ctx.RequestCtx.Request.Header.Method())
 	if root := r.trees[method]; root != nil {
-		if f, tsr := root.getValue(path, c); f != nil {
-			f(c)
+		if f, tsr := root.getValue(path, ctx); f != nil {
+			f(ctx)
 			return
 		} else if method != "CONNECT" && path != "/" {
 			code := fasthttp.StatusMovedPermanently // Permanent redirect, request with GET method
@@ -332,7 +332,7 @@ func (r *Router) Handler(c *Context) {
 				} else {
 					uri = path + "/"
 				}
-				c.Redirect(uri, code)
+				ctx.Redirect(uri, code)
 				return
 			}
 
@@ -344,7 +344,7 @@ func (r *Router) Handler(c *Context) {
 				)
 				if found {
 					uri := string(fixedPath)
-					c.Redirect(uri, code)
+					ctx.Redirect(uri, code)
 					return
 				}
 			}
@@ -354,24 +354,24 @@ func (r *Router) Handler(c *Context) {
 	if method == "OPTIONS" {
 		// Handle OPTIONS requests
 		if r.HandleOPTIONS {
-			if allow := r.allowed(path, method, c); len(allow) > 0 {
-				c.Response.Header.Set("Allow", allow)
+			if allow := r.allowed(path, method, ctx); len(allow) > 0 {
+				ctx.Response.Header.Set("Allow", allow)
 				return
 			}
 		}
 	} else {
 		// Handle 405
 		if r.HandleMethodNotAllowed {
-			if allow := r.allowed(path, method, c); len(allow) > 0 {
-				c.Response.Header.Set("Allow", allow)
-				r.MethodNotAllowed(c)
+			if allow := r.allowed(path, method, ctx); len(allow) > 0 {
+				ctx.Response.Header.Set("Allow", allow)
+				r.MethodNotAllowed(ctx)
 				return
 			}
 		}
 	}
 
 	// Handle 404
-	r.NotFound(c)
+	r.NotFound(ctx)
 }
 
 // CleanPath is the URL version of path.Clean, it returns a canonical URL path
@@ -805,7 +805,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 // If no handle can be found, a TSR (trailing slash redirect) recommendation is
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
-func (n *node) getValue(path string, c *Context) (handle HandlerFunc, tsr bool) {
+func (n *node) getValue(path string, ctx *Context) (handle HandlerFunc, tsr bool) {
 walk: // outer loop for walking the tree
 	for {
 		if len(path) > len(n.path) {
@@ -840,7 +840,7 @@ walk: // outer loop for walking the tree
 					for end < len(path) && path[end] != '/' {
 						end++
 					}
-					c.SetUserValue(n.path[1:], path[:end])
+					ctx.SetUserValue(n.path[1:], path[:end])
 
 					// we need to go deeper!
 					if end < len(path) {
@@ -867,7 +867,7 @@ walk: // outer loop for walking the tree
 					return
 
 				case catchAll:
-					c.SetUserValue(n.path[2:], path)
+					ctx.SetUserValue(n.path[2:], path)
 
 					handle = n.handle
 					return
