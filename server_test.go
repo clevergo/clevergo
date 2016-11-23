@@ -7,7 +7,6 @@ package gem
 import (
 	"testing"
 
-	"github.com/go-gem/log"
 	"github.com/go-gem/sessions"
 )
 
@@ -24,8 +23,8 @@ func TestName(t *testing.T) {
 }
 
 func TestServer_SetLogger(t *testing.T) {
-	var logger log.Logger
-	s := New()
+	var logger Logger
+	s := New("", func(ctx *Context) {})
 	s.SetLogger(logger)
 	if s.logger != logger {
 		t.Errorf("Failed to set logger")
@@ -34,7 +33,7 @@ func TestServer_SetLogger(t *testing.T) {
 
 func TestServer_SetSessionsStoret(t *testing.T) {
 	var store sessions.Store
-	s := New()
+	s := New("", func(ctx *Context) {})
 	s.SetSessionsStore(store)
 	if s.sessionsStore != store {
 		t.Errorf("Failed to set sessions store")

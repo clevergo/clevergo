@@ -2,15 +2,9 @@
 // Use of this source code is governed by a MIT license
 // that can be found in the LICENSE file.
 
-package bytes
+package gem
 
-// bytes unit.
-const (
-	B = 1 << (10 * iota)
-	KB
-	MB
-	GB
-	TB
-	PB
-	EB
-)
+// Middleware interface.
+type Middleware interface {
+	Handle(next Handler) Handler
+}

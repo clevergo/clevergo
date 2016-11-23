@@ -10,7 +10,6 @@ import (
 	"encoding/xml"
 	"sync"
 
-	"github.com/go-gem/log"
 	"github.com/go-gem/sessions"
 	"github.com/valyala/fasthttp"
 )
@@ -54,94 +53,94 @@ type Context struct {
 }
 
 // Logger returns server's logger.
-func (c *Context) Logger() log.Logger {
-	return c.server.logger
+func (ctx *Context) Logger() Logger {
+	return ctx.server.logger
 }
 
 // SessionsStore returns server's sessions store.
-func (c *Context) SessionsStore() sessions.Store {
-	return c.server.sessionsStore
+func (ctx *Context) SessionsStore() sessions.Store {
+	return ctx.server.sessionsStore
 }
 
 // newContext returns a Context instance.
 //
 // It will try to get Context instance from contextPool,
 // returns a new Context instance when failure.
-func acquireContext(server *Server, ctx *fasthttp.RequestCtx) *Context {
-	c := contextPool.Get().(*Context)
-	c.RequestCtx = ctx
-	c.server = server
-	return c
+func acquireContext(server *Server, reqCtx *fasthttp.RequestCtx) *Context {
+	ctx := contextPool.Get().(*Context)
+	ctx.RequestCtx = reqCtx
+	ctx.server = server
+	return ctx
 }
 
-// close close the current context on request was finished,
+// releaseContext release context on request was finished,
 // context will be put into context pool for reusing.
-func (c *Context) close() {
-	c.server = nil
-	c.RequestCtx = nil
-	contextPool.Put(c)
+func releaseContext(ctx *Context) {
+	ctx.server = nil
+	ctx.RequestCtx = nil
+	contextPool.Put(ctx)
 }
 
 // MethodString returns HTTP request method.
-func (c *Context) MethodString() string {
-	return bytes2String(c.RequestCtx.Request.Header.Method())
+func (ctx *Context) MethodString() string {
+	return bytes2String(ctx.RequestCtx.Request.Header.Method())
 }
 
 // HostString returns requested host.
-func (c *Context) HostString() string {
-	return bytes2String(c.RequestCtx.URI().Host())
+func (ctx *Context) HostString() string {
+	return bytes2String(ctx.RequestCtx.URI().Host())
 }
 
 // PathString returns URI path.
-func (c *Context) PathString() string {
-	return bytes2String(c.RequestCtx.Request.URI().Path())
+func (ctx *Context) PathString() string {
+	return bytes2String(ctx.RequestCtx.Request.URI().Path())
 }
 
 // IsAjax returns whether this is an AJAX (XMLHttpRequest) request.
-func (c *Context) IsAjax() bool {
-	return bytes.Equal(c.RequestCtx.Request.Header.Peek("X-Requested-With"), bytesXMLHttpRequest)
+func (ctx *Context) IsAjax() bool {
+	return bytes.Equal(ctx.RequestCtx.Request.Header.Peek("X-Requested-With"), bytesXMLHttpRequest)
 }
 
 // HTML responses HTML data and custom status code to client.
-func (c *Context) HTML(code int, body string) {
-	c.SetStatusCode(code)
-	c.Response.Header.SetBytesKV(contentType, ContentTypeHTML)
-	c.Response.SetBodyString(body)
+func (ctx *Context) HTML(code int, body string) {
+	ctx.SetStatusCode(code)
+	ctx.Response.Header.SetBytesKV(contentType, ContentTypeHTML)
+	ctx.Response.SetBodyString(body)
 }
 
 // JSON responses JSON data and custom status code to client.
-func (c *Context) JSON(code int, v interface{}) {
-	c.Response.SetStatusCode(code)
+func (ctx *Context) JSON(code int, v interface{}) {
+	ctx.Response.SetStatusCode(code)
 	data, err := json.Marshal(v)
 	if err != nil {
-		c.Logger().Fatalf("JSON: %q\n.", err)
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return
 	}
-	c.Response.Header.SetBytesKV(contentType, ContentTypeJSON)
-	c.Response.SetBody(data)
+	ctx.Response.Header.SetBytesKV(contentType, ContentTypeJSON)
+	ctx.Response.SetBody(data)
 }
 
 // JSONP responses JSONP data and custom status code to client.
-func (c *Context) JSONP(code int, v interface{}, callback []byte) {
-	c.Response.SetStatusCode(code)
+func (ctx *Context) JSONP(code int, v interface{}, callback []byte) {
+	ctx.Response.SetStatusCode(code)
 	data, err := json.Marshal(v)
 	if err != nil {
-		c.Logger().Fatalf("JSONP: %q\n.", err)
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return
 	}
-	c.Response.Header.SetBytesKV(contentType, ContentTypeJSONP)
+	ctx.Response.Header.SetBytesKV(contentType, ContentTypeJSONP)
 	callback = append(callback, "("...)
 	callback = append(callback, data...)
 	callback = append(callback, ")"...)
-	c.Response.SetBody(callback)
+	ctx.Response.SetBody(callback)
 }
 
 // XML responses XML data and custom status code to client.
-func (c *Context) XML(code int, v interface{}, headers ...string) {
-	c.Response.SetStatusCode(code)
+func (ctx *Context) XML(code int, v interface{}, headers ...string) {
+	ctx.Response.SetStatusCode(code)
 	xmlBytes, err := xml.MarshalIndent(v, "", `   `)
 	if err != nil {
-		c.Logger().Fatalf("XML: %q\n.", err)
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return
 	}
 
@@ -154,6 +153,6 @@ func (c *Context) XML(code int, v interface{}, headers ...string) {
 	bytes = append(bytes, header...)
 	bytes = append(bytes, xmlBytes...)
 
-	c.Response.Header.SetBytesKV(contentType, ContentTypeXML)
-	c.Response.SetBody(bytes)
+	ctx.Response.Header.SetBytesKV(contentType, ContentTypeXML)
+	ctx.Response.SetBody(bytes)
 }

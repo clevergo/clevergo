@@ -10,14 +10,11 @@ import (
 	"time"
 
 	"github.com/go-gem/gem"
-	"github.com/go-gem/gem/bytes"
 	"github.com/valyala/fasthttp"
 )
 
 func TestBodyLimit(t *testing.T) {
-	bl := NewBodyLimit(7 * bytes.B)
-
-	s := gem.New()
+	bl := NewBodyLimit(7 * gem.B)
 
 	router := gem.NewRouter()
 	router.Use(bl)
@@ -25,7 +22,7 @@ func TestBodyLimit(t *testing.T) {
 		c.HTML(fasthttp.StatusOK, "OK")
 	})
 
-	s.Init(router.Handler)
+	s := gem.New("", router.Handler)
 
 	rw := &readWriter{}
 	br := bufio.NewReader(&rw.w)
@@ -41,7 +38,7 @@ func TestBodyLimit(t *testing.T) {
 
 	rw.r.WriteString(reqStr)
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -67,10 +64,10 @@ func TestBodyLimit(t *testing.T) {
 	s.Init(router.Handler)
 
 	// Increase limit size to 8B.
-	bl.Limit = 8 * bytes.B
+	bl.Limit = 8 * gem.B
 	rw.r.WriteString(reqStr)
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -94,7 +91,7 @@ func TestBodyLimit(t *testing.T) {
 
 	rw.r.WriteString(reqStr)
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:

@@ -22,38 +22,32 @@ Run the following code, and then navigate to http://127.0.0.1:8080.
 		"log"
 
 		"github.com/go-gem/gem"
-		"github.com/valyala/fasthttp"
 	)
 
 	func main() {
-		server := gem.New()
-
 		router := gem.NewRouter()
 
 		router.GET("/", func(c *gem.Context) {
-			c.HTML(fasthttp.StatusOK, "Hello world.")
+			c.HTML(200, "Hello world.")
 		})
 
-		log.Fatal(server.ListenAndServe(":8080", router.Handler))
+		log.Fatal(gem.ListenAndServe(":8080", router.Handler))
 	}
 
 
 Server
 
-The Server is extend edition of fasthttp.Server.
-
-1. Create Server:
-
-	server := gem.New()
-
-2. Create router:
+1. Create router:
 
 	router := gem.NewRouter()
 
+2. Create Server:
+
+	server := gem.New(":8080", router.Handler)
+
 3. Launch the server:
 
-	// HTTP server.
-	server.ListenAndServe(":8080", router.Handler)
+	server.ListenAndServe()
 
 Router
 

@@ -16,7 +16,6 @@ import (
 )
 
 func TestGzip(t *testing.T) {
-	s := gem.New()
 
 	router := gem.NewRouter()
 	router.Use(NewGzip(CompressBestCompression))
@@ -24,7 +23,7 @@ func TestGzip(t *testing.T) {
 		c.HTML(fasthttp.StatusOK, "Compress")
 	})
 
-	s.Init(router.Handler)
+	s := gem.New("", router.Handler)
 
 	rw := &readWriter{}
 	br := bufio.NewReader(&rw.w)
@@ -33,7 +32,7 @@ func TestGzip(t *testing.T) {
 
 	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -53,7 +52,7 @@ func TestGzip(t *testing.T) {
 	// Accept-Encoding: gzip
 	rw.r.WriteString("GET / HTTP/1.1\r\nAccept-Encoding: gzip\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -73,7 +72,7 @@ func TestGzip(t *testing.T) {
 	// Accept-Encoding: deflate, gzip
 	rw.r.WriteString("GET / HTTP/1.1\r\nAccept-Encoding: deflate, gzip\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -93,7 +92,7 @@ func TestGzip(t *testing.T) {
 	// Accept-Encoding: deflate
 	rw.r.WriteString("GET / HTTP/1.1\r\nAccept-Encoding: deflate\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:

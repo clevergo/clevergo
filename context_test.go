@@ -21,7 +21,6 @@ type project struct {
 }
 
 func TestContext(t *testing.T) {
-	s := New()
 
 	router := NewRouter()
 	respHtml := "OK"
@@ -54,7 +53,7 @@ func TestContext(t *testing.T) {
 		c.XML(fasthttp.StatusOK, p, xml.Header)
 	})
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	// HTML
 	rw1 := &readWriter{}
@@ -62,7 +61,7 @@ func TestContext(t *testing.T) {
 
 	ch1 := make(chan error)
 	go func() {
-		ch1 <- s.Server.ServeConn(rw1)
+		ch1 <- s.ServeConn(rw1)
 	}()
 
 	select {
@@ -98,7 +97,7 @@ func TestContext(t *testing.T) {
 
 	ch2 := make(chan error)
 	go func() {
-		ch2 <- s.Server.ServeConn(rw2)
+		ch2 <- s.ServeConn(rw2)
 	}()
 
 	select {
@@ -134,7 +133,7 @@ func TestContext(t *testing.T) {
 
 	ch3 := make(chan error)
 	go func() {
-		ch3 <- s.Server.ServeConn(rw3)
+		ch3 <- s.ServeConn(rw3)
 	}()
 
 	select {
@@ -170,7 +169,7 @@ func TestContext(t *testing.T) {
 
 	ch4 := make(chan error)
 	go func() {
-		ch4 <- s.Server.ServeConn(rw4)
+		ch4 <- s.ServeConn(rw4)
 	}()
 
 	select {
@@ -206,8 +205,6 @@ func TestContext(t *testing.T) {
 }
 
 func TestContext2(t *testing.T) {
-	s := New()
-
 	router := NewRouter()
 
 	router.GET("/", func(c *Context) {
@@ -228,7 +225,7 @@ func TestContext2(t *testing.T) {
 		}
 	})
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	// HTML
 	rw1 := &readWriter{}
@@ -236,7 +233,7 @@ func TestContext2(t *testing.T) {
 
 	ch1 := make(chan error)
 	go func() {
-		ch1 <- s.Server.ServeConn(rw1)
+		ch1 <- s.ServeConn(rw1)
 	}()
 
 	select {

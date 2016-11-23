@@ -2,19 +2,15 @@ Gem
 ===
 ![Gem logo](logo.png)
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/go-gem/gem) 
-[![Build Status](https://img.shields.io/travis/go-gem/gem.svg)](https://travis-ci.org/go-gem/gem) 
-[![Go Report Card](https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat-square)](https://goreportcard.com/report/github.com/go-gem/gem) 
-[![Coverage Status](https://img.shields.io/coveralls/go-gem/gem.svg)](https://coveralls.io/github/go-gem/gem?branch=master) 
+[![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem)
+[![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem)
+[![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem)
+[![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master)
 
 Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
 
-currently, Gem API is **unstable** until the version v1.0.0 being released,
+The API is currently **unstable** until the version v1.0.0 being released,
 see [milestone](https://github.com/go-gem/gem/milestone/1) for more details.
-
-The project inspired by third party packages, such as [fasthttp](https://github.com/valyala/fasthttp), [fasthttprouter](https://github.com/buaazp/fasthttprouter) and
-[echo](https://github.com/labstack/echo), thier LICENSE can be found in LICENSE file.
-
 
 ### Install
 
@@ -22,41 +18,60 @@ The project inspired by third party packages, such as [fasthttp](https://github.
 go get github.com/go-gem/gem
 ```
 
+### Features
+
+- Graceful shutdown and reload
+
+- Listen multiple port in a process
+
+- Leveled logger
+
+- High-performance and pretty router, very friendly to RESTful APIs
+
+- Sessions support
+
+- [Various Middlewares](#middlewares):
+    - JSON WEB TOKEN Middleware
+    
+    - Compress Middleware
+    
+    - Basic Auth Middleware
+    
+    - Request Body Limit Middleware
+    
+    - JSON WEB TOKEN Middleware
+    
+    - CSRF Middleware
+    
+    - CORS Middleware
 
 ### Example
-
-See the [documentation](https://godoc.org/github.com/go-gem/gem) for more usages.
 
 ```
 package main
 
 import (
 	"log"
-	
+
 	"github.com/go-gem/gem"
-	"github.com/valyala/fasthttp"
 )
 
 func main() {
-	server := gem.New()
-
 	router := gem.NewRouter()
-	
+
 	router.GET("/", func(c *gem.Context) {
-		c.HTML(fasthttp.StatusOK, "Hello world.")
+		c.HTML(200, "Hello world.")
 	})
 
-	log.Fatal(server.ListenAndServe(":8080", router.Handler))
+	log.Fatal(gem.ListenAndServe(":8080", router.Handler))
 }
 ```
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
-
  
 ### Semantic Versioning
 
 Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitHub releases.
-
 
 ### Support Us
 
@@ -66,7 +81,6 @@ Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitH
 
 - [Contribute](#contribute) to the project.
 
-
 ### Contribute
 
 - [Report issues](https://github.com/go-gem/gem/issues/new)
@@ -75,22 +89,30 @@ Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitH
 
 - Improve/fix documentation.
 
+### Motivation
 
-### Related Projects
-
-1. [sessions](https://github.com/go-gem/sessions) Sessions manager for fasthttp.
-
-2. [fasthttp](https://github.com/valyala/fasthttp) Fast HTTP package for Go.
-
-3. [echo](https://github.com/labstack/echo) Fast and unfancy HTTP server framework.
-
-4. [fasthttprouter](https://github.com/buaazp/fasthttprouter) A high performance fasthttp request router.
-
-
-### About Name
-
-The name means that this project aims to be Gem.
+Just for figuring out the web framework's workflow, and try to design a simple and strong web framework.
 
 ### LICENSE
 
-MIT licensed. See the LICENSE file for details.
+MIT licensed. See [LICENSE](LICENSE) file for more information.
+
+**Inspiration & Credits**
+
+I have read the code of the following open source projects, and integrate their designs into this project.
+
+I respect these projects and it's authors, and follow their LICENSE.
+
+If your LICENSE is missing, please contact me, I will add it ASAP.
+
+- [**fasthttp**](https://github.com/valyala/fasthttp) - [LICENSE](https://github.com/valyala/fasthttp/blob/master/LICENSE)
+
+- [**httprouter**](https://github.com/julienschmidt/httprouter) - [LICENSE](https://github.com/julienschmidt/httprouter/blob/master/LICENSE)
+
+- [**fasthttprouter**](https://github.com/buaazp/fasthttprouter) - [LICENSE](https://github.com/buaazp/fasthttprouter/blob/master/LICENSE)
+
+- [**echo**](https://github.com/labstack/echo) - [LICENSE](https://github.com/labstack/echo/blob/master/LICENSE)
+
+- [**endless**](https://github.com/fvbock/endless) - [LICENSE](https://github.com/fvbock/endless/blob/master/LICENSE)
+
+- [**go-graceful-restart-example**](https://github.com/Scalingo/go-graceful-restart-example) - [LICENSE](https://github.com/Scalingo/go-graceful-restart-example/blob/master/LICENSE)

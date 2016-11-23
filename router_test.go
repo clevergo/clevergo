@@ -23,8 +23,6 @@ import (
 )
 
 func TestRouter(t *testing.T) {
-	s := New()
-
 	routed := false
 
 	router := NewRouter()
@@ -37,14 +35,14 @@ func TestRouter(t *testing.T) {
 		c.Success("foo/bar", []byte("success"))
 	})
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	rw.r.WriteString("GET /user/gem?baz HTTP/1.1\r\n\r\n")
 
 	ch := make(chan error)
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 
 	select {
@@ -63,8 +61,6 @@ func TestRouter(t *testing.T) {
 
 func TestRouterAPI(t *testing.T) {
 	var get, head, options, post, put, patch, deleted bool
-
-	s := New()
 
 	router := NewRouter()
 
@@ -90,14 +86,14 @@ func TestRouterAPI(t *testing.T) {
 		deleted = true
 	})
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	ch := make(chan error)
 
 	rw.r.WriteString("GET /GET HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -113,7 +109,7 @@ func TestRouterAPI(t *testing.T) {
 
 	rw.r.WriteString("HEAD /GET HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -129,7 +125,7 @@ func TestRouterAPI(t *testing.T) {
 
 	rw.r.WriteString("OPTIONS /GET HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -145,7 +141,7 @@ func TestRouterAPI(t *testing.T) {
 
 	rw.r.WriteString("POST /POST HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -161,7 +157,7 @@ func TestRouterAPI(t *testing.T) {
 
 	rw.r.WriteString("PUT /PUT HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -177,7 +173,7 @@ func TestRouterAPI(t *testing.T) {
 
 	rw.r.WriteString("PATCH /PATCH HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -193,7 +189,7 @@ func TestRouterAPI(t *testing.T) {
 
 	rw.r.WriteString("DELETE /DELETE HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -219,8 +215,6 @@ func TestRouterRoot(t *testing.T) {
 }
 
 func TestRouterChaining(t *testing.T) {
-	s := New()
-
 	router := NewRouter()
 
 	router2 := NewRouter()
@@ -240,14 +234,14 @@ func TestRouterChaining(t *testing.T) {
 		c.SetStatusCode(fasthttp.StatusOK)
 	})
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	ch := make(chan error)
 
 	rw.r.WriteString("POST /foo HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -269,7 +263,7 @@ func TestRouterChaining(t *testing.T) {
 
 	rw.r.WriteString("POST /bar HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -289,7 +283,7 @@ func TestRouterChaining(t *testing.T) {
 
 	rw.r.WriteString("POST /qax HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -309,7 +303,6 @@ func TestRouterChaining(t *testing.T) {
 }
 
 func TestRouterOPTIONS(t *testing.T) {
-	s := New()
 	// TODO: because fasthttp is not support OPTIONS method now,
 	// these test cases will be used in the future.
 	handlerFunc := func(_ *Context) {}
@@ -319,14 +312,14 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test not allowed
 	// * (server)
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	ch := make(chan error)
 
 	rw.r.WriteString("OPTIONS * HTTP/1.1\r\nHost:\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -351,7 +344,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	// path
 	rw.r.WriteString("OPTIONS /path HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -373,7 +366,7 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	rw.r.WriteString("OPTIONS /doesnotexist HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -398,7 +391,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	// * (server)
 	rw.r.WriteString("OPTIONS * HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -421,7 +414,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	// path
 	rw.r.WriteString("OPTIONS /path HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -451,7 +444,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	// * (server)
 	rw.r.WriteString("OPTIONS * HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -477,7 +470,7 @@ func TestRouterOPTIONS(t *testing.T) {
 	// path
 	rw.r.WriteString("OPTIONS /path HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -500,21 +493,20 @@ func TestRouterOPTIONS(t *testing.T) {
 }
 
 func TestRouterNotAllowed(t *testing.T) {
-	s := New()
 	handlerFunc := func(_ *Context) {}
 
 	router := NewRouter()
 	router.POST("/path", handlerFunc)
 
 	// Test not allowed
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	ch := make(chan error)
 
 	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -542,7 +534,7 @@ func TestRouterNotAllowed(t *testing.T) {
 	// test again
 	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -568,7 +560,7 @@ func TestRouterNotAllowed(t *testing.T) {
 	}
 	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -593,8 +585,6 @@ func TestRouterNotAllowed(t *testing.T) {
 }
 
 func TestConvert(t *testing.T) {
-	s := New()
-
 	router := NewRouter()
 
 	fastHandler := func(ctx *fasthttp.RequestCtx) {
@@ -603,7 +593,7 @@ func TestConvert(t *testing.T) {
 
 	router.GET("/", Convert(fastHandler))
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	br := bufio.NewReader(&rw.w)
@@ -612,7 +602,7 @@ func TestConvert(t *testing.T) {
 
 	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -631,7 +621,6 @@ func TestConvert(t *testing.T) {
 }
 
 func TestRouterNotFound(t *testing.T) {
-	s := New()
 	handlerFunc := func(_ *Context) {}
 
 	router := NewRouter()
@@ -654,7 +643,7 @@ func TestRouterNotFound(t *testing.T) {
 		{"/nope", 404},    // NotFound
 	}
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	br := bufio.NewReader(&rw.w)
@@ -663,7 +652,7 @@ func TestRouterNotFound(t *testing.T) {
 	for _, tr := range testRoutes {
 		rw.r.WriteString(fmt.Sprintf("GET %s HTTP/1.1\r\n\r\n", tr.route))
 		go func() {
-			ch <- s.Server.ServeConn(rw)
+			ch <- s.ServeConn(rw)
 		}()
 		select {
 		case err := <-ch:
@@ -690,7 +679,7 @@ func TestRouterNotFound(t *testing.T) {
 	}
 	rw.r.WriteString("GET /nope HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -711,7 +700,7 @@ func TestRouterNotFound(t *testing.T) {
 	router.PATCH("/path", handlerFunc)
 	rw.r.WriteString("PATCH /path/ HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -729,13 +718,13 @@ func TestRouterNotFound(t *testing.T) {
 	}
 
 	// Test special case where no node for the prefix "/" exists
-	s = New()
+	s = New("", router.Handler)
 	router = NewRouter()
 	router.GET("/a", handlerFunc)
 	s.init(router.Handler)
 	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -754,8 +743,6 @@ func TestRouterNotFound(t *testing.T) {
 }
 
 func TestRouterPanicHandler(t *testing.T) {
-	s := New()
-
 	panicHandled := false
 
 	router := NewRouter()
@@ -773,14 +760,14 @@ func TestRouterPanicHandler(t *testing.T) {
 		}
 	}()
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	ch := make(chan error)
 
 	rw.r.WriteString(string("PUT /user/gopher HTTP/1.1\r\n\r\n"))
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -864,8 +851,6 @@ func (m testMiddleware) Handle(next Handler) Handler {
 }
 
 func TestMiddleware(t *testing.T) {
-	s := New()
-
 	router := NewRouter()
 	router.Use(testMiddleware{key: "Test-Middleware", val: "Test-Middleware"})
 
@@ -873,7 +858,7 @@ func TestMiddleware(t *testing.T) {
 		c.Write([]byte("Hello"))
 	})
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	br := bufio.NewReader(&rw.w)
@@ -882,7 +867,7 @@ func TestMiddleware(t *testing.T) {
 
 	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
@@ -910,8 +895,6 @@ func (mfs *mockFileSystem) Open(name string) (http.File, error) {
 }
 
 func TestRouterServeFiles(t *testing.T) {
-	s := New()
-
 	router := NewRouter()
 	recv := catchPanic(func() {
 		router.ServeFiles("/noFilepath", os.TempDir())
@@ -924,14 +907,14 @@ func TestRouterServeFiles(t *testing.T) {
 
 	router.ServeFiles("/*filepath", os.TempDir())
 
-	s.init(router.Handler)
+	s := New("", router.Handler)
 
 	rw := &readWriter{}
 	ch := make(chan error)
 
 	rw.r.WriteString(string("GET /favicon.ico HTTP/1.1\r\n\r\n"))
 	go func() {
-		ch <- s.Server.ServeConn(rw)
+		ch <- s.ServeConn(rw)
 	}()
 	select {
 	case err := <-ch:
