@@ -207,6 +207,8 @@ func TestContext(t *testing.T) {
 func TestContext2(t *testing.T) {
 	router := NewRouter()
 
+	s := New("", router.Handler)
+
 	router.GET("/", func(ctx *Context) {
 		if !ctx.IsAjax() {
 			t.Errorf("Expected c.IsAjax() = %t, got %t", true, ctx.IsAjax())
@@ -223,9 +225,15 @@ func TestContext2(t *testing.T) {
 		if !strings.EqualFold(string(ctx.Host()), ctx.HostString()) {
 			t.Errorf("Expected host %q, got %q", ctx.Host(), ctx.HostString())
 		}
-	})
 
-	s := New("", router.Handler)
+		if s.logger != ctx.Logger() {
+			t.Error("Unexpected logger")
+		}
+
+		if s.sessionsStore != ctx.SessionsStore() {
+			t.Error("Unexpected sessions store")
+		}
+	})
 
 	// HTML
 	rw1 := &readWriter{}

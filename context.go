@@ -114,7 +114,8 @@ func (ctx *Context) JSON(code int, v interface{}) {
 	ctx.Response.SetStatusCode(code)
 	data, err := json.Marshal(v)
 	if err != nil {
-		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+		ctx.Logger().Errorf("JSON error: %s\n", err)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 	ctx.Response.Header.SetBytesKV(contentType, ContentTypeJSON)
@@ -126,8 +127,8 @@ func (ctx *Context) JSONP(code int, v interface{}, callback []byte) {
 	ctx.Response.SetStatusCode(code)
 	data, err := json.Marshal(v)
 	if err != nil {
-		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
-		return
+		ctx.Logger().Errorf("JSON error: %s\n", err)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 	}
 	ctx.Response.Header.SetBytesKV(contentType, ContentTypeJSONP)
 	callback = append(callback, "("...)
@@ -141,7 +142,8 @@ func (ctx *Context) XML(code int, v interface{}, headers ...string) {
 	ctx.Response.SetStatusCode(code)
 	xmlBytes, err := xml.MarshalIndent(v, "", `   `)
 	if err != nil {
-		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+		ctx.Logger().Errorf("XML error: %s\n", err)
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 
