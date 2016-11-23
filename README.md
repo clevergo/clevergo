@@ -32,17 +32,10 @@ go get github.com/go-gem/gem
 
 - [Various Middlewares](#middlewares):
     - JSON WEB TOKEN Middleware
-    
     - Compress Middleware
-    
     - Basic Auth Middleware
-    
     - Request Body Limit Middleware
-    
-    - JSON WEB TOKEN Middleware
-    
     - CSRF Middleware
-    
     - CORS Middleware
 
 ### Example
