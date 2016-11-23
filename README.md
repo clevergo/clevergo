@@ -12,24 +12,21 @@ Gem, a simple and fast web framework, it built top of [fasthttp](https://github.
 The API is currently **unstable** until the version v1.0.0 being released,
 see [milestone](https://github.com/go-gem/gem/milestone/1) for more details.
 
+
 ### Install
 
 ```
 go get github.com/go-gem/gem
 ```
 
+
 ### Features
 
 - Graceful shutdown and reload
-
-- Listen multiple port in a process
-
+- Listen multiple ports at single process
 - Leveled logger
-
 - High-performance and pretty router, very friendly to RESTful APIs
-
 - Sessions support
-
 - [Various Middlewares](#middlewares):
     - JSON WEB TOKEN Middleware
     - Compress Middleware
@@ -37,6 +34,7 @@ go get github.com/go-gem/gem
     - Request Body Limit Middleware
     - CSRF Middleware
     - CORS Middleware
+
 
 ### Example
 
@@ -62,29 +60,30 @@ func main() {
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
  
+
 ### Semantic Versioning
 
 Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitHub releases.
 
+
 ### Support Us
 
 - :star: the project.
-
 - Spread the word.
-
 - [Contribute](#contribute) to the project.
+
 
 ### Contribute
 
 - [Report issues](https://github.com/go-gem/gem/issues/new)
-
 - Send PRs.
-
 - Improve/fix documentation.
+
 
 ### Motivation
 
 Just for figuring out the web framework's workflow, and try to design a simple and strong web framework.
+
 
 ### LICENSE
 

@@ -30,8 +30,44 @@ const (
 )
 
 // Headers
+const (
+	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
+	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
+	HeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
+	HeaderAccessControlAllowMethods     = "Access-Control-Allow-Methods"
+	HeaderAccessControlAllowHeaders     = "Access-Control-Allow-Headers"
+	HeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
+	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
+	HeaderAccessControlMaxAge           = "Access-Control-Max-Age"
+	HeaderAuthorization                 = "Authorization"
+	HeaderOrigin                        = "Origin"
+	HeaderVary                          = "Vary"
+)
+
+// Methods string
+const (
+	StrConnect = "CONNECT"
+	StrDelete  = "DELETE"
+	StrGet     = "GET"
+	StrHead    = "HEAD"
+	StrOptions = "OPTIONS"
+	StrPatch   = "PATCH"
+	StrPost    = "POST"
+	StrPut     = "PUT"
+	StrTrace   = "TRACE"
+)
+
+// Methods bytes
 var (
-	HeaderAuthorization = []byte("Authorization")
+	MethodConnect = []byte(StrConnect)
+	MethodDelete  = []byte(StrDelete)
+	MethodGet     = []byte(StrGet)
+	MethodHead    = []byte(StrHead)
+	MethodOptions = []byte(StrOptions)
+	MethodPatch   = []byte(StrPatch)
+	MethodPost    = []byte(StrPost)
+	MethodPut     = []byte(StrPut)
+	MethodTrace   = []byte(StrTrace)
 )
 
 // Name returns name.

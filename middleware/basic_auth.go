@@ -41,7 +41,7 @@ func (ba *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			return
 		}
 
-		auth := string(ctx.RequestCtx.Request.Header.PeekBytes(gem.HeaderAuthorization))
+		auth := string(ctx.RequestCtx.Request.Header.Peek(gem.HeaderAuthorization))
 		l := len(basic)
 
 		if len(auth) > l+1 && auth[:l] == basic {

@@ -5,65 +5,131 @@
 package middleware
 
 import (
-	"encoding/base64"
+	"bytes"
+	"strconv"
+	"strings"
 
 	"github.com/go-gem/gem"
-	"github.com/valyala/fasthttp"
 )
 
-// Basic Auth middleware.
-type BasicAuth struct {
-	Skipper   Skipper
-	Validator func(username, password string) bool
+// Default configuration.
+var (
+	AllowOrigins = []string{"*"}
+	AllowMethods = []string{gem.StrGet, gem.StrHead, gem.StrPut, gem.StrPatch, gem.StrPost, gem.StrDelete}
+)
+
+// Cross-Origin Resource Sharing middleware.
+type CORS struct {
+	//  Skipper defines a function to skip middleware.
+	Skipper Skipper
+
+	// Access-Control-Allow-Origin
+	AllowOrigins []string
+
+	// Access-Control-Allow-Methods
+	AllowMethods []string
+
+	// Access-Control-Allow-Headers
+	AllowHeaders []string
+
+	// Access-Control-Expose-Headers
+	ExposeHeaders []string
+
+	// Access-Control-Max-Age
+	MaxAge int
+
+	// Access-Control-Allow-Credentials
+	AllowCredentials bool
 }
 
-// NewBasicAuth returns BasicAuth instance by the
-// given validator function
-func NewBasicAuth(validator func(username, password string) bool) *BasicAuth {
-	return &BasicAuth{
-		Validator: validator,
+// NewCORS returns CORS instance with the default configuration.
+func NewCORS() *CORS {
+	return &CORS{
+		Skipper:       defaultSkipper,
+		AllowOrigins:  AllowOrigins,
+		AllowMethods:  AllowMethods,
+		AllowHeaders:  []string{},
+		ExposeHeaders: []string{},
 	}
 }
-
-const (
-	basic = "Basic"
-)
 
 // Handle implements Middleware's Handle function.
-func (ba *BasicAuth) Handle(next gem.Handler) gem.Handler {
-	if ba.Skipper == nil {
-		ba.Skipper = defaultSkipper
+func (cors *CORS) Handle(next gem.Handler) gem.Handler {
+	if cors.Skipper == nil {
+		cors.Skipper = defaultSkipper
 	}
+	if len(cors.AllowOrigins) == 0 {
+		cors.AllowOrigins = AllowOrigins
+	}
+	if len(cors.AllowMethods) == 0 {
+		cors.AllowMethods = AllowMethods
+	}
+	allowMethods := strings.Join(cors.AllowMethods, ",")
+	allowHeaders := strings.Join(cors.AllowHeaders, ",")
+	exposeHeaders := strings.Join(cors.ExposeHeaders, ",")
+	maxAge := strconv.Itoa(cors.MaxAge)
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
-		if ba.Skipper(ctx) {
+		if cors.Skipper(ctx) {
 			next.Handle(ctx)
 			return
 		}
 
-		auth := string(ctx.RequestCtx.Request.Header.PeekBytes(gem.HeaderAuthorization))
-		l := len(basic)
+		next.Handle(ctx)
 
-		if len(auth) > l+1 && auth[:l] == basic {
-			b, err := base64.StdEncoding.DecodeString(auth[l+1:])
-			if err != nil {
-				ctx.Logger().Errorf("Basic Auth error: %s\n", err)
-				return
-			}
-			cred := string(b)
-			for i := 0; i < len(cred); i++ {
-				if cred[i] == ':' {
-					// Verify credentials
-					if ba.Validator(cred[:i], cred[i+1:]) {
-						next.Handle(ctx)
-						return
-					}
-				}
+		origin := string(ctx.RequestCtx.Request.Header.Peek(gem.HeaderOrigin))
+
+		allowedOrigin := ""
+		for _, o := range cors.AllowOrigins {
+			if o == "*" || o == origin {
+				allowedOrigin = o
+				break
 			}
 		}
 
-		// Return 401 message.
-		ctx.Response.SetStatusCode(fasthttp.StatusUnauthorized)
-		ctx.Response.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
+		// Simple request
+		if bytes.Equal(ctx.RequestCtx.Request.Header.Method(), gem.MethodOptions) {
+			ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderOrigin)
+			if origin == "" || allowedOrigin == "" {
+				next.Handle(ctx)
+				return
+			}
+			ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowOrigin, allowedOrigin)
+			if cors.AllowCredentials {
+				ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowCredentials, "true")
+			}
+			if exposeHeaders != "" {
+				ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlExposeHeaders, exposeHeaders)
+			}
+			next.Handle(ctx)
+			return
+		}
+
+		// Preflight request
+		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderOrigin)
+		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderAccessControlRequestMethod)
+		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderAccessControlRequestHeaders)
+		if origin == "" || allowedOrigin == "" {
+			next.Handle(ctx)
+			return
+		}
+		ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowOrigin, allowedOrigin)
+		ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowMethods, allowMethods)
+		if cors.AllowCredentials {
+			ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowCredentials, "true")
+		}
+		if allowHeaders != "" {
+			ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowHeaders, allowHeaders)
+		} else {
+			h := ctx.RequestCtx.Response.Header.Peek(gem.HeaderAccessControlRequestHeaders)
+			if len(h) > 0 {
+				ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowHeaders, string(h))
+			}
+		}
+		if cors.MaxAge > 0 {
+			ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlMaxAge, maxAge)
+		}
+
+		ctx.Response.ResetBody()
 	})
 }
