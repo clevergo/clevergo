@@ -54,23 +54,23 @@ func NewCORS() *CORS {
 }
 
 // Handle implements Middleware's Handle function.
-func (cors *CORS) Handle(next gem.Handler) gem.Handler {
-	if cors.Skipper == nil {
-		cors.Skipper = defaultSkipper
+func (m *CORS) Handle(next gem.Handler) gem.Handler {
+	if m.Skipper == nil {
+		m.Skipper = defaultSkipper
 	}
-	if len(cors.AllowOrigins) == 0 {
-		cors.AllowOrigins = AllowOrigins
+	if len(m.AllowOrigins) == 0 {
+		m.AllowOrigins = AllowOrigins
 	}
-	if len(cors.AllowMethods) == 0 {
-		cors.AllowMethods = AllowMethods
+	if len(m.AllowMethods) == 0 {
+		m.AllowMethods = AllowMethods
 	}
-	allowMethods := strings.Join(cors.AllowMethods, ",")
-	allowHeaders := strings.Join(cors.AllowHeaders, ",")
-	exposeHeaders := strings.Join(cors.ExposeHeaders, ",")
-	maxAge := strconv.Itoa(cors.MaxAge)
+	allowMethods := strings.Join(m.AllowMethods, ",")
+	allowHeaders := strings.Join(m.AllowHeaders, ",")
+	exposeHeaders := strings.Join(m.ExposeHeaders, ",")
+	maxAge := strconv.Itoa(m.MaxAge)
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
-		if cors.Skipper(ctx) {
+		if m.Skipper(ctx) {
 			next.Handle(ctx)
 			return
 		}
@@ -80,7 +80,7 @@ func (cors *CORS) Handle(next gem.Handler) gem.Handler {
 		origin := string(ctx.RequestCtx.Request.Header.Peek(gem.StrHeaderOrigin))
 
 		allowedOrigin := ""
-		for _, o := range cors.AllowOrigins {
+		for _, o := range m.AllowOrigins {
 			if o == "*" || o == origin {
 				allowedOrigin = o
 				break
@@ -95,7 +95,7 @@ func (cors *CORS) Handle(next gem.Handler) gem.Handler {
 				return
 			}
 			ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlAllowOrigin, allowedOrigin)
-			if cors.AllowCredentials {
+			if m.AllowCredentials {
 				ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlAllowCredentials, "true")
 			}
 			if exposeHeaders != "" {
@@ -115,7 +115,7 @@ func (cors *CORS) Handle(next gem.Handler) gem.Handler {
 		}
 		ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlAllowOrigin, allowedOrigin)
 		ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlAllowMethods, allowMethods)
-		if cors.AllowCredentials {
+		if m.AllowCredentials {
 			ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlAllowCredentials, "true")
 		}
 		if allowHeaders != "" {
@@ -126,7 +126,7 @@ func (cors *CORS) Handle(next gem.Handler) gem.Handler {
 				ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlAllowHeaders, string(h))
 			}
 		}
-		if cors.MaxAge > 0 {
+		if m.MaxAge > 0 {
 			ctx.RequestCtx.Response.Header.Set(gem.StrHeaderAccessControlMaxAge, maxAge)
 		}
 

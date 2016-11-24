@@ -76,6 +76,10 @@ func NewJWT(signingMethod jwt.SigningMethod, keyFunc jwt.Keyfunc) *JWT {
 
 // Handle implements Middleware's Handle function.
 func (m *JWT) Handle(next gem.Handler) gem.Handler {
+	if m.Skipper == nil {
+		m.Skipper = defaultSkipper
+	}
+
 	return gem.HandlerFunc(func(ctx *gem.Context) {
 		tokenStr, err := m.AcquireToken(ctx)
 		// Returns Bad Request status code if the token is empty.

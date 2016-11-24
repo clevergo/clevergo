@@ -20,6 +20,10 @@ type project struct {
 	Name string `json:"name" xml:"name"`
 }
 
+var (
+	contentType = []byte("Content-Type")
+)
+
 func TestContext(t *testing.T) {
 
 	router := NewRouter()

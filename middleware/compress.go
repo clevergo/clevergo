@@ -36,11 +36,11 @@ func NewCompress(level int) *Compress {
 }
 
 // Handle implements Middleware's Handle function.
-func (c *Compress) Handle(next gem.Handler) gem.Handler {
+func (m *Compress) Handle(next gem.Handler) gem.Handler {
 	return gem.HandlerFunc(func(ctx *gem.Context) {
 		defer fasthttp.CompressHandlerLevel(
 			func(ctx *fasthttp.RequestCtx) {},
-			c.level,
+			m.level,
 		)(ctx.RequestCtx)
 		next.Handle(ctx)
 	})

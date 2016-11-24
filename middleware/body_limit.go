@@ -27,18 +27,18 @@ func NewBodyLimit(limit int) *BodyLimit {
 }
 
 // Handle implements Middleware's Handle function.
-func (bl *BodyLimit) Handle(next gem.Handler) gem.Handler {
-	if bl.Skipper == nil {
-		bl.Skipper = defaultSkipper
+func (m *BodyLimit) Handle(next gem.Handler) gem.Handler {
+	if m.Skipper == nil {
+		m.Skipper = defaultSkipper
 	}
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
-		if bl.Skipper(ctx) {
+		if m.Skipper(ctx) {
 			next.Handle(ctx)
 			return
 		}
 
-		if ctx.Request.Header.ContentLength() > bl.Limit || len(ctx.RequestCtx.Request.Body()) > bl.Limit {
+		if ctx.Request.Header.ContentLength() > m.Limit || len(ctx.RequestCtx.Request.Body()) > m.Limit {
 			ctx.RequestCtx.SetStatusCode(fasthttp.StatusRequestEntityTooLarge)
 			ctx.RequestCtx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusRequestEntityTooLarge))
 			return

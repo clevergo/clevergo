@@ -30,13 +30,13 @@ const (
 )
 
 // Handle implements Middleware's Handle function.
-func (ba *BasicAuth) Handle(next gem.Handler) gem.Handler {
-	if ba.Skipper == nil {
-		ba.Skipper = defaultSkipper
+func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
+	if m.Skipper == nil {
+		m.Skipper = defaultSkipper
 	}
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
-		if ba.Skipper(ctx) {
+		if m.Skipper(ctx) {
 			next.Handle(ctx)
 			return
 		}
@@ -54,7 +54,7 @@ func (ba *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			for i := 0; i < len(cred); i++ {
 				if cred[i] == ':' {
 					// Verify credentials
-					if ba.Validator(cred[:i], cred[i+1:]) {
+					if m.Validator(cred[:i], cred[i+1:]) {
 						next.Handle(ctx)
 						return
 					}

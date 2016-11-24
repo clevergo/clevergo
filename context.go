@@ -15,8 +15,6 @@ import (
 )
 
 var (
-	contentType = []byte("Content-Type")
-
 	// ContentTypeDefault default Content-Type
 	ContentTypeDefault = []byte("text/plain; charset=utf-8")
 
@@ -105,7 +103,7 @@ func (ctx *Context) IsAjax() bool {
 // HTML responses HTML data and custom status code to client.
 func (ctx *Context) HTML(code int, body string) {
 	ctx.SetStatusCode(code)
-	ctx.Response.Header.SetBytesKV(contentType, ContentTypeHTML)
+	ctx.Response.Header.SetContentTypeBytes(ContentTypeHTML)
 	ctx.Response.SetBodyString(body)
 }
 
@@ -118,7 +116,7 @@ func (ctx *Context) JSON(code int, v interface{}) {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
-	ctx.Response.Header.SetBytesKV(contentType, ContentTypeJSON)
+	ctx.Response.Header.SetContentTypeBytes(ContentTypeJSON)
 	ctx.Response.SetBody(data)
 }
 
@@ -130,7 +128,7 @@ func (ctx *Context) JSONP(code int, v interface{}, callback []byte) {
 		ctx.Logger().Errorf("JSON error: %s\n", err)
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 	}
-	ctx.Response.Header.SetBytesKV(contentType, ContentTypeJSONP)
+	ctx.Response.Header.SetContentTypeBytes(ContentTypeJSONP)
 	callback = append(callback, "("...)
 	callback = append(callback, data...)
 	callback = append(callback, ")"...)
@@ -156,6 +154,6 @@ func (ctx *Context) XML(code int, v interface{}, headers ...string) {
 	bytes = append(bytes, header...)
 	bytes = append(bytes, xmlBytes...)
 
-	ctx.Response.Header.SetBytesKV(contentType, ContentTypeXML)
+	ctx.Response.Header.SetContentTypeBytes(ContentTypeXML)
 	ctx.Response.SetBody(bytes)
 }
