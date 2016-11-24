@@ -5,6 +5,7 @@
 package gem
 
 import (
+	"runtime"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -28,7 +29,10 @@ var (
 
 	// handlePanic default handle of panic.
 	handlePanic = func(ctx *Context, v interface{}) {
-		ctx.Logger().Errorf("Panic: %+v\n", v)
+		_, file, line, ok := runtime.Caller(6)
+		if ok {
+			ctx.Logger().Printf("Received panic:\n\t%s: %d\n\t\t%+v.\n", file, line, v)
+		}
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		ctx.SetContentTypeBytes(ContentTypeDefault)
 		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusInternalServerError))
