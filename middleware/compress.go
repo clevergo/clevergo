@@ -17,13 +17,12 @@ const (
 	CompressDefaultCompression = fasthttp.CompressDefaultCompression
 )
 
-// Gzip gzip compress middleware.
+// Compress compress middleware.
 type Compress struct {
 	level int
 }
 
-// NewGzip returns a Gzip middleware instance.
-// See NewGzipWithSkipper.
+// NewCompress returns a Compress middleware instance.
 //
 // Level is the desired compression level:
 //     * CompressNoCompression

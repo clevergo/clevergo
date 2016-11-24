@@ -29,45 +29,60 @@ const (
 	version = "0.0.1"
 )
 
-// Headers
+// Headers strings
 const (
-	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
-	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
-	HeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
-	HeaderAccessControlAllowMethods     = "Access-Control-Allow-Methods"
-	HeaderAccessControlAllowHeaders     = "Access-Control-Allow-Headers"
-	HeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
-	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
-	HeaderAccessControlMaxAge           = "Access-Control-Max-Age"
-	HeaderAuthorization                 = "Authorization"
-	HeaderOrigin                        = "Origin"
-	HeaderVary                          = "Vary"
+	StrHeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
+	StrHeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
+	StrHeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
+	StrHeaderAccessControlAllowMethods     = "Access-Control-Allow-Methods"
+	StrHeaderAccessControlAllowHeaders     = "Access-Control-Allow-Headers"
+	StrHeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
+	StrHeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
+	StrHeaderAccessControlMaxAge           = "Access-Control-Max-Age"
+	StrHeaderAuthorization                 = "Authorization"
+	StrHeaderOrigin                        = "Origin"
+	StrHeaderVary                          = "Vary"
 )
 
-// Methods string
-const (
-	StrConnect = "CONNECT"
-	StrDelete  = "DELETE"
-	StrGet     = "GET"
-	StrHead    = "HEAD"
-	StrOptions = "OPTIONS"
-	StrPatch   = "PATCH"
-	StrPost    = "POST"
-	StrPut     = "PUT"
-	StrTrace   = "TRACE"
-)
-
-// Methods bytes
+// Headers bytes
 var (
-	MethodConnect = []byte(StrConnect)
-	MethodDelete  = []byte(StrDelete)
-	MethodGet     = []byte(StrGet)
-	MethodHead    = []byte(StrHead)
-	MethodOptions = []byte(StrOptions)
-	MethodPatch   = []byte(StrPatch)
-	MethodPost    = []byte(StrPost)
-	MethodPut     = []byte(StrPut)
-	MethodTrace   = []byte(StrTrace)
+	HeaderAccessControlRequestMethod    = []byte(StrHeaderAccessControlRequestMethod)
+	HeaderAccessControlRequestHeaders   = []byte(StrHeaderAccessControlRequestHeaders)
+	HeaderAccessControlAllowOrigin      = []byte(StrHeaderAccessControlAllowOrigin)
+	HeaderAccessControlAllowMethods     = []byte(StrHeaderAccessControlAllowMethods)
+	HeaderAccessControlAllowHeaders     = []byte(StrHeaderAccessControlAllowHeaders)
+	HeaderAccessControlAllowCredentials = []byte(StrHeaderAccessControlAllowCredentials)
+	HeaderAccessControlExposeHeaders    = []byte(StrHeaderAccessControlExposeHeaders)
+	HeaderAccessControlMaxAge           = []byte(StrHeaderAccessControlMaxAge)
+	HeaderAuthorization                 = []byte(StrHeaderAuthorization)
+	HeaderOrigin                        = []byte(StrHeaderOrigin)
+	HeaderVary                          = []byte(StrHeaderVary)
+)
+
+// Method strings
+const (
+	StrMethodConnect = "CONNECT"
+	StrMethodDelete  = "DELETE"
+	StrMethodGet     = "GET"
+	StrMethodHead    = "HEAD"
+	StrMethodOptions = "OPTIONS"
+	StrMethodPatch   = "PATCH"
+	StrMethodPost    = "POST"
+	StrMethodPut     = "PUT"
+	StrMethodTrace   = "TRACE"
+)
+
+// Method bytes
+var (
+	MethodConnect = []byte(StrMethodConnect)
+	MethodDelete  = []byte(StrMethodDelete)
+	MethodGet     = []byte(StrMethodGet)
+	MethodHead    = []byte(StrMethodHead)
+	MethodOptions = []byte(StrMethodOptions)
+	MethodPatch   = []byte(StrMethodPatch)
+	MethodPost    = []byte(StrMethodPost)
+	MethodPut     = []byte(StrMethodPut)
+	MethodTrace   = []byte(StrMethodTrace)
 )
 
 // Name returns name.

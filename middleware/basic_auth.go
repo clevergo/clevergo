@@ -11,7 +11,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-// Basic Auth middleware.
+// BasicAuth Basic Auth middleware.
 type BasicAuth struct {
 	Skipper   Skipper
 	Validator func(username, password string) bool
@@ -41,7 +41,7 @@ func (ba *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			return
 		}
 
-		auth := string(ctx.RequestCtx.Request.Header.Peek(gem.HeaderAuthorization))
+		auth := string(ctx.RequestCtx.Request.Header.PeekBytes(gem.HeaderAuthorization))
 		l := len(basic)
 
 		if len(auth) > l+1 && auth[:l] == basic {
