@@ -16,7 +16,7 @@ const bearer = "Bearer"
 
 // JWT default configuration.
 var (
-	AcquireJWTToken = func(ctx *gem.Context) (token string, err error) {
+	JWTAcquireToken = func(ctx *gem.Context) (token string, err error) {
 		if token, err = AcquireJWTTokenFromHeader(ctx, gem.StrHeaderAuthorization); err != nil {
 			token, err = AcquireJWTTokenFromForm(ctx, "jwt_token")
 		}
@@ -66,7 +66,7 @@ type JWT struct {
 func NewJWT(signingMethod jwt.SigningMethod, keyFunc jwt.Keyfunc) *JWT {
 	return &JWT{
 		Skipper:       defaultSkipper,
-		AcquireToken:  AcquireJWTToken,
+		AcquireToken:  JWTAcquireToken,
 		OnValid:       JWTOnValid,
 		OnInvalid:     JWTOnInvalid,
 		SigningMethod: signingMethod,
@@ -92,6 +92,11 @@ func (m *JWT) Handle(next gem.Handler) gem.Handler {
 		} else {
 			claims = m.NewClaims()
 			token, err = jwt.ParseWithClaims(tokenStr, claims, m.KeyFunc)
+
+			if err = claims.Valid(); err != nil {
+				m.OnInvalid(ctx, err)
+				return
+			}
 		}
 
 		if err != nil {
