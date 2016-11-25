@@ -86,8 +86,8 @@ func TestContext(t *testing.T) {
 		t.Errorf("Regular routing failed with router chaining.")
 		t.FailNow()
 	}
-	if !bytes.Equal(resp1.Header.PeekBytes(contentType), ContentTypeHTML) {
-		t.Errorf("unexpected Content-Type got %q want %q", string(resp1.Header.PeekBytes(contentType)), string(ContentTypeHTML))
+	if !bytes.Equal(resp1.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes) {
+		t.Errorf("unexpected Content-Type got %q want %q", resp1.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes)
 		t.FailNow()
 	}
 	if !bytes.Equal(resp1.Body(), []byte(respHtml)) {
@@ -122,8 +122,8 @@ func TestContext(t *testing.T) {
 		t.Errorf("Regular routing failed with router chaining.")
 		t.FailNow()
 	}
-	if !bytes.Equal(resp2.Header.PeekBytes(contentType), ContentTypeJSON) {
-		t.Errorf("unexpected Content-Type got %q want %q", string(resp2.Header.PeekBytes(contentType)), string(ContentTypeJSON))
+	if !bytes.Equal(resp2.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes) {
+		t.Errorf("unexpected Content-Type got %q want %q", resp2.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes)
 		t.FailNow()
 	}
 	if !bytes.Equal(resp2.Body(), []byte(respJson)) {
@@ -158,8 +158,8 @@ func TestContext(t *testing.T) {
 		t.Errorf("Regular routing failed with router chaining.")
 		t.FailNow()
 	}
-	if !bytes.Equal(resp3.Header.PeekBytes(contentType), ContentTypeJSONP) {
-		t.Errorf("unexpected Content-Type got %q want %q", string(resp3.Header.PeekBytes(contentType)), string(ContentTypeJSONP))
+	if !bytes.Equal(resp3.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes) {
+		t.Errorf("unexpected Content-Type got %q want %q", resp3.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes)
 		t.FailNow()
 	}
 	if !bytes.Equal(resp3.Body(), []byte(respJsonp)) {
@@ -194,8 +194,8 @@ func TestContext(t *testing.T) {
 		t.Errorf("Regular routing failed with router chaining.")
 		t.FailNow()
 	}
-	if !bytes.Equal(resp4.Header.PeekBytes(contentType), ContentTypeXML) {
-		t.Errorf("unexpected Content-Type got %q want %q", string(resp4.Header.PeekBytes(contentType)), string(ContentTypeXML))
+	if !bytes.Equal(resp4.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes) {
+		t.Errorf("unexpected Content-Type got %q want %q", resp4.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes)
 		t.FailNow()
 	}
 	p2 := project{}

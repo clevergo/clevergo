@@ -23,7 +23,7 @@ var (
 	// handleMethodNotAllowed default handle of Method Not Allowed.
 	handleMethodNotAllowed = func(ctx *Context) {
 		ctx.SetStatusCode(fasthttp.StatusMethodNotAllowed)
-		ctx.SetContentTypeBytes(ContentTypeDefault)
+		ctx.SetContentType(HeaderContentTypeText)
 		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusMethodNotAllowed))
 	}
 
@@ -34,7 +34,7 @@ var (
 			ctx.Logger().Printf("Received panic:\n\t%s: %d\n\t\t%+v.\n", file, line, v)
 		}
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetContentTypeBytes(ContentTypeDefault)
+		ctx.SetContentType(HeaderContentTypeText)
 		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusInternalServerError))
 	}
 )

@@ -42,6 +42,7 @@ func (m *Compress) Handle(next gem.Handler) gem.Handler {
 			func(ctx *fasthttp.RequestCtx) {},
 			m.level,
 		)(ctx.RequestCtx)
+
 		next.Handle(ctx)
 	})
 }

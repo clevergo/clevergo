@@ -6,27 +6,63 @@ package middleware
 
 import (
 	"encoding/base64"
+	"errors"
 
 	"github.com/go-gem/gem"
 	"github.com/valyala/fasthttp"
 )
 
-// BasicAuth Basic Auth middleware.
+// BasicAuth default configuration
+var (
+	BasicAuthOnValid   = func(ctx *gem.Context, _ string) {}
+	BasicAuthOnInvalid = func(ctx *gem.Context, _ error) {
+		// Sends 401 Unauthorized response.
+		ctx.Response.SetStatusCode(fasthttp.StatusUnauthorized)
+	}
+)
+
+// BasicAuth Basic Auth middleware
 type BasicAuth struct {
-	Skipper   Skipper
+	// Skipper defines a function to skip middleware.
+	Skipper Skipper
+
+	// Validator is a function to validate BasicAuth credentials.
+	// Required.
 	Validator func(username, password string) bool
+
+	// OnValid will be invoked on when the Validator return true.
+	//
+	// It is easy to share the username with the other middlewares
+	// by using ctx.SetUserValue.
+	//
+	// Optional.
+	OnValid func(ctx *gem.Context, username string)
+
+	// OnInvalid will be invoked on when error was occurred, such
+	// as empty authorization, invalid authorization, incorrect
+	// username or password.
+	//
+	// If you are care about the error message, you can
+	// print it by using ctx.Logger().
+	//
+	// Optional.
+	OnInvalid func(ctx *gem.Context, err error)
 }
 
 // NewBasicAuth returns BasicAuth instance by the
-// given validator function
+// given validator function.
 func NewBasicAuth(validator func(username, password string) bool) *BasicAuth {
 	return &BasicAuth{
+		Skipper:   defaultSkipper,
 		Validator: validator,
+		OnValid:   BasicAuthOnValid,
+		OnInvalid: BasicAuthOnInvalid,
 	}
 }
 
-const (
-	basic = "Basic"
+// BasicAuth errors
+var (
+	BasicAuthErrEmptyAuthorization = errors.New("empty authorization")
 )
 
 // Handle implements Middleware's Handle function.
@@ -34,6 +70,7 @@ func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
 	if m.Skipper == nil {
 		m.Skipper = defaultSkipper
 	}
+	basicLen := len(gem.HeaderBasic)
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
 		if m.Skipper(ctx) {
@@ -41,20 +78,27 @@ func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			return
 		}
 
-		auth := string(ctx.RequestCtx.Request.Header.PeekBytes(gem.HeaderAuthorization))
-		l := len(basic)
+		auth := ctx.ReqHeader(gem.HeaderAuthorization)
 
-		if len(auth) > l+1 && auth[:l] == basic {
-			b, err := base64.StdEncoding.DecodeString(auth[l+1:])
+		if len(auth) == 0 {
+			m.OnInvalid(ctx, BasicAuthErrEmptyAuthorization)
+			return
+		}
+
+		if len(auth) > basicLen+1 && auth[:basicLen] == gem.HeaderBasic {
+			b, err := base64.StdEncoding.DecodeString(auth[basicLen+1:])
 			if err != nil {
-				ctx.Logger().Errorf("Basic Auth error: %s\n", err)
+				m.OnInvalid(ctx, err)
 				return
 			}
 			cred := string(b)
 			for i := 0; i < len(cred); i++ {
 				if cred[i] == ':' {
 					// Verify credentials
-					if m.Validator(cred[:i], cred[i+1:]) {
+					username := cred[:i]
+					psw := cred[i+1:]
+					if m.Validator(username, psw) {
+						m.OnValid(ctx, username)
 						next.Handle(ctx)
 						return
 					}
@@ -62,8 +106,6 @@ func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			}
 		}
 
-		// Return 401 message.
-		ctx.Response.SetStatusCode(fasthttp.StatusUnauthorized)
-		ctx.Response.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
+		m.OnInvalid(ctx, nil)
 	})
 }

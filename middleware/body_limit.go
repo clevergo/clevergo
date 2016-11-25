@@ -11,6 +11,7 @@ import (
 
 // BodyLimit request body limit middleware.
 type BodyLimit struct {
+	// Skipper defines a function to skip middleware.
 	Skipper Skipper
 
 	// Maximum allowed size for a request body,
@@ -22,7 +23,8 @@ type BodyLimit struct {
 // given limit.
 func NewBodyLimit(limit int) *BodyLimit {
 	return &BodyLimit{
-		Limit: limit,
+		Skipper: defaultSkipper,
+		Limit:   limit,
 	}
 }
 

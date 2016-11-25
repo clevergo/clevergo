@@ -5,145 +5,66 @@
 package middleware
 
 import (
-	"bufio"
 	"bytes"
-	"net"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/go-gem/gem"
+	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
 
 func TestCompress(t *testing.T) {
-
 	router := gem.NewRouter()
 	router.Use(NewCompress(CompressBestCompression))
-	router.GET("/", func(c *gem.Context) {
-		c.HTML(fasthttp.StatusOK, "Compress")
+	router.GET("/", func(ctx *gem.Context) {
+		ctx.HTML(fasthttp.StatusOK, fasthttp.StatusMessage(fasthttp.StatusOK))
 	})
 
-	s := gem.New("", router.Handler)
+	srv := gem.New("", router.Handler)
 
-	rw := &readWriter{}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	// Expected uncompressed response.
+	test1 := tests.New(srv)
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if len(resp.Header.Peek("Content-Encoding")) > 0 {
+			return fmt.Errorf("Expected uncompressed response, got compressed response")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if len(resp.Header.Peek("Content-Encoding")) > 0 {
-		t.Errorf("Expected no compress response, got compressed response")
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
-	// Accept-Encoding: gzip
-	rw.r.WriteString("GET / HTTP/1.1\r\nAccept-Encoding: gzip\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	// Expected gzip compressed response.
+	test2 := tests.New(srv)
+	test2.Timeout = time.Second
+	test2.Headers[gem.HeaderAcceptEncoding] = gem.HeaderAcceptEncodingGzip
+	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if ce := resp.Header.Peek(gem.HeaderContentEncoding); len(ce) == 0 || !bytes.Equal(ce, gem.HeaderAcceptEncodingGzipBytes) {
+			return fmt.Errorf("Expected Content-Encoding %q, got %q", gem.HeaderAcceptEncodingGzipBytes, ce)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if ce := resp.Header.Peek("Content-Encoding"); len(ce) == 0 || !bytes.Equal(ce, []byte("gzip")) {
-		t.Errorf("Expected Content-Encoding %q, got %q", "gzip", ce)
+
+		return nil
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
-	// Accept-Encoding: deflate, gzip
-	rw.r.WriteString("GET / HTTP/1.1\r\nAccept-Encoding: deflate, gzip\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	// Expected deflate compressed response.
+	test3 := tests.New(srv)
+	test3.Timeout = time.Second
+	test3.Headers[gem.HeaderAcceptEncoding] = gem.HeaderAcceptEncodingDeflate
+	test3.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if ce := resp.Header.Peek(gem.HeaderContentEncoding); len(ce) == 0 || !bytes.Equal(ce, gem.HeaderAcceptEncodingDeflateBytes) {
+			return fmt.Errorf("Expected Content-Encoding %q, got %q", gem.HeaderAcceptEncodingDeflateBytes, ce)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+
+		return nil
+	})
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if ce := resp.Header.Peek("Content-Encoding"); len(ce) == 0 || !bytes.Equal(ce, []byte("gzip")) {
-		t.Errorf("Expected Content-Encoding %q, got %q", "gzip", ce)
-	}
-
-	// Accept-Encoding: deflate
-	rw.r.WriteString("GET / HTTP/1.1\r\nAccept-Encoding: deflate\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if ce := resp.Header.Peek("Content-Encoding"); len(ce) == 0 || !bytes.Equal(ce, []byte("deflate")) {
-		t.Errorf("Expected Content-Encoding %q, got %q", "deflate", ce)
-	}
-}
-
-type readWriter struct {
-	net.Conn
-	r bytes.Buffer
-	w bytes.Buffer
-}
-
-var zeroTCPAddr = &net.TCPAddr{
-	IP: net.IPv4zero,
-}
-
-func (rw *readWriter) Close() error {
-	return nil
-}
-
-func (rw *readWriter) Read(b []byte) (int, error) {
-	return rw.r.Read(b)
-}
-
-func (rw *readWriter) Write(b []byte) (int, error) {
-	return rw.w.Write(b)
-}
-
-func (rw *readWriter) RemoteAddr() net.Addr {
-	return zeroTCPAddr
-}
-
-func (rw *readWriter) LocalAddr() net.Addr {
-	return zeroTCPAddr
-}
-
-func (rw *readWriter) SetReadDeadline(t time.Time) error {
-	return nil
-}
-
-func (rw *readWriter) SetWriteDeadline(t time.Time) error {
-	return nil
 }

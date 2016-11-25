@@ -26,63 +26,7 @@ const (
 	name = "Gem"
 
 	// Gem version
-	version = "0.0.1"
-)
-
-// Headers strings
-const (
-	StrHeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
-	StrHeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
-	StrHeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
-	StrHeaderAccessControlAllowMethods     = "Access-Control-Allow-Methods"
-	StrHeaderAccessControlAllowHeaders     = "Access-Control-Allow-Headers"
-	StrHeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
-	StrHeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
-	StrHeaderAccessControlMaxAge           = "Access-Control-Max-Age"
-	StrHeaderAuthorization                 = "Authorization"
-	StrHeaderOrigin                        = "Origin"
-	StrHeaderVary                          = "Vary"
-)
-
-// Headers bytes
-var (
-	HeaderAccessControlRequestMethod    = []byte(StrHeaderAccessControlRequestMethod)
-	HeaderAccessControlRequestHeaders   = []byte(StrHeaderAccessControlRequestHeaders)
-	HeaderAccessControlAllowOrigin      = []byte(StrHeaderAccessControlAllowOrigin)
-	HeaderAccessControlAllowMethods     = []byte(StrHeaderAccessControlAllowMethods)
-	HeaderAccessControlAllowHeaders     = []byte(StrHeaderAccessControlAllowHeaders)
-	HeaderAccessControlAllowCredentials = []byte(StrHeaderAccessControlAllowCredentials)
-	HeaderAccessControlExposeHeaders    = []byte(StrHeaderAccessControlExposeHeaders)
-	HeaderAccessControlMaxAge           = []byte(StrHeaderAccessControlMaxAge)
-	HeaderAuthorization                 = []byte(StrHeaderAuthorization)
-	HeaderOrigin                        = []byte(StrHeaderOrigin)
-	HeaderVary                          = []byte(StrHeaderVary)
-)
-
-// Method strings
-const (
-	StrMethodConnect = "CONNECT"
-	StrMethodDelete  = "DELETE"
-	StrMethodGet     = "GET"
-	StrMethodHead    = "HEAD"
-	StrMethodOptions = "OPTIONS"
-	StrMethodPatch   = "PATCH"
-	StrMethodPost    = "POST"
-	StrMethodPut     = "PUT"
-	StrMethodTrace   = "TRACE"
-)
-
-// Method bytes
-var (
-	MethodConnect = []byte(StrMethodConnect)
-	MethodDelete  = []byte(StrMethodDelete)
-	MethodGet     = []byte(StrMethodGet)
-	MethodHead    = []byte(StrMethodHead)
-	MethodOptions = []byte(StrMethodOptions)
-	MethodPatch   = []byte(StrMethodPatch)
-	MethodPost    = []byte(StrMethodPost)
-	MethodPut     = []byte(StrMethodPut)
-	MethodTrace   = []byte(StrMethodTrace)
+	version = "v1.0.0-alpha"
 )
 
 // Name returns name.

@@ -3,3 +3,9 @@
 // that can be found in the LICENSE file.
 
 package middleware
+
+import "testing"
+
+func TestCSRF(t *testing.T) {
+
+}

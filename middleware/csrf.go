@@ -19,7 +19,7 @@ import (
 
 // CSRF default configuration.
 var (
-	CSRFSafeMethods = []string{gem.StrMethodGet, gem.StrMethodHead, gem.StrMethodOptions}
+	CSRFSafeMethods = []string{gem.MethodGet, gem.MethodHead, gem.MethodOptions}
 
 	CSRFAcquireToken = func(ctx *gem.Context) (token []byte) {
 		if token = ctx.RequestCtx.Request.Header.Peek("X-CSRF-Token"); len(token) == 0 {

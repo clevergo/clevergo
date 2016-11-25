@@ -74,7 +74,7 @@ Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitH
 - Send PRs.
 - Improve/fix documentation.
 
-Any suggestions, discussions and pull requests are welcome.
+**We’re always looking for help, so if you would like to contribute, we’d love to have you!**
 
 
 ## Motivation

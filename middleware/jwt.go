@@ -12,24 +12,23 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-const bearer = "Bearer"
-
 // JWT default configuration.
 var (
 	JWTAcquireToken = func(ctx *gem.Context) (token string, err error) {
-		if token, err = AcquireJWTTokenFromHeader(ctx, gem.StrHeaderAuthorization); err != nil {
-			token, err = AcquireJWTTokenFromForm(ctx, "jwt_token")
+		if token, err = AcquireJWTTokenFromHeader(ctx, gem.HeaderAuthorization); err != nil {
+			token, err = AcquireJWTTokenFromForm(ctx, "_jwt")
 		}
 		return
 	}
 
 	JWTOnValid = func(ctx *gem.Context, token *jwt.Token, claims jwt.Claims) {
-		ctx.SetUserValue("jwt_token", token)
+		ctx.SetUserValue("jwt", token)
 		ctx.SetUserValue("jwt_claims", claims)
 	}
 
 	JWTOnInvalid = func(ctx *gem.Context, err error) {
-		ctx.Logger().Errorf("JWT middleware error: %s\n", err)
+		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
 	}
 )
 
@@ -81,6 +80,11 @@ func (m *JWT) Handle(next gem.Handler) gem.Handler {
 	}
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
+		if m.Skipper(ctx) {
+			next.Handle(ctx)
+			return
+		}
+
 		tokenStr, err := m.AcquireToken(ctx)
 		// Returns Bad Request status code if the token is empty.
 		if err != nil || tokenStr == "" {
@@ -96,10 +100,8 @@ func (m *JWT) Handle(next gem.Handler) gem.Handler {
 		} else {
 			claims = m.NewClaims()
 			token, err = jwt.ParseWithClaims(tokenStr, claims, m.KeyFunc)
-
-			if err = claims.Valid(); err != nil {
-				m.OnInvalid(ctx, err)
-				return
+			if err == nil {
+				err = claims.Valid()
 			}
 		}
 
@@ -120,13 +122,16 @@ var (
 	ErrEmptyJWTInForm   = errors.New("empty jwt in query string or post form")
 )
 
+var (
+	bearerLen = len(gem.HeaderBearer)
+)
+
 // AcquireJWTTokenFromHeader acquire jwt token from the request
 // header.
 func AcquireJWTTokenFromHeader(ctx *gem.Context, key string) (string, error) {
-	auth := string(ctx.RequestCtx.Request.Header.Peek(key))
-	l := len(bearer)
-	if len(auth) > l+1 && auth[:l] == bearer {
-		return auth[l+1:], nil
+	auth := ctx.ReqHeader(key)
+	if len(auth) > bearerLen+1 && auth[:bearerLen] == gem.HeaderBearer {
+		return auth[bearerLen+1:], nil
 	}
 
 	return "", ErrEmptyJWTInHeader

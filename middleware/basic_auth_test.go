@@ -5,88 +5,81 @@
 package middleware
 
 import (
-	"bufio"
 	"encoding/base64"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/go-gem/gem"
+	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
 
 func TestBasicAuth(t *testing.T) {
 	trueUsername := "foo"
-	truePsw := "123456"
+	truePsw := "bar"
 	encodedStr := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", trueUsername, truePsw)))
 
-	ba := NewBasicAuth(func(username, psw string) bool {
+	incorrectPsw := "incorrectPassword"
+	incorrectEncodedStr := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", trueUsername, incorrectPsw)))
+
+	authorization := fmt.Sprintf("%s %s", gem.HeaderBasic, encodedStr)
+
+	m := NewBasicAuth(func(username, psw string) bool {
 		return trueUsername == username && truePsw == psw
 	})
+	m.Skipper = nil
 
 	router := gem.NewRouter()
-	router.Use(ba)
-	router.POST("/", func(c *gem.Context) {
-		c.HTML(fasthttp.StatusOK, "OK")
+	router.Use(m)
+	router.GET("/", func(ctx *gem.Context) {
+		ctx.HTML(fasthttp.StatusOK, fasthttp.StatusMessage(fasthttp.StatusOK))
 	})
 
-	s := gem.New("", router.Handler)
-
-	rw := &readWriter{}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	ch := make(chan error)
-
-	newLine := "\r\n"
-	reqStr := "POST / HTTP/1.1" + newLine +
-		"Content-Length:8" + newLine +
-		"Content-Type:application/x-www-form-urlencoded" + newLine +
-		newLine +
-		"name=123"
-
-	rw.r.WriteString(reqStr)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.StatusCode() != fasthttp.StatusUnauthorized {
-		t.Errorf("Expected status code %d, got %d", fasthttp.StatusUnauthorized, resp.StatusCode())
-	}
-	if string(resp.Body()) != fasthttp.StatusMessage(fasthttp.StatusUnauthorized) {
-		t.Errorf("Expected response body %q, got %q", fasthttp.StatusMessage(fasthttp.StatusUnauthorized), resp.Body())
+	if m.Skipper == nil {
+		t.Error(errSkipperNil)
 	}
 
-	newLine = "\r\n"
-	reqStr = "POST / HTTP/1.1" + newLine +
-		"Content-Length:8" + newLine +
-		"Content-Type:application/x-www-form-urlencoded" + newLine +
-		"Authorization:Basic " + encodedStr + newLine +
-		newLine +
-		"name=123"
+	srv := gem.New("", router.Handler)
 
-	rw.r.WriteString(reqStr)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+	var err error
+
+	// Correct authorization.
+	test1 := tests.New(srv)
+	test1.Headers[gem.HeaderAuthorization] = authorization
+	test1.Expect().Status(fasthttp.StatusOK).Body(fasthttp.StatusMessage(fasthttp.StatusOK))
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
+
+	// Empty authorization.
+	test2 := tests.New(srv)
+	test2.Expect().Status(fasthttp.StatusUnauthorized)
+	if err = test2.Run(); err != nil {
+		t.Error(err)
+	}
+
+	// Invalid base64 encoded string.
+	test3 := tests.New(srv)
+	test3.Headers[gem.HeaderAuthorization] = "Basic invalidBase64EncodedString"
+	test3.Expect().Status(fasthttp.StatusUnauthorized)
+	if err = test3.Run(); err != nil {
+		t.Error(err)
+	}
+
+	// Incorrect password.
+	test4 := tests.New(srv)
+	test4.Headers[gem.HeaderAuthorization] = fmt.Sprintf("%s %s", gem.HeaderBasic, incorrectEncodedStr)
+	test4.Expect().Status(fasthttp.StatusUnauthorized)
+	if err = test4.Run(); err != nil {
+		t.Error(err)
+	}
+
+	// Always skip.
+	m.Skipper = alwaysSkipper
+	test5 := tests.New(srv)
+	test5.Expect().Status(fasthttp.StatusOK).
+		Body(fasthttp.StatusMessage(fasthttp.StatusOK))
+	if err = test5.Run(); err != nil {
+		t.Error(err)
 	}
 }

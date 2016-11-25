@@ -5,12 +5,21 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/go-gem/gem"
 )
 
-var defaultSkipper = func(c *gem.Context) bool {
+var defaultSkipper = func(ctx *gem.Context) bool {
 	return false
 }
 
+var alwaysSkipper = func(ctx *gem.Context) bool {
+	return true
+}
+
+var (
+	errSkipperNil = errors.New("The skipper should not be nil")
+)
+
 // Skipper defines a function to skip middleware.
-type Skipper func(c *gem.Context) bool
+type Skipper func(ctx *gem.Context) bool

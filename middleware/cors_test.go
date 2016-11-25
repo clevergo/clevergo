@@ -7,77 +7,56 @@ package middleware
 import (
 	"testing"
 
+	"github.com/go-gem/gem"
 	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
 
-var (
-	cors = NewCORS()
-)
-
-/*
-
-
-var (
-	cors = NewCORS()
-)
 func TestCORS(t *testing.T) {
+	m := NewCORS()
+	m.Skipper = nil
+	m.AllowMethods = []string{}
+	m.AllowOrigins = []string{}
+
 	router := gem.NewRouter()
-	router.Use(cors)
-	router.GET("/", func(c *gem.Context) {
-		c.HTML(fasthttp.StatusOK, "OK")
+	router.Use(m)
+	router.GET("/", func(ctx *gem.Context) {
+		ctx.HTML(fasthttp.StatusOK, "OK")
 	})
 
-	s := gem.New("", router.Handler)
+	if m.Skipper == nil {
+		t.Errorf("The skipper should not be nil")
+	}
+	for i := 0; i < len(m.AllowOrigins); i++ {
+		if m.AllowOrigins[i] != CORSAllowOrigins[i] {
+			t.Errorf("Unexpected allow origins")
+		}
+	}
+	for i := 0; i < len(m.AllowMethods); i++ {
+		if m.AllowMethods[i] != CORSAllowMethods[i] {
+			t.Errorf("Unexpected allow methods")
+		}
+	}
 
-	test := test.New(s)
+	srv := gem.New("", router.Handler)
 
-	test.Expect().
-		Header("Content-Type","aaa").
+	test1 := tests.New(srv)
+	test1.Expect().
 		Status(200).
 		Body("OK")
-
-	if err := test.Run(); err != nil {
+	if err := test1.Run(); err != nil {
 		t.Error(err)
 	}
-}*/
 
-func TestFastHTTP(t *testing.T) {
-	contentType := "text/html; charset=utf-8"
-	statusCode := fasthttp.StatusBadRequest
-	respBody := fasthttp.StatusMessage(fasthttp.StatusBadRequest)
-
-	// Fake server
-	srv := &fasthttp.Server{
-		Handler: func(ctx *fasthttp.RequestCtx) {
-			ctx.SetContentType(contentType)
-			ctx.SetStatusCode(statusCode)
-			ctx.SetBodyString(respBody)
-		},
+	// Always skip.
+	m.Skipper = func(ctx *gem.Context) bool {
+		return true
 	}
-
-	// Create a Test instance.
-	test := tests.New(srv)
-
-	// Customize request.
-	// See Test struct.
-	test.Url = "/"
-
-	// Add excepted result.
-	test.Expect().
-		Status(statusCode).
-		Header("Content-Type", contentType).
-		Body(respBody)
-
-	// Custom checking function.
-	test.Expect().Custom(func(resp fasthttp.Response) error {
-		// check response.
-
-		return nil
-	})
-
-	// Run test.
-	if err := test.Run(); err != nil {
+	test8 := tests.New(srv)
+	test8.Expect().
+		Status(200).
+		Body("OK")
+	if err := test8.Run(); err != nil {
 		t.Error(err)
 	}
 }

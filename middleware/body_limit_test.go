@@ -5,106 +5,67 @@
 package middleware
 
 import (
-	"bufio"
+	"strconv"
 	"testing"
-	"time"
 
 	"github.com/go-gem/gem"
+	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
 
 func TestBodyLimit(t *testing.T) {
-	bl := NewBodyLimit(7 * gem.B)
+	reqPayload := "name=foo"
+	reqPayloadSize := len(reqPayload)
+
+	m := NewBodyLimit(reqPayloadSize - 1)
+	m.Skipper = nil
 
 	router := gem.NewRouter()
-	router.Use(bl)
-	router.POST("/", func(c *gem.Context) {
-		c.HTML(fasthttp.StatusOK, "OK")
+	router.Use(m)
+	router.POST("/", func(ctx *gem.Context) {
+		ctx.HTML(fasthttp.StatusOK, "OK")
 	})
 
-	s := gem.New("", router.Handler)
-
-	rw := &readWriter{}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	ch := make(chan error)
-
-	newLine := "\r\n"
-	reqStr := "POST / HTTP/1.1" + newLine +
-		"Content-Length:8" + newLine +
-		"Content-Type:application/x-www-form-urlencoded" + newLine +
-		newLine +
-		"name=123"
-
-	rw.r.WriteString(reqStr)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.StatusCode() != fasthttp.StatusRequestEntityTooLarge {
-		t.Errorf("Expected status code %d, got %d", fasthttp.StatusRequestEntityTooLarge, resp.StatusCode())
+	if m.Skipper == nil {
+		t.Error(errSkipperNil)
 	}
 
-	router = gem.NewRouter()
-	router.Use(bl)
-	router.POST("/", func(c *gem.Context) {
-		c.HTML(fasthttp.StatusOK, "OK")
-	})
+	srv := gem.New("", router.Handler)
 
-	s.Init(router.Handler)
+	var err error
 
-	// Increase limit size to 8B.
-	bl.Limit = 8 * gem.B
-	rw.r.WriteString(reqStr)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("Expected status code %d, got %d", fasthttp.StatusOK, resp.StatusCode())
+	// Entity too large.
+	test1 := tests.New(srv)
+	test1.Method = gem.MethodPost
+	test1.Headers[gem.HeaderContentType] = gem.HeaderContentTypeForm
+	test1.Headers[gem.HeaderContentLength] = strconv.Itoa(reqPayloadSize)
+	test1.Payload = reqPayload
+	test1.Expect().Status(fasthttp.StatusRequestEntityTooLarge).
+		Body(fasthttp.StatusMessage(fasthttp.StatusRequestEntityTooLarge))
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
-	// Skip body limit middleware
-	bl.Skipper = func(c *gem.Context) bool {
-		return true
+	// Increase limit size.
+	m.Limit = reqPayloadSize
+	test2 := tests.New(srv)
+	test2.Method = gem.MethodPost
+	test2.Headers[gem.HeaderContentType] = gem.HeaderContentTypeForm
+	test2.Headers[gem.HeaderContentLength] = strconv.Itoa(reqPayloadSize)
+	test2.Payload = reqPayload
+	test2.Expect().Status(fasthttp.StatusOK).
+		Body(fasthttp.StatusMessage(fasthttp.StatusOK))
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString(reqStr)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("Expected status code %d, got %d", fasthttp.StatusOK, resp.StatusCode())
+	// Always skip.
+	m.Skipper = alwaysSkipper
+	test3 := tests.New(srv)
+	test3.Method = gem.MethodPost
+	test3.Expect().Status(fasthttp.StatusOK).
+		Body(fasthttp.StatusMessage(fasthttp.StatusOK))
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 }
