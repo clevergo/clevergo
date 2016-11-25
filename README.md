@@ -2,7 +2,7 @@
 
 Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
 
-#### The API is currently unstable until the version `v1.0.0` being released, see [milestone](https://github.com/go-gem/gem/milestone/1) for more details.
+#### The API is currently unstable until the version `v1.0.0` being released, see [milestones](https://github.com/go-gem/gem/milestones) for more details.
 
 ## Install
 
@@ -13,18 +13,18 @@ go get github.com/go-gem/gem
 
 ## Features
 
-- Graceful shutdown and reload
+- Graceful shutdown and restart
 - Listen multiple ports at single process
 - Leveled logger
 - High-performance and pretty router, very friendly to RESTful APIs
 - Sessions support
 - Various Middlewares:
-    - JSON WEB TOKEN Middleware
-    - Compress Middleware
-    - Basic Auth Middleware
-    - Request Body Limit Middleware
-    - CSRF Middleware
-    - CORS Middleware
+    - JSON WEB TOKEN middleware
+    - Compress middleware
+    - Basic Auth middleware
+    - Request Body Limit middleware
+    - CSRF middleware
+    - CORS middleware
 
 ## Performance
 
@@ -74,10 +74,39 @@ Gem follows [semantic versioning 2.0.0](http://semver.org/) managed through GitH
 - Send PRs.
 - Improve/fix documentation.
 
+Any suggestions, discussions and pull requests are welcome.
+
 
 ## Motivation
 
 Just for figuring out the web framework's workflow, and try to design a simple and strong web framework.
+
+
+## Related Packages
+
+- [**tests**](https://github.com/go-gem/tests) - a tests package for fasthttp and Gem.
+- [**sessions**](https://github.com/go-gem/sessions) - a sessions manager package for fasthttp.
+- [**log**](https://github.com/go-gem/log) - a simple, leveled logging package.
+
+
+## FAQ
+
+1. What should I pay attention to?
+    **At present**, Gem is incompatible with some APIs of fasthttp, the incompatible APIs following:
+    - fasthttp.TimeoutHandler can not works with Gem.
+
+2. What is the difference between of fasthttp and gem.
+    Gem built on top of fasthttp, and use `Server.ServeConn` to serve connections.
+    
+    **Advantages**: Gem provides some useful built-in features, such as:
+        - High-performance router
+        - Leveled logger
+        - Various middlewares
+        - Sessions support
+        - Graceful shutdown and restart
+    
+    **Disadvantages**: at present, Gem dose not provide APIs to Serve the custom `Listener` like `fasthttp.Serve`,
+        but that will not be a problem, We will add support for this feature in the future.
 
 
 ## LICENSE
