@@ -80,7 +80,7 @@ func (m *CORS) Handle(next gem.Handler) gem.Handler {
 
 		next.Handle(ctx)
 
-		origin := ctx.ReqHeader(gem.HeaderOrigin)
+		origin := gem.Bytes2String(ctx.RequestCtx.Request.Header.Peek(gem.HeaderOrigin))
 
 		allowedOrigin := ""
 		for _, o := range m.AllowOrigins {
@@ -155,7 +155,8 @@ func IsCORSSimpleRequest(ctx *gem.Context) bool {
 	// 	application/x-www-form-urlencoded
 	// 	multipart/form-data
 	// 	text/plain
-	ct := ctx.ReqHeader(gem.HeaderContentType)
+	ct := gem.Bytes2String(ctx.RequestCtx.Request.Header.ContentType())
+
 	if !strings.Contains(ct, contentTypeText) &&
 		!strings.Contains(ct, contentTypeMultipartForm) &&
 		!strings.Contains(ct, contentTypeForm) {

@@ -6,6 +6,7 @@ package middleware
 
 import (
 	"errors"
+
 	"github.com/go-gem/gem"
 )
 

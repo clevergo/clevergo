@@ -11,9 +11,9 @@ import (
 	"errors"
 	"io"
 	"strings"
-	"time"
 
 	"github.com/go-gem/gem"
+	"github.com/go-gem/sessions"
 	"github.com/valyala/fasthttp"
 )
 
@@ -21,17 +21,22 @@ import (
 var (
 	CSRFSafeMethods = []string{gem.MethodGet, gem.MethodHead, gem.MethodOptions}
 
-	CSRFAcquireToken = func(ctx *gem.Context) (token []byte) {
-		if token = ctx.RequestCtx.Request.Header.Peek("X-CSRF-Token"); len(token) == 0 {
-			token = ctx.RequestCtx.FormValue("_csrf")
-		}
-
-		return
-	}
-
 	CSRFMaskLen = 8
 
 	CSRFTokenLen = 32
+
+	CSRFCookieKey = "_csrf"
+
+	CSRFCookieOptions = &sessions.Options{
+		MaxAge:   60 * 60, // one hour.
+		HttpOnly: true,
+	}
+
+	CSRFFormKey = "_csrf"
+
+	CSRFHeaderKey = "X-CSRF-Token"
+
+	CSRFContextKey = "csrf_token"
 )
 
 // CSRF Cross-site request forgery protection middleware.
@@ -49,19 +54,36 @@ type CSRF struct {
 	// TokenLen the length of true token.
 	TokenLen int
 
-	// AcquireToken acquire encoded token.
-	AcquireToken func(ctx *gem.Context) []byte
+	// ContextKey be used to ctx.SetUserValue(ContextKey, encodedToken)
+	ContextKey string
+
+	// CookieKey be used to acquire true token from cookie.
+	CookieKey string
+
+	//
+	CookieOptions *sessions.Options
+
+	// FormKey be used to acquire encoded token from query string
+	// or post form.
+	FormKey string
+
+	// HeaderKey be used to acquire encoded token from header.
+	HeaderKey string
 }
 
 // NewCSRF returns a CSRF instance with the default
 // configuration.
 func NewCSRF() *CSRF {
 	return &CSRF{
-		Skipper:      defaultSkipper,
-		SafeMethods:  CSRFSafeMethods,
-		AcquireToken: CSRFAcquireToken,
-		MaskLen:      CSRFMaskLen,
-		TokenLen:     CSRFTokenLen,
+		Skipper:       defaultSkipper,
+		SafeMethods:   CSRFSafeMethods,
+		MaskLen:       CSRFMaskLen,
+		TokenLen:      CSRFTokenLen,
+		ContextKey:    CSRFContextKey,
+		CookieKey:     CSRFCookieKey,
+		CookieOptions: CSRFCookieOptions,
+		FormKey:       CSRFFormKey,
+		HeaderKey:     CSRFHeaderKey,
 	}
 }
 
@@ -76,15 +98,25 @@ func (m *CSRF) Handle(next gem.Handler) gem.Handler {
 	if m.TokenLen <= 0 {
 		m.TokenLen = CSRFTokenLen
 	}
-
-	safeMethods := make(map[string]bool, len(m.SafeMethods))
-	for _, method := range m.SafeMethods {
-		safeMethods[method] = true
+	if m.CookieKey == "" {
+		m.CookieKey = CSRFCookieKey
+	}
+	if m.CookieOptions == nil {
+		m.CookieOptions = CSRFCookieOptions
+	}
+	if m.ContextKey == "" {
+		m.ContextKey = CSRFContextKey
+	}
+	if m.FormKey == "" {
+		m.FormKey = CSRFFormKey
+	}
+	if m.HeaderKey == "" {
+		m.HeaderKey = CSRFHeaderKey
 	}
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
 		var trueToken []byte
-		trueTokenStr := string(ctx.Request.Header.Cookie("_csrf"))
+		trueTokenStr := string(ctx.RequestCtx.Request.Header.Cookie(m.CookieKey))
 		if trueTokenStr != "" {
 			if token, err := base64.StdEncoding.DecodeString(trueTokenStr); err == nil && len(token) >= m.TokenLen {
 				trueToken = token[:m.TokenLen]
@@ -93,24 +125,35 @@ func (m *CSRF) Handle(next gem.Handler) gem.Handler {
 
 		if len(trueToken) == 0 {
 			trueToken = randomBytes(m.TokenLen)
-			cookie := &fasthttp.Cookie{}
-			cookie.SetKey("_csrf")
-			cookie.SetValue(base64.StdEncoding.EncodeToString(trueToken))
-			cookie.SetExpire(time.Now().Add(time.Minute * 10))
+			cookie := sessions.NewCookie(m.CookieKey, base64.StdEncoding.EncodeToString(trueToken), m.CookieOptions)
 			ctx.Response.Header.SetCookie(cookie)
 		}
 
+		// Always generate en encoded token.
 		encodedToken := generateCSRFToken(m.MaskLen, trueToken)
-		ctx.SetUserValue("_csrf", encodedToken)
+		ctx.SetUserValue(m.ContextKey, encodedToken)
 
-		method := ctx.MethodString()
-		if _, safe := safeMethods[method]; safe {
+		if m.Skipper(ctx) {
 			next.Handle(ctx)
 			return
 		}
 
-		// Verify CSRF token
-		if err := validateCSRF(m.MaskLen, m.AcquireToken(ctx), trueToken); err != nil {
+		method := gem.Bytes2String(ctx.RequestCtx.Request.Header.Method())
+		for _, v := range m.SafeMethods {
+			if v == method {
+				next.Handle(ctx)
+				return
+			}
+		}
+
+		// acquire csrf token from header, query string or post form.
+		token := ctx.RequestCtx.Request.Header.Peek(m.HeaderKey)
+		if len(token) == 0 {
+			token = ctx.RequestCtx.FormValue(m.FormKey)
+		}
+
+		// verify CSRF token
+		if err := validateCSRF(m.MaskLen, token, trueToken); err != nil {
 			ctx.SetStatusCode(fasthttp.StatusBadRequest)
 			ctx.SetBodyString("Unable to verify your data submission.")
 			return

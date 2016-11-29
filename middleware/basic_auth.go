@@ -78,9 +78,9 @@ func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			return
 		}
 
-		auth := ctx.ReqHeader(gem.HeaderAuthorization)
+		auth := gem.Bytes2String(ctx.RequestCtx.Request.Header.Peek(gem.HeaderAuthorization))
 
-		if len(auth) == 0 {
+		if auth == "" {
 			m.OnInvalid(ctx, BasicAuthErrEmptyAuthorization)
 			return
 		}

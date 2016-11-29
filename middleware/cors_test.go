@@ -41,10 +41,16 @@ func TestCORS(t *testing.T) {
 	srv := gem.New("", router.Handler)
 
 	test1 := tests.New(srv)
-	test1.Expect().
-		Status(200).
-		Body("OK")
+	test1.Expect().Status(200).Body("OK")
 	if err := test1.Run(); err != nil {
+		t.Error(err)
+	}
+
+	// Preflight request
+	test2 := tests.New(srv)
+	test2.Method = gem.MethodOptions
+	test2.Expect().Status(200)
+	if err := test2.Run(); err != nil {
 		t.Error(err)
 	}
 

@@ -5,14 +5,13 @@
 package gem
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"strings"
+	"fmt"
 	"testing"
-	"time"
 
+	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
 
@@ -25,13 +24,13 @@ var (
 )
 
 func TestContext(t *testing.T) {
-
 	router := NewRouter()
 	respHtml := "OK"
 	router.GET("/html", func(ctx *Context) {
 		ctx.HTML(fasthttp.StatusOK, respHtml)
 	})
 
+	invalidValue := make(chan bool)
 	p := project{Name: "GEM"}
 	respJson, err := json.Marshal(&p)
 	if err != nil {
@@ -40,6 +39,9 @@ func TestContext(t *testing.T) {
 
 	router.GET("/json", func(ctx *Context) {
 		ctx.JSON(fasthttp.StatusOK, p)
+	})
+	router.GET("/json2", func(ctx *Context) {
+		ctx.JSON(fasthttp.StatusOK, invalidValue)
 	})
 
 	jsonpCallback := []byte("callback")
@@ -53,217 +55,218 @@ func TestContext(t *testing.T) {
 		ctx.JSONP(fasthttp.StatusOK, p, jsonpCallback)
 	})
 
+	router.GET("/jsonp2", func(ctx *Context) {
+		ctx.JSONP(fasthttp.StatusOK, invalidValue, jsonpCallback)
+	})
+
 	router.GET("/xml", func(ctx *Context) {
 		ctx.XML(fasthttp.StatusOK, p, xml.Header)
 	})
+	router.GET("/xml2", func(ctx *Context) {
+		ctx.XML(fasthttp.StatusOK, invalidValue, xml.Header)
+	})
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
 	// HTML
-	rw1 := &readWriter{}
-	rw1.r.WriteString("GET /html HTTP/1.1\r\n\r\n")
-
-	ch1 := make(chan error)
-	go func() {
-		ch1 <- s.ServeConn(rw1)
-	}()
-
-	select {
-	case err := <-ch1:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Url = "/html"
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes) {
+			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-
-	br1 := bufio.NewReader(&rw1.w)
-	var resp1 fasthttp.Response
-	if err := resp1.Read(br1); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp1.Header.StatusCode() == fasthttp.StatusOK) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
-	}
-	if !bytes.Equal(resp1.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes) {
-		t.Errorf("unexpected Content-Type got %q want %q", resp1.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes)
-		t.FailNow()
-	}
-	if !bytes.Equal(resp1.Body(), []byte(respHtml)) {
-		t.Errorf("unexpected response got %q want %q", string(resp1.Body()), respHtml)
-		t.FailNow()
+		if !bytes.Equal(resp.Body(), []byte(respHtml)) {
+			return fmt.Errorf("unexpected response got %q want %q", string(resp.Body()), respHtml)
+		}
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// JSON
-	rw2 := &readWriter{}
-	rw2.r.WriteString("GET /json HTTP/1.1\r\n\r\n")
-
-	ch2 := make(chan error)
-	go func() {
-		ch2 <- s.ServeConn(rw2)
-	}()
-
-	select {
-	case err := <-ch2:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test2 := tests.New(srv)
+	test2.Url = "/json"
+	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes) {
+			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+		if !bytes.Equal(resp.Body(), []byte(respJson)) {
+			return fmt.Errorf("unexpected response got %q want %q", string(resp.Body()), respJson)
+		}
+		return nil
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
-	br2 := bufio.NewReader(&rw2.w)
-	var resp2 fasthttp.Response
-	if err := resp2.Read(br2); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp2.Header.StatusCode() == fasthttp.StatusOK) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
-	}
-	if !bytes.Equal(resp2.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes) {
-		t.Errorf("unexpected Content-Type got %q want %q", resp2.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes)
-		t.FailNow()
-	}
-	if !bytes.Equal(resp2.Body(), []byte(respJson)) {
-		t.Errorf("unexpected response got %q want %q", string(resp2.Body()), respJson)
-		t.FailNow()
+	test3 := tests.New(srv)
+	test3.Url = "/json2"
+	test3.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
+		return nil
+	})
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// JSONP
-	rw3 := &readWriter{}
-	rw3.r.WriteString("GET /jsonp HTTP/1.1\r\n\r\n")
-
-	ch3 := make(chan error)
-	go func() {
-		ch3 <- s.ServeConn(rw3)
-	}()
-
-	select {
-	case err := <-ch3:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test4 := tests.New(srv)
+	test4.Url = "/jsonp"
+	test4.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes) {
+			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+		if !bytes.Equal(resp.Body(), []byte(respJsonp)) {
+			return fmt.Errorf("unexpected response got %q want %q", string(resp.Body()), respJsonp)
+		}
+		return nil
+	})
+	if err = test4.Run(); err != nil {
+		t.Error(err)
 	}
 
-	br3 := bufio.NewReader(&rw3.w)
-	var resp3 fasthttp.Response
-	if err := resp3.Read(br3); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp3.Header.StatusCode() == fasthttp.StatusOK) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
-	}
-	if !bytes.Equal(resp3.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes) {
-		t.Errorf("unexpected Content-Type got %q want %q", resp3.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes)
-		t.FailNow()
-	}
-	if !bytes.Equal(resp3.Body(), []byte(respJsonp)) {
-		t.Errorf("unexpected response got %q want %q", string(resp3.Body()), respJsonp)
-		t.FailNow()
+	test5 := tests.New(srv)
+	test5.Url = "/jsonp2"
+	test5.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
+		return nil
+	})
+	if err = test5.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// XML
-	rw4 := &readWriter{}
-	rw4.r.WriteString("GET /xml HTTP/1.1\r\n\r\n")
-
-	ch4 := make(chan error)
-	go func() {
-		ch4 <- s.ServeConn(rw4)
-	}()
-
-	select {
-	case err := <-ch4:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test6 := tests.New(srv)
+	test6.Url = "/xml"
+	test6.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes) {
+			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+		p2 := project{}
+		if err := xml.Unmarshal(resp.Body(), &p2); err != nil {
+			return fmt.Errorf("xml.Unmarshal error %s", err)
+		}
+		if p2.Name != p.Name {
+			return fmt.Errorf("unexpected project's name got %q want %q", p2.Name, p.Name)
+		}
+		return nil
+	})
+	if err = test6.Run(); err != nil {
+		t.Error(err)
 	}
 
-	br4 := bufio.NewReader(&rw4.w)
-	var resp4 fasthttp.Response
-	if err := resp4.Read(br4); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
+	test7 := tests.New(srv)
+	test7.Url = "/xml2"
+	test7.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
+		return nil
+	})
+	if err = test7.Run(); err != nil {
+		t.Error(err)
 	}
-	if !(resp4.Header.StatusCode() == fasthttp.StatusOK) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
-	}
-	if !bytes.Equal(resp4.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes) {
-		t.Errorf("unexpected Content-Type got %q want %q", resp4.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes)
-		t.FailNow()
-	}
-	p2 := project{}
-	if err := xml.Unmarshal(resp4.Body(), &p2); err != nil {
-		t.Fatalf("xml.Unmarshal error %s", err)
-		t.FailNow()
-	}
-	if p2.Name != p.Name {
-		t.Errorf("unexpected project's name got %q want %q", p2.Name, p.Name)
-	}
-}
 
-func TestContext2(t *testing.T) {
-	router := NewRouter()
-
-	s := New("", router.Handler)
-
+	var handleErr error
 	router.GET("/", func(ctx *Context) {
 		if !ctx.IsAjax() {
-			t.Errorf("Expected c.IsAjax() = %t, got %t", true, ctx.IsAjax())
+			handleErr = fmt.Errorf("expected c.IsAjax() = %t, got %t", true, ctx.IsAjax())
+			return
 		}
 
-		if !strings.EqualFold(string(ctx.Method()), ctx.MethodString()) {
-			t.Errorf("Expected method %q, got %q", ctx.Method(), ctx.MethodString())
+		if srv.logger != ctx.Logger() {
+			handleErr = fmt.Errorf("unexpected logger")
+			return
 		}
 
-		if !strings.EqualFold(string(ctx.Path()), ctx.PathString()) {
-			t.Errorf("Expected path %q, got %q", ctx.Path(), ctx.PathString())
-		}
-
-		if !strings.EqualFold(string(ctx.Host()), ctx.HostString()) {
-			t.Errorf("Expected host %q, got %q", ctx.Host(), ctx.HostString())
-		}
-
-		if s.logger != ctx.Logger() {
-			t.Error("Unexpected logger")
-		}
-
-		if s.sessionsStore != ctx.SessionsStore() {
-			t.Error("Unexpected sessions store")
+		if srv.sessionsStore != ctx.SessionsStore() {
+			handleErr = fmt.Errorf("unexpected sessions store")
+			return
 		}
 	})
 
-	// HTML
-	rw1 := &readWriter{}
-	rw1.r.WriteString("GET http://127.0.0.1/ HTTP/1.1\r\nX-Requested-With: XMLHttpRequest\r\n\r\n")
+	test8 := tests.New(srv)
+	test8.Headers[HeaderXRequestedWith] = HeaderXMLHttpRequest
+	test8.Expect().Status(fasthttp.StatusOK)
+	if err = test8.Run(); err != nil {
+		t.Error(err)
+	}
+	if handleErr != nil {
+		t.Error(handleErr)
+	}
+}
 
-	ch1 := make(chan error)
-	go func() {
-		ch1 <- s.ServeConn(rw1)
-	}()
+func TestContext_Param(t *testing.T) {
+	router := NewRouter()
+	srv := New("", router.Handler)
 
-	select {
-	case err := <-ch1:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	router.GET("/user/:name", func(ctx *Context) {
+		ctx.HTML(fasthttp.StatusOK, ctx.Param("name"))
+	})
+
+	router.POST("/user/:name", func(ctx *Context) {
+		ctx.SetUserValue("name", 1)
+		ctx.HTML(fasthttp.StatusOK, ctx.Param("name"))
+	})
+
+	var err error
+
+	test1 := tests.New(srv)
+	test1.Url = "/user/foo"
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		body := string(resp.Body())
+		if body != "foo" {
+			return fmt.Errorf("expected body %q, got %q", "foo", body)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
-	br1 := bufio.NewReader(&rw1.w)
-	var resp1 fasthttp.Response
-	if err := resp1.Read(br1); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
+	test2 := tests.New(srv)
+	test2.Url = "/user/foo"
+	test2.Method = MethodPost
+	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		body := string(resp.Body())
+		if body != "" {
+			return fmt.Errorf("expected empty body, got %q", body)
+		}
+
+		return nil
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
-	if !(resp1.Header.StatusCode() == fasthttp.StatusOK) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
+}
+
+func TestContext_ParamInt(t *testing.T) {
+	router := NewRouter()
+	srv := New("", router.Handler)
+
+	var page int
+
+	router.GET("/list/:page", func(ctx *Context) {
+		page = ctx.ParamInt("page")
+	})
+
+	var err error
+
+	test1 := tests.New(srv)
+	test1.Url = "/list/2"
+	test1.Expect().Status(fasthttp.StatusOK)
+	if err = test1.Run(); err != nil {
+		t.Error(err)
+	}
+	if page != 2 {
+		t.Errorf("expected page: %d, got %d", 2, page)
+	}
+
+	// empty page
+	test2 := tests.New(srv)
+	test2.Url = "/list/invalid_number"
+	test2.Expect().Status(fasthttp.StatusOK)
+	if err = test2.Run(); err != nil {
+		t.Error(err)
+	}
+	if page != 0 {
+		t.Errorf("expected page: %d, got %d", 0, page)
 	}
 }

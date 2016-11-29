@@ -75,6 +75,10 @@ func init() {
 	serversAddr = make([]string, 0)
 	serversFdOffset = make(map[string]uint)
 
+	initServersFdOffset()
+}
+
+func initServersFdOffset() {
 	if addrs := os.Getenv("GEM_SERVER_ADDRS"); len(addrs) > 0 {
 		serversAddr = strings.Split(addrs, ",")
 		for i, addr := range serversAddr {
@@ -107,8 +111,12 @@ func New(addr string, handler HandlerFunc) *Server {
 		server: &fasthttp.Server{
 			Name: serverName(),
 		},
-		wg:          &sync.WaitGroup{},
-		sigChan:     make(chan os.Signal),
+		wg:      &sync.WaitGroup{},
+		sigChan: make(chan os.Signal),
+		signals: map[os.Signal]Signal{
+			syscall.SIGHUP:  SignalRestart,
+			syscall.SIGTERM: SignalShutdown,
+		},
 		logger:      logger,
 		waitTimeout: waitTimeout,
 	}
@@ -121,6 +129,20 @@ func New(addr string, handler HandlerFunc) *Server {
 	return srv
 }
 
+// Signal
+type Signal int8
+
+// Signals
+const (
+	_              = iota
+	SignalShutdown = iota
+	SignalRestart
+)
+
+func isSignal(sig Signal) bool {
+	return sig == SignalShutdown || sig == SignalRestart
+}
+
 // Server
 type Server struct {
 	server        *fasthttp.Server
@@ -128,9 +150,19 @@ type Server struct {
 	listener      net.Listener
 	wg            *sync.WaitGroup
 	sigChan       chan os.Signal
+	signals       map[os.Signal]Signal
 	waitTimeout   time.Duration
 	logger        Logger
 	sessionsStore sessions.Store
+}
+
+func (srv *Server) SetSignal(sig1 os.Signal, sig2 Signal) error {
+	if !isSignal(sig2) {
+		return fmt.Errorf("unsupported signal: %v", sig2)
+	}
+
+	srv.signals[sig1] = sig2
+	return nil
 }
 
 // SetLogger set logger.
@@ -226,24 +258,21 @@ func (srv *Server) ListenAndServe() error {
 // handleSignals handle signals.
 func (srv *Server) handleSignals() {
 	var sig os.Signal
-
-	signal.Notify(
-		srv.sigChan,
-		syscall.SIGHUP,
-		syscall.SIGTERM,
-	)
+	for sig, _ = range srv.signals {
+		signal.Notify(srv.sigChan, sig)
+	}
 
 	pid := syscall.Getpid()
 	for {
 		sig = <-srv.sigChan
-		switch sig {
-		case syscall.SIGHUP:
+		switch srv.signals[sig] {
+		case SignalRestart:
 			err := fork()
 			if err != nil {
 				log.Printf("[%d] Fork err: %s", pid, err)
 			}
 			srv.stop()
-		case syscall.SIGTERM:
+		case SignalShutdown:
 			if err := srv.wait(); err != nil {
 				log.Printf(
 					"[%d] Server(%s) has been shutdown, but some exsiting connctions reach error: %s.\n",
@@ -256,7 +285,7 @@ func (srv *Server) handleSignals() {
 			shutdown()
 			return
 		default:
-			log.Printf("[%d] Received %v: nothing i care about...\n", pid, sig)
+			log.Printf("[%d] Received %v.\n", pid, sig)
 		}
 	}
 }
@@ -280,14 +309,10 @@ func (srv *Server) ServeConn(conn net.Conn) (err error) {
 
 	err = srv.server.ServeConn(conn)
 	if err != nil {
-		log.Println("Serve conn error: %s\n", err)
+		srv.logger.Errorf("Serve conn error: %s\n", err)
 	}
 
 	return
-}
-
-func (srv *Server) Init(handler HandlerFunc) {
-	srv.init(handler)
 }
 
 // init initialize server.
@@ -461,4 +486,159 @@ func newCertListener(ln net.Listener, cert *tls.Certificate) net.Listener {
 		PreferServerCipherSuites: true,
 	}
 	return tls.NewListener(ln, tlsConfig)
+}
+
+// ServerConfig see fasthttp.Server for more details.
+type ServerConfig struct {
+	// Server name for sending in response headers.
+	//
+	// Default server name is used if left blank.
+	Name string `json:"name"`
+
+	// The maximum number of concurrent connections the server may serve.
+	//
+	// DefaultConcurrency is used if not set.
+	Concurrency int `json:"concurrency"`
+
+	// Whether to disable keep-alive connections.
+	//
+	// The server will close all the incoming connections after sending
+	// the first response to client if this option is set to true.
+	//
+	// By default keep-alive connections are enabled.
+	DisableKeepalive bool `json:"disable_keepalive"`
+
+	// Per-connection buffer size for requests' reading.
+	// This also limits the maximum header size.
+	//
+	// Increase this buffer if your clients send multi-KB RequestURIs
+	// and/or multi-KB headers (for example, BIG cookies).
+	//
+	// Default buffer size is used if not set.
+	ReadBufferSize int `json:"read_buffer_size"`
+
+	// Per-connection buffer size for responses' writing.
+	//
+	// Default buffer size is used if not set.
+	WriteBufferSize int `json:"write_buffer_size"`
+
+	// Maximum duration for reading the full request (including body).
+	//
+	// This also limits the maximum duration for idle keep-alive
+	// connections.
+	//
+	// By default request read timeout is unlimited.
+	ReadTimeout time.Duration `json:"read_timeout"`
+
+	// Maximum duration for writing the full response (including body).
+	//
+	// By default response write timeout is unlimited.
+	WriteTimeout time.Duration `json:"write_timeout"`
+
+	// Maximum number of concurrent client connections allowed per IP.
+	//
+	// By default unlimited number of concurrent connections
+	// may be established to the server from a single IP address.
+	MaxConnsPerIP int `json:"max_conns_per_ip"`
+
+	// Maximum number of requests served per connection.
+	//
+	// The server closes connection after the last request.
+	// 'Connection: close' header is added to the last response.
+	//
+	// By default unlimited number of requests may be served per connection.
+	MaxRequestsPerConn int `json:"max_requests_per_conn"`
+
+	// Maximum keep-alive connection lifetime.
+	//
+	// The server closes keep-alive connection after its' lifetime
+	// expiration.
+	//
+	// See also ReadTimeout for limiting the duration of idle keep-alive
+	// connections.
+	//
+	// By default keep-alive connection lifetime is unlimited.
+	MaxKeepaliveDuration time.Duration `json:"max_keepalive_duration"`
+
+	// Maximum request body size.
+	//
+	// The server rejects requests with bodies exceeding this limit.
+	//
+	// Request body size is limited by DefaultMaxRequestBodySize by default.
+	MaxRequestBodySize int `json:"max_request_body_size"`
+
+	// Aggressively reduces memory usage at the cost of higher CPU usage
+	// if set to true.
+	//
+	// Try enabling this option only if the server consumes too much memory
+	// serving mostly idle keep-alive connections. This may reduce memory
+	// usage by more than 50%.
+	//
+	// Aggressive memory usage reduction is disabled by default.
+	ReduceMemoryUsage bool `json:"reduce_memory_usage"`
+
+	// Rejects all non-GET requests if set to true.
+	//
+	// This option is useful as anti-DoS protection for servers
+	// accepting only GET requests. The request size is limited
+	// by ReadBufferSize if GetOnly is set.
+	//
+	// Server accepts all the requests by default.
+	GetOnly bool `json:"get_only"`
+
+	// Header names are passed as-is without normalization
+	// if this option is set.
+	//
+	// Disabled header names' normalization may be useful only for proxying
+	// incoming requests to other servers expecting case-sensitive
+	// header names. See https://github.com/valyala/fasthttp/issues/57
+	// for details.
+	//
+	// By default request and response header names are normalized, i.e.
+	// The first letter and the first letters following dashes
+	// are uppercased, while all the other letters are lowercased.
+	// Examples:
+	//
+	//     * HOST -> Host
+	//     * content-type -> Content-Type
+	//     * cONTENT-lenGTH -> Content-Length
+	DisableHeaderNamesNormalizing bool `json:"disable_header_names_normalizing"`
+}
+
+// LoadConfig load server configuration.
+func (srv *Server) LoadConfig(config *ServerConfig) {
+	if config.Name != "" {
+		srv.server.Name = config.Name
+	}
+	if config.Concurrency > 0 {
+		srv.server.Concurrency = config.Concurrency
+	}
+	if config.ReadBufferSize > 0 {
+		srv.server.ReadBufferSize = config.ReadBufferSize
+	}
+	if config.WriteBufferSize > 0 {
+		srv.server.WriteBufferSize = config.WriteBufferSize
+	}
+	if config.ReadTimeout > 0 {
+		srv.server.ReadTimeout = config.ReadTimeout
+	}
+	if config.WriteTimeout > 0 {
+		srv.server.WriteTimeout = config.WriteTimeout
+	}
+	if config.MaxConnsPerIP > 0 {
+		srv.server.MaxConnsPerIP = config.MaxConnsPerIP
+	}
+	if config.MaxRequestsPerConn > 0 {
+		srv.server.MaxRequestsPerConn = config.MaxRequestsPerConn
+	}
+	if config.MaxKeepaliveDuration > 0 {
+		srv.server.MaxKeepaliveDuration = config.MaxKeepaliveDuration
+	}
+	if config.MaxRequestBodySize > 0 {
+		srv.server.MaxRequestBodySize = config.MaxRequestBodySize
+	}
+	srv.server.DisableKeepalive = config.DisableKeepalive
+	srv.server.ReduceMemoryUsage = config.ReduceMemoryUsage
+	srv.server.GetOnly = config.GetOnly
+	srv.server.DisableHeaderNamesNormalizing = config.DisableHeaderNamesNormalizing
 }

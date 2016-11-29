@@ -5,31 +5,16 @@
 package middleware
 
 import (
-	"errors"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-gem/gem"
 	"github.com/valyala/fasthttp"
 )
 
 // JWT default configuration.
-var (
-	JWTAcquireToken = func(ctx *gem.Context) (token string, err error) {
-		if token, err = AcquireJWTTokenFromHeader(ctx, gem.HeaderAuthorization); err != nil {
-			token, err = AcquireJWTTokenFromForm(ctx, "_jwt")
-		}
-		return
-	}
-
-	JWTOnValid = func(ctx *gem.Context, token *jwt.Token, claims jwt.Claims) {
-		ctx.SetUserValue("jwt", token)
-		ctx.SetUserValue("jwt_claims", claims)
-	}
-
-	JWTOnInvalid = func(ctx *gem.Context, err error) {
-		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
-	}
+const (
+	JWTFormKey    = "_jwt"
+	JWTContextKey = "jwt_token"
+	JWTClaimsKey  = "jwt_claims"
 )
 
 // JWT JSON WEB TOKEN middleware.
@@ -37,27 +22,26 @@ type JWT struct {
 	// Skipper defines a function to skip middleware.
 	Skipper Skipper
 
-	// AcquireToken provides API to customize a function that
-	// get jwt token.
-	AcquireToken func(*gem.Context) (string, error)
-
-	// OnValid will be invoked if the token is valid.
-	// It is useful to store the token by ctx.SetUserValue()
-	OnValid func(*gem.Context, *jwt.Token, jwt.Claims)
-
-	// OnInvalid will be invoked if the token is invalid.
-	OnInvalid func(*gem.Context, error)
-
 	// See jwt.SigningMethod
 	SigningMethod jwt.SigningMethod
 
 	// See jwt.Keyfunc
 	KeyFunc jwt.Keyfunc
 
+	// FormKey be used to acquire token from query string
+	// or post form.
+	FormKey string
+
+	// ContextKey be used to ctx.SetUserValue(ContextKey,jwt.Token)
+	ContextKey string
+
 	// NewClaims returns a jwt.Claims instance,
 	// And then use jwt.ParseWithClaims to parse token and claims.
 	// If it is not set, use jwt.Parse instead.
 	NewClaims func() jwt.Claims
+
+	// ClaimsKey be used to ctx.SetUserValue(ClaimsKey, jwt.Claims)
+	ClaimsKey string
 }
 
 // NewJWT returns a JWT instance with the given
@@ -65,11 +49,11 @@ type JWT struct {
 func NewJWT(signingMethod jwt.SigningMethod, keyFunc jwt.Keyfunc) *JWT {
 	return &JWT{
 		Skipper:       defaultSkipper,
-		AcquireToken:  JWTAcquireToken,
-		OnValid:       JWTOnValid,
-		OnInvalid:     JWTOnInvalid,
 		SigningMethod: signingMethod,
 		KeyFunc:       keyFunc,
+		FormKey:       JWTFormKey,
+		ContextKey:    JWTContextKey,
+		ClaimsKey:     JWTClaimsKey,
 	}
 }
 
@@ -85,14 +69,18 @@ func (m *JWT) Handle(next gem.Handler) gem.Handler {
 			return
 		}
 
-		tokenStr, err := m.AcquireToken(ctx)
+		var tokenStr string
+		if tokenStr = AcquireJWTTokenFromHeader(ctx, gem.HeaderAuthorization); tokenStr == "" {
+			tokenStr = AcquireJWTTokenFromForm(ctx, m.FormKey)
+		}
 		// Returns Bad Request status code if the token is empty.
-		if err != nil || tokenStr == "" {
+		if tokenStr == "" {
 			ctx.SetStatusCode(fasthttp.StatusBadRequest)
 			ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusBadRequest))
 			return
 		}
 
+		var err error
 		var token *jwt.Token
 		var claims jwt.Claims
 		if m.NewClaims == nil {
@@ -106,21 +94,18 @@ func (m *JWT) Handle(next gem.Handler) gem.Handler {
 		}
 
 		if err != nil {
-			m.OnInvalid(ctx, err)
+			ctx.Logger().Infoln(err)
+			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+			ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
 			return
 		}
 
-		m.OnValid(ctx, token, claims)
+		ctx.SetUserValue(m.ContextKey, token)
+		ctx.SetUserValue(m.ClaimsKey, claims)
 
 		next.Handle(ctx)
 	})
 }
-
-// JWT Error
-var (
-	ErrEmptyJWTInHeader = errors.New("empty jwt in request header")
-	ErrEmptyJWTInForm   = errors.New("empty jwt in query string or post form")
-)
 
 var (
 	bearerLen = len(gem.HeaderBearer)
@@ -128,21 +113,21 @@ var (
 
 // AcquireJWTTokenFromHeader acquire jwt token from the request
 // header.
-func AcquireJWTTokenFromHeader(ctx *gem.Context, key string) (string, error) {
-	auth := ctx.ReqHeader(key)
+func AcquireJWTTokenFromHeader(ctx *gem.Context, key string) string {
+	auth := gem.Bytes2String(ctx.RequestCtx.Request.Header.Peek(key))
 	if len(auth) > bearerLen+1 && auth[:bearerLen] == gem.HeaderBearer {
-		return auth[bearerLen+1:], nil
+		return auth[bearerLen+1:]
 	}
 
-	return "", ErrEmptyJWTInHeader
+	return ""
 }
 
 // AcquireJWTTokenFromForm acquire jwt token from the query string
 // or post form.
-func AcquireJWTTokenFromForm(ctx *gem.Context, key string) (string, error) {
+func AcquireJWTTokenFromForm(ctx *gem.Context, key string) string {
 	token := ctx.RequestCtx.FormValue(key)
 	if len(token) == 0 {
-		return "", ErrEmptyJWTInForm
+		return ""
 	}
-	return string(token), nil
+	return string(token)
 }

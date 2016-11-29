@@ -43,18 +43,15 @@ import (
 )
 
 func main() {
-	router := gem.NewRouter()
-
-	router.GET("/", func(c *gem.Context) {
-		c.HTML(200, "Hello world.")
-	})
-
-	log.Fatal(gem.ListenAndServe(":8080", router.Handler))
+	log.Fatal(gem.ListenAndServe(":8080", func(c *gem.Context) {
+        c.HTML(200, "Hello world.")
+    }))
 }
 ```
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
- 
+
+
 
 ## Semantic Versioning
 
@@ -92,21 +89,29 @@ Just for figuring out the web framework's workflow, and try to design a simple a
 ## FAQ
 
 1. What should I pay attention to?
-    **At present**, Gem is incompatible with some APIs of fasthttp, the incompatible APIs following:
-    - fasthttp.TimeoutHandler can not works with Gem.
 
-2. What is the difference between of fasthttp and gem.
-    Gem built on top of fasthttp, and use `Server.ServeConn` to serve connections.
+    **At present**, Gem is incompatible with some APIs of fasthttp, the incompatible APIs following:
     
-    **Advantages**: Gem provides some useful built-in features, such as:
-        - High-performance router
-        - Leveled logger
-        - Various middlewares
-        - Sessions support
-        - Graceful shutdown and restart
+    - **fasthttp.TimeoutHandler**
+
+2. What is the difference between of fasthttp and gem?
+
+    **Gem built on top of fasthttp, and use `Server.ServeConn` to serve connections, it can not works without fasthttp**.
     
-    **Disadvantages**: at present, Gem dose not provide APIs to Serve the custom `Listener` like `fasthttp.Serve`,
-        but that will not be a problem, We will add support for this feature in the future.
+    **Advantages**: 
+    
+    Gem provides some useful built-in features, such as:
+    
+    - High-performance router
+    - Leveled logger
+    - Various middlewares
+    - Sessions support
+    - Graceful shutdown and restart
+    
+    **Disadvantages**: 
+    
+    at present, Gem dose not provide APIs to Serve the custom `Listener` like `fasthttp.Serve`,
+    but that will not be a problem, We will add support for this feature in the future.
 
 
 ## LICENSE

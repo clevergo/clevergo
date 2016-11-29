@@ -5,12 +5,10 @@
 package gem
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"reflect"
@@ -19,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
 
@@ -26,6 +25,9 @@ func TestRouter(t *testing.T) {
 	routed := false
 
 	router := NewRouter()
+	router.Handle("GET", "/panic", func(ctx *Context) {
+		panic("panic handler")
+	})
 	router.Handle("GET", "/user/:name", func(ctx *Context) {
 		routed = true
 		want := "gem"
@@ -35,27 +37,26 @@ func TestRouter(t *testing.T) {
 		ctx.Success("foo/bar", []byte("success"))
 	})
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	rw.r.WriteString("GET /user/gem?baz HTTP/1.1\r\n\r\n")
+	var err error
 
-	ch := make(chan error)
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+	test1 := tests.New(srv)
+	test1.Url = "/user/gem?baz"
+	test1.Expect().Status(fasthttp.StatusOK)
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
-
 	if !routed {
 		t.Fatal("routing failed")
+	}
+
+	// test default panic
+	test2 := tests.New(srv)
+	test2.Url = "/panic"
+	test2.Expect().Status(fasthttp.StatusInternalServerError)
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -86,121 +87,99 @@ func TestRouterAPI(t *testing.T) {
 		deleted = true
 	})
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("GET /GET HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Method = MethodGet
+	test1.Url = "/GET"
+	test1.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !get {
+			err = errors.New("routing GET failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if !get {
-		t.Error("routing GET failed")
-	}
-
-	rw.r.WriteString("HEAD /GET HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if !head {
-		t.Error("routing HEAD failed")
+		return
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("OPTIONS /GET HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test2 := tests.New(srv)
+	test2.Method = MethodHead
+	test2.Url = "/GET"
+	test2.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !head {
+			err = errors.New("routing HEAD failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if !options {
-		t.Error("routing OPTIONS failed")
+		return
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("POST /POST HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test3 := tests.New(srv)
+	test3.Method = MethodOptions
+	test3.Url = "/GET"
+	test3.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !options {
+			err = errors.New("routing OPTIONS failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if !post {
-		t.Error("routing POST failed")
+		return
+	})
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("PUT /PUT HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test4 := tests.New(srv)
+	test4.Method = MethodPost
+	test4.Url = "/POST"
+	test4.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !post {
+			err = errors.New("routing POST failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if !put {
-		t.Error("routing PUT failed")
+		return
+	})
+	if err = test4.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("PATCH /PATCH HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test5 := tests.New(srv)
+	test5.Method = MethodPut
+	test5.Url = "/PUT"
+	test5.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !put {
+			err = errors.New("routing PUT failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if !patch {
-		t.Error("routing PATCH failed")
+		return
+	})
+	if err = test5.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("DELETE /DELETE HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test6 := tests.New(srv)
+	test6.Method = MethodPatch
+	test6.Url = "/PATCH"
+	test6.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !patch {
+			err = errors.New("routing PATCH failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+		return
+	})
+	if err = test6.Run(); err != nil {
+		t.Error(err)
 	}
-	if !deleted {
-		t.Error("routing DELETE failed")
+
+	test7 := tests.New(srv)
+	test7.Method = MethodDelete
+	test7.Url = "/DELETE"
+	test7.Expect().Custom(func(_ fasthttp.Response) (err error) {
+		if !deleted {
+			err = errors.New("routing DELETE failed")
+		}
+		return
+	})
+	if err = test7.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -234,71 +213,47 @@ func TestRouterChaining(t *testing.T) {
 		ctx.SetStatusCode(fasthttp.StatusOK)
 	})
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("POST /foo HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Method = MethodPost
+	test1.Url = "/foo"
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(_ fasthttp.Response) (err error) {
+		if !fooHit {
+			err = errors.New("Regular routing failed with router chaining.")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusOK && fooHit) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
+		return
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("POST /bar HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test2 := tests.New(srv)
+	test2.Method = MethodPost
+	test2.Url = "/bar"
+	test2.Expect().Status(fasthttp.StatusOK).Custom(func(_ fasthttp.Response) (err error) {
+		if !barHit {
+			err = errors.New("Chained routing failed with router chaining.")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusOK && barHit) {
-		t.Errorf("Chained routing failed with router chaining.")
-		t.FailNow()
+		return
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("POST /qax HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test3 := tests.New(srv)
+	test3.Method = MethodPost
+	test3.Url = "/qax"
+	test3.Expect().Status(fasthttp.StatusNotFound).Custom(func(_ fasthttp.Response) (err error) {
+		if !barHit {
+			err = errors.New("NotFound behavior failed with router chaining.")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusNotFound) {
-		t.Errorf("NotFound behavior failed with router chaining.")
-		t.FailNow()
+		return
+	})
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -312,76 +267,43 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test not allowed
 	// * (server)
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("OPTIONS * HTTP/1.1\r\nHost:\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Method = MethodOptions
+	test1.Url = "*"
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) (err error) {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, OPTIONS" {
+			err = fmt.Errorf("unexpected Allow header value: %s", allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		return
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// path
-	rw.r.WriteString("OPTIONS /path HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test2 := tests.New(srv)
+	test2.Method = MethodOptions
+	test2.Url = "/path"
+	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) (err error) {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, OPTIONS" {
+			err = fmt.Errorf("unexpected Allow header value: %s", allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		return
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
-	rw.r.WriteString("OPTIONS /doesnotexist HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusNotFound) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
+	test3 := tests.New(srv)
+	test3.Method = MethodOptions
+	test3.Url = "/doesnotexist"
+	test3.Expect().Status(fasthttp.StatusNotFound)
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// add another method
@@ -389,49 +311,31 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test again
 	// * (server)
-	rw.r.WriteString("OPTIONS * HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test4 := tests.New(srv)
+	test4.Method = MethodOptions
+	test4.Url = "*"
+	test4.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) (err error) {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, GET, OPTIONS" && allow != "GET, POST, OPTIONS" {
+			err = fmt.Errorf("unexpected Allow header value: %s", allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, GET, OPTIONS" && allow != "GET, POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		return
+	})
+	if err = test4.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// path
-	rw.r.WriteString("OPTIONS /path HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test5 := tests.New(srv)
+	test5.Method = MethodOptions
+	test5.Url = "/path"
+	test5.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) (err error) {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, GET, OPTIONS" && allow != "GET, POST, OPTIONS" {
+			err = fmt.Errorf("unexpected Allow header value: %s", allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, GET, OPTIONS" && allow != "GET, POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		return
+	})
+	if err = test5.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// custom handler
@@ -442,53 +346,34 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test again
 	// * (server)
-	rw.r.WriteString("OPTIONS * HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test6 := tests.New(srv)
+	test6.Method = MethodOptions
+	test6.Url = "*"
+	test6.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, GET, OPTIONS" && allow != "GET, POST, OPTIONS" {
+			return fmt.Errorf("unexpected Allow header value: %s", allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, GET, OPTIONS" && allow != "GET, POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
-	if custom {
-		t.Error("custom handler called on *")
+		if custom {
+			return errors.New("custom handler called on *")
+		}
+		return nil
+	})
+	if err = test6.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// path
-	rw.r.WriteString("OPTIONS /path HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test7 := tests.New(srv)
+	test7.Method = MethodOptions
+	test7.Url = "/path"
+	test7.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) (err error) {
+		if !custom {
+			err = errors.New("custom handler not called")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusOK {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v",
-			resp.Header.StatusCode(), resp.Header.String())
-	}
-	if !custom {
-		t.Error("custom handler not called")
+		return
+	})
+	if err = test7.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -499,32 +384,20 @@ func TestRouterNotAllowed(t *testing.T) {
 	router.POST("/path", handlerFunc)
 
 	// Test not allowed
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Url = "/path"
+	test1.Expect().Status(fasthttp.StatusMethodNotAllowed).Custom(func(resp fasthttp.Response) (err error) {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, OPTIONS" {
+			err = errors.New("unexpected Allow header value: " + allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusMethodNotAllowed) {
-		t.Errorf("NotAllowed handling failed: Code=%d, Header=%v", resp.Header.StatusCode(), resp.Header)
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		return
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// add another method
@@ -532,25 +405,16 @@ func TestRouterNotAllowed(t *testing.T) {
 	router.OPTIONS("/path", handlerFunc) // must be ignored
 
 	// test again
-	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test2 := tests.New(srv)
+	test2.Url = "/path"
+	test2.Expect().Status(fasthttp.StatusMethodNotAllowed).Custom(func(resp fasthttp.Response) (err error) {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, DELETE, OPTIONS" && allow != "DELETE, POST, OPTIONS" {
+			err = errors.New("unexpected Allow header value: " + allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusMethodNotAllowed) {
-		t.Errorf("NotAllowed handling failed: Code=%d, Header=%v", resp.Header.StatusCode(), resp.Header)
-	} else if allow := string(resp.Header.Peek("Allow")); allow != "POST, DELETE, OPTIONS" && allow != "DELETE, POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		return
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
 	responseText := "custom method"
@@ -558,65 +422,47 @@ func TestRouterNotAllowed(t *testing.T) {
 		ctx.SetStatusCode(fasthttp.StatusTeapot)
 		ctx.Write([]byte(responseText))
 	}
-	rw.r.WriteString("GET /path HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+
+	test3 := tests.New(srv)
+	test3.Url = "/path"
+	test3.Expect().Status(fasthttp.StatusTeapot).Custom(func(resp fasthttp.Response) error {
+		if allow := string(resp.Header.Peek("Allow")); allow != "POST, DELETE, OPTIONS" && allow != "DELETE, POST, OPTIONS" {
+			return errors.New("unexpected Allow header value: " + allow)
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !bytes.Equal(resp.Body(), []byte(responseText)) {
-		t.Errorf("unexpected response got %q want %q", string(resp.Body()), responseText)
-	}
-	if resp.Header.StatusCode() != fasthttp.StatusTeapot {
-		t.Errorf("unexpected response code %d want %d", resp.Header.StatusCode(), fasthttp.StatusTeapot)
-	}
-	if allow := string(resp.Header.Peek("Allow")); allow != "POST, DELETE, OPTIONS" && allow != "DELETE, POST, OPTIONS" {
-		t.Error("unexpected Allow header value: " + allow)
+		if !bytes.Equal(resp.Body(), []byte(responseText)) {
+			return fmt.Errorf("unexpected response got %q want %q", resp.Body(), responseText)
+		}
+		return nil
+	})
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
 func TestConvert(t *testing.T) {
 	router := NewRouter()
 
+	respText := "Hello world"
+
 	fastHandler := func(ctx *fasthttp.RequestCtx) {
-		ctx.Write([]byte("Hello"))
+		ctx.SetBodyString(respText)
 	}
 
 	router.GET("/", Convert(fastHandler))
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) (err error) {
+		if !strings.EqualFold(respText, string(resp.Body())) {
+			err = fmt.Errorf("Expected response body %q, got %q", respText, resp.Body())
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !strings.EqualFold("Hello", string(resp.Body())) {
-		t.Errorf("Expected response body %q, got %q", "Hello", resp.Body())
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -643,31 +489,16 @@ func TestRouterNotFound(t *testing.T) {
 		{"/nope", 404},    // NotFound
 	}
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	ch := make(chan error)
+	var err error
+
 	for _, tr := range testRoutes {
-		rw.r.WriteString(fmt.Sprintf("GET %s HTTP/1.1\r\n\r\n", tr.route))
-		go func() {
-			ch <- s.ServeConn(rw)
-		}()
-		select {
-		case err := <-ch:
-			if err != nil {
-				t.Fatalf("return error %s", err)
-			}
-		case <-time.After(100 * time.Millisecond):
-			t.Fatalf("timeout")
-		}
-		if err := resp.Read(br); err != nil {
-			t.Fatalf("Unexpected error when reading response: %s", err)
-		}
-		if !(resp.Header.StatusCode() == tr.code) {
-			t.Errorf("NotFound handling route %s failed: Code=%d want=%d",
-				tr.route, resp.Header.StatusCode(), tr.code)
+		test := tests.New(srv)
+		test.Url = tr.route
+		test.Expect().Status(tr.code)
+		if err = test.Run(); err != nil {
+			t.Error(err)
 		}
 	}
 
@@ -677,68 +508,48 @@ func TestRouterNotFound(t *testing.T) {
 		ctx.SetStatusCode(404)
 		notFound = true
 	}
-	rw.r.WriteString("GET /nope HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Url = "/nope"
+	test1.Expect().Custom(func(resp fasthttp.Response) error {
+		if !(resp.Header.StatusCode() == 404 && notFound == true) {
+			return fmt.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", resp.Header.StatusCode(), string(resp.Header.Peek("Location")))
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == 404 && notFound == true) {
-		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", resp.Header.StatusCode(), string(resp.Header.Peek("Location")))
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// Test other method than GET (want 307 instead of 301)
 	router.PATCH("/path", handlerFunc)
-	rw.r.WriteString("PATCH /path/ HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test2 := tests.New(srv)
+	test2.Method = MethodPatch
+	test2.Url = "/path/"
+	test2.Expect().Custom(func(resp fasthttp.Response) error {
+		if !(resp.Header.StatusCode() == fasthttp.StatusTemporaryRedirect) {
+			return fmt.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", resp.Header.StatusCode(), string(resp.Header.Peek("Location")))
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == fasthttp.StatusTemporaryRedirect) {
-		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", resp.Header.StatusCode(), string(resp.Header.Peek("Location")))
+		return nil
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 
 	// Test special case where no node for the prefix "/" exists
-	s = New("", router.Handler)
 	router = NewRouter()
 	router.GET("/a", handlerFunc)
-	s.init(router.Handler)
-	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	srv = New("", router.Handler)
+
+	test3 := tests.New(srv)
+	test3.Url = "/"
+	test3.Expect().Custom(func(resp fasthttp.Response) error {
+		if !(resp.Header.StatusCode() == 404) {
+			return fmt.Errorf("NotFound handling route / failed: Code=%d", resp.Header.StatusCode())
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !(resp.Header.StatusCode() == 404) {
-		t.Errorf("NotFound handling route / failed: Code=%d", resp.Header.StatusCode())
+		return nil
+	})
+	if err = test3.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -760,26 +571,21 @@ func TestRouterPanicHandler(t *testing.T) {
 		}
 	}()
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString(string("PUT /user/gopher HTTP/1.1\r\n\r\n"))
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Method = "PUT"
+	test1.Url = "/user/gopher"
+	test1.Expect().Custom(func(_ fasthttp.Response) error {
+		if !panicHandled {
+			return fmt.Errorf("simulating failed")
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-
-	if !panicHandled {
-		t.Fatal("simulating failed")
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -851,37 +657,47 @@ func (m testMiddleware) Handle(next Handler) Handler {
 }
 
 func TestMiddleware(t *testing.T) {
+	m := testMiddleware{key: "Test-Middleware", val: "Test"}
+
 	router := NewRouter()
-	router.Use(testMiddleware{key: "Test-Middleware", val: "Test-Middleware"})
+	router.Use(m)
 
 	router.GET("/", func(ctx *Context) {
 		ctx.Write([]byte("Hello"))
 	})
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString("GET / HTTP/1.1\r\n\r\n")
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !strings.EqualFold(m.val, string(resp.Header.Peek(m.key))) {
+			return fmt.Errorf("Expected Test-Middleware value %q, got %q", m.val, resp.Header.Peek(m.key))
 		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout")
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if !strings.EqualFold("Test-Middleware", string(resp.Header.Peek("Test-Middleware"))) {
-		t.Errorf("Expected Test-Middleware value %q, got %q", "Test-Middleware", resp.Header.Peek("Test-Middleware"))
+
+	// register middleware through HandlerConfig
+	router2 := NewRouter()
+
+	router2.GET("/", func(ctx *Context) {
+		ctx.Write([]byte("Hello"))
+	}, HandlerConfig{Middlewares: []Middleware{m}})
+
+	srv = New("", router2.Handler)
+	test2 := tests.New(srv)
+	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !strings.EqualFold(m.val, string(resp.Header.Peek(m.key))) {
+			return fmt.Errorf("Expected Test-Middleware value %q, got %q", m.val, resp.Header.Peek(m.key))
+		}
+		return nil
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -907,34 +723,21 @@ func TestRouterServeFiles(t *testing.T) {
 
 	router.ServeFiles("/*filepath", os.TempDir())
 
-	s := New("", router.Handler)
+	srv := New("", router.Handler)
 
-	rw := &readWriter{}
-	ch := make(chan error)
+	var err error
 
-	rw.r.WriteString(string("GET /favicon.ico HTTP/1.1\r\n\r\n"))
-	go func() {
-		ch <- s.ServeConn(rw)
-	}()
-	select {
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("return error %s", err)
+	test1 := tests.New(srv)
+	test1.Url = "/favicon.ico"
+	test1.Timeout = 500 * time.Millisecond
+	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
+		if !bytes.Equal(resp.Body(), body) {
+			t.Fatalf("Unexpected body %q. Expected %q", resp.Body(), body)
 		}
-	case <-time.After(500 * time.Millisecond):
-		t.Fatalf("timeout")
-	}
-
-	br := bufio.NewReader(&rw.w)
-	var resp fasthttp.Response
-	if err := resp.Read(br); err != nil {
-		t.Fatalf("Unexpected error when reading response: %s", err)
-	}
-	if resp.Header.StatusCode() != 200 {
-		t.Fatalf("Unexpected status code %d. Expected %d", resp.Header.StatusCode(), 423)
-	}
-	if !bytes.Equal(resp.Body(), body) {
-		t.Fatalf("Unexpected body %q. Expected %q", resp.Body(), string(body))
+		return nil
+	})
+	if err = test1.Run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -1682,44 +1485,6 @@ func TestTreeInvalidNodeType(t *testing.T) {
 	if rs, ok := recv.(string); !ok || rs != panicMsg {
 		t.Fatalf("Expected panic '"+panicMsg+"', got '%v'", recv)
 	}
-}
-
-type readWriter struct {
-	net.Conn
-	r bytes.Buffer
-	w bytes.Buffer
-}
-
-var zeroTCPAddr = &net.TCPAddr{
-	IP: net.IPv4zero,
-}
-
-func (rw *readWriter) Close() error {
-	return nil
-}
-
-func (rw *readWriter) Read(b []byte) (int, error) {
-	return rw.r.Read(b)
-}
-
-func (rw *readWriter) Write(b []byte) (int, error) {
-	return rw.w.Write(b)
-}
-
-func (rw *readWriter) RemoteAddr() net.Addr {
-	return zeroTCPAddr
-}
-
-func (rw *readWriter) LocalAddr() net.Addr {
-	return zeroTCPAddr
-}
-
-func (rw *readWriter) SetReadDeadline(t time.Time) error {
-	return nil
-}
-
-func (rw *readWriter) SetWriteDeadline(t time.Time) error {
-	return nil
 }
 
 type handlerStruct struct {

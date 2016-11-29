@@ -16,13 +16,13 @@ var (
 )
 
 func TestBytes2String(t *testing.T) {
-	if strings.Compare(s, bytes2String(b)) != 0 {
-		t.Errorf(`unexpected: strings.Compare("%s", bytes2String([]byte("%s"))) got false want true.`, s, s)
+	if strings.Compare(s, Bytes2String(b)) != 0 {
+		t.Errorf(`unexpected: strings.Compare("%s", Bytes2String([]byte("%s"))) got false want true.`, s, s)
 	}
 }
 
 func TestString2Bytes(t *testing.T) {
-	if !bytes.Equal(b, string2Bytes(s)) {
-		t.Errorf(`unexpected: bytes.Equal([]byte("%s"), string2Bytes("%s")) got false want true.`, s, s)
+	if !bytes.Equal(b, String2Bytes(s)) {
+		t.Errorf(`unexpected: bytes.Equal([]byte("%s"), String2Bytes("%s")) got false want true.`, s, s)
 	}
 }

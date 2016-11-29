@@ -112,14 +112,3 @@ var (
 	MethodPutBytes     = []byte(MethodPut)
 	MethodTraceBytes   = []byte(MethodTrace)
 )
-
-// Byte units.
-const (
-	B = 1 << (10 * iota)
-	KB
-	MB
-	GB
-	TB
-	PB
-	EB
-)

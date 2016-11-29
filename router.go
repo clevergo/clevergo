@@ -5,6 +5,7 @@
 package gem
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 	"unicode"
@@ -29,10 +30,19 @@ var (
 
 	// handlePanic default handle of panic.
 	handlePanic = func(ctx *Context, v interface{}) {
-		_, file, line, ok := runtime.Caller(6)
-		if ok {
-			ctx.Logger().Printf("Received panic:\n\t%s: %d\n\t\t%+v.\n", file, line, v)
+		callers := make([]uintptr, 10)
+		runtime.Callers(0, callers)
+
+		var file string
+		var line int
+		msg := fmt.Sprintf("received panic: %+v\n", v)
+		for i := 0; i < len(callers); i++ {
+			file, line = runtime.FuncForPC(callers[i]).FileLine(callers[i])
+			msg += fmt.Sprintf("\t%s: %d\n", file, line)
 		}
+
+		ctx.Logger().Errorln(msg)
+
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		ctx.SetContentType(HeaderContentTypeText)
 		ctx.SetBodyString(fasthttp.StatusMessage(fasthttp.StatusInternalServerError))
@@ -69,16 +79,16 @@ func Convert(h fasthttp.RequestHandler) HandlerFunc {
 // Router is a http.Handler which can be used to dispatch requests to different
 // handler functions via configurable routes
 type Router struct {
-	middlewares []Middleware
+	middlewares            []Middleware
 
-	trees map[string]*node
+	trees                  map[string]*node
 
 	// Enables automatic redirection if the current route can't be matched but a
 	// handler for the path with (without) the trailing slash exists.
 	// For example if /foo/ is requested but a route only exists for /foo, the
 	// client is redirected to /foo with http status code 301 for GET requests
 	// and 307 for all other request methods.
-	RedirectTrailingSlash bool
+	RedirectTrailingSlash  bool
 
 	// If enabled, the router tries to fix the current request path, if no
 	// handle is registered for it.
@@ -89,7 +99,7 @@ type Router struct {
 	// all other request methods.
 	// For example /FOO and /..//Foo could be redirected to /foo.
 	// RedirectTrailingSlash is independent of this option.
-	RedirectFixedPath bool
+	RedirectFixedPath      bool
 
 	// If enabled, the router checks if another method is allowed for the
 	// current route, if the current request can not be routed.
@@ -101,25 +111,25 @@ type Router struct {
 
 	// If enabled, the router automatically replies to OPTIONS requests.
 	// Custom OPTIONS handlers take priority over automatic replies.
-	HandleOPTIONS bool
+	HandleOPTIONS          bool
 
 	// Configurable http.Handler which is called when no matching route is
 	// found. If it is not set, http.NotFound is used.
-	NotFound HandlerFunc
+	NotFound               HandlerFunc
 
 	// Configurable http.Handler which is called when a request
 	// cannot be routed and HandleMethodNotAllowed is true.
 	// If it is not set, http.Error with http.StatusMethodNotAllowed is used.
 	// The "Allow" header with allowed request methods is set before the handler
 	// is called.
-	MethodNotAllowed HandlerFunc
+	MethodNotAllowed       HandlerFunc
 
 	// Function to handle panics recovered from http handlers.
 	// It should be used to generate a error page and return the http error code
 	// 500 (Internal Server Error).
 	// The handler can be used to keep your server from crashing because of
 	// unrecovered panics.
-	PanicHandler func(*Context, interface{})
+	PanicHandler           func(*Context, interface{})
 }
 
 // NewRouter returns a new initialized Router.
@@ -237,10 +247,10 @@ func (r *Router) Handle(method, path string, handle HandlerFunc, configs ...Hand
 // Internally a http.FileServer is used, therefore http.NotFound is used instead
 // of the Router's NotFound handler.
 func (r *Router) ServeFiles(path string, rootPath string, configs ...HandlerConfig) {
-	if len(path) < 10 || path[len(path)-10:] != "/*filepath" {
+	if len(path) < 10 || path[len(path) - 10:] != "/*filepath" {
 		panic("path must end with /*filepath in path '" + path + "'")
 	}
-	prefix := path[:len(path)-10]
+	prefix := path[:len(path) - 10]
 
 	fileHandler := fasthttp.FSHandler(rootPath, strings.Count(prefix, "/"))
 
@@ -315,15 +325,15 @@ func (r *Router) Handler(ctx *Context) {
 		defer r.recv(ctx)
 	}
 
-	path := bytes2String(ctx.RequestCtx.URI().Path())
-	method := bytes2String(ctx.RequestCtx.Request.Header.Method())
+	path := Bytes2String(ctx.RequestCtx.URI().Path())
+	method := Bytes2String(ctx.RequestCtx.Request.Header.Method())
 	if root := r.trees[method]; root != nil {
 		if f, tsr := root.getValue(path, ctx); f != nil {
 			f(ctx)
 			return
-		} else if method != "CONNECT" && path != "/" {
+		} else if method != MethodConnect && path != "/" {
 			code := fasthttp.StatusMovedPermanently // Permanent redirect, request with GET method
-			if method != "GET" {
+			if method != MethodGet {
 				// Temporary redirect, request with same method
 				// As of Go 1.3, Go does not support status code 308.
 				code = fasthttp.StatusTemporaryRedirect
@@ -331,8 +341,8 @@ func (r *Router) Handler(ctx *Context) {
 
 			if tsr && r.RedirectTrailingSlash {
 				var uri string
-				if len(path) > 1 && path[len(path)-1] == '/' {
-					uri = path[:len(path)-1]
+				if len(path) > 1 && path[len(path) - 1] == '/' {
+					uri = path[:len(path) - 1]
 				} else {
 					uri = path + "/"
 				}
@@ -410,11 +420,11 @@ func CleanPath(p string) string {
 
 	if p[0] != '/' {
 		r = 0
-		buf = make([]byte, n+1)
+		buf = make([]byte, n + 1)
 		buf[0] = '/'
 	}
 
-	trailing := n > 2 && p[n-1] == '/'
+	trailing := n > 2 && p[n - 1] == '/'
 
 	// A bit more clunky without a 'lazybuf' like the path package, but the loop
 	// gets completely inlined (bufApp). So in contrast to the path package this
@@ -426,15 +436,15 @@ func CleanPath(p string) string {
 			// empty path element, trailing slash is added after the end
 			r++
 
-		case p[r] == '.' && r+1 == n:
+		case p[r] == '.' && r + 1 == n:
 			trailing = true
 			r++
 
-		case p[r] == '.' && p[r+1] == '/':
+		case p[r] == '.' && p[r + 1] == '/':
 			// . element
 			r++
 
-		case p[r] == '.' && p[r+1] == '.' && (r+2 == n || p[r+2] == '/'):
+		case p[r] == '.' && p[r + 1] == '.' && (r + 2 == n || p[r + 2] == '/'):
 			// .. element: remove to last /
 			r += 2
 
@@ -543,10 +553,10 @@ func (n *node) incrementChildPrio(pos int) int {
 
 	// adjust position (move to front)
 	newPos := pos
-	for newPos > 0 && n.children[newPos-1].priority < prio {
+	for newPos > 0 && n.children[newPos - 1].priority < prio {
 		// swap node positions
-		tmpN := n.children[newPos-1]
-		n.children[newPos-1] = n.children[newPos]
+		tmpN := n.children[newPos - 1]
+		n.children[newPos - 1] = n.children[newPos]
 		n.children[newPos] = tmpN
 
 		newPos--
@@ -555,8 +565,8 @@ func (n *node) incrementChildPrio(pos int) int {
 	// build new index char string
 	if newPos != pos {
 		n.indices = n.indices[:newPos] + // unchanged prefix, might be empty
-			n.indices[pos:pos+1] + // the index char we move
-			n.indices[newPos:pos] + n.indices[pos+1:] // rest without char at 'pos'
+			n.indices[pos:pos + 1] + // the index char we move
+			n.indices[newPos:pos] + n.indices[pos + 1:] // rest without char at 'pos'
 	}
 
 	return newPos
@@ -571,7 +581,7 @@ func (n *node) addRoute(path string, handle HandlerFunc) {
 
 	// non-empty tree
 	if len(n.path) > 0 || len(n.children) > 0 {
-	walk:
+		walk:
 		for {
 			// Update maxParams of the current node
 			if numParams > n.maxParams {
@@ -720,7 +730,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 		}
 
 		// check if the wildcard has a name
-		if end-i < 2 {
+		if end - i < 2 {
 			panic("wildcards must be named with a non-empty name in path '" + fullPath + "'")
 		}
 
@@ -762,7 +772,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 				panic("catch-all routes are only allowed at the end of the path in path '" + fullPath + "'")
 			}
 
-			if len(n.path) > 0 && n.path[len(n.path)-1] == '/' {
+			if len(n.path) > 0 && n.path[len(n.path) - 1] == '/' {
 				panic("catch-all conflicts with existing handle for the path segment root in path '" + fullPath + "'")
 			}
 
@@ -810,7 +820,7 @@ func (n *node) insertChild(numParams uint8, path, fullPath string, handle Handle
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
 func (n *node) getValue(path string, ctx *Context) (handle HandlerFunc, tsr bool) {
-walk: // outer loop for walking the tree
+	walk: // outer loop for walking the tree
 	for {
 		if len(path) > len(n.path) {
 			if path[:len(n.path)] == n.path {
@@ -855,7 +865,7 @@ walk: // outer loop for walking the tree
 						}
 
 						// ... but we can't
-						tsr = (len(path) == end+1)
+						tsr = (len(path) == end + 1)
 						return
 					}
 
@@ -909,8 +919,8 @@ walk: // outer loop for walking the tree
 		// Nothing found. We can recommend to redirect to the same URL with an
 		// extra trailing slash if a leaf exists for that path
 		tsr = (path == "/") ||
-			(len(n.path) == len(path)+1 && n.path[len(path)] == '/' &&
-				path == n.path[:len(n.path)-1] && n.handle != nil)
+			(len(n.path) == len(path) + 1 && n.path[len(path)] == '/' &&
+				path == n.path[:len(n.path) - 1] && n.handle != nil)
 		return
 	}
 }
@@ -923,8 +933,8 @@ func (n *node) findCaseInsensitivePath(path string, fixTrailingSlash bool) (ciPa
 	return n.findCaseInsensitivePathRec(
 		path,
 		strings.ToLower(path),
-		make([]byte, 0, len(path)+1), // preallocate enough memory for new path
-		[4]byte{},                    // empty rune buffer
+		make([]byte, 0, len(path) + 1), // preallocate enough memory for new path
+		[4]byte{}, // empty rune buffer
 		fixTrailingSlash,
 	)
 }
@@ -949,7 +959,7 @@ func shiftNRuneBytes(rb [4]byte, n int) [4]byte {
 func (n *node) findCaseInsensitivePathRec(path, loPath string, ciPath []byte, rb [4]byte, fixTrailingSlash bool) ([]byte, bool) {
 	loNPath := strings.ToLower(n.path)
 
-walk: // outer loop for walking the tree
+	walk: // outer loop for walking the tree
 	for len(loPath) >= len(loNPath) && (len(loNPath) == 0 || loPath[1:len(loNPath)] == loNPath[1:]) {
 		// add common path to result
 		ciPath = append(ciPath, n.path...)
@@ -1057,7 +1067,7 @@ walk: // outer loop for walking the tree
 					}
 
 					// ... but we can't
-					if fixTrailingSlash && len(path) == k+1 {
+					if fixTrailingSlash && len(path) == k + 1 {
 						return ciPath, true
 					}
 					return ciPath, false
@@ -1112,7 +1122,7 @@ walk: // outer loop for walking the tree
 		if path == "/" {
 			return ciPath, true
 		}
-		if len(loPath)+1 == len(loNPath) && loNPath[len(loPath)] == '/' &&
+		if len(loPath) + 1 == len(loNPath) && loNPath[len(loPath)] == '/' &&
 			loPath[1:] == loNPath[1:len(loPath)] && n.handle != nil {
 			return append(ciPath, n.path...), true
 		}

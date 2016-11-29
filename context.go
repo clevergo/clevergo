@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"strconv"
 	"sync"
 
 	"github.com/go-gem/sessions"
@@ -39,10 +40,7 @@ func (ctx *Context) SessionsStore() sessions.Store {
 	return ctx.server.sessionsStore
 }
 
-// newContext returns a Context instance.
-//
-// It will try to get Context instance from contextPool,
-// returns a new Context instance when failure.
+// acquireContext returns a Context instance.
 func acquireContext(srv *Server, reqCtx *fasthttp.RequestCtx) *Context {
 	ctx := contextPool.Get().(*Context)
 	ctx.RequestCtx = reqCtx
@@ -58,31 +56,31 @@ func releaseContext(ctx *Context) {
 	contextPool.Put(ctx)
 }
 
-// MethodString returns HTTP request method.
-func (ctx *Context) MethodString() string {
-	return bytes2String(ctx.RequestCtx.Request.Header.Method())
+// Param returns a string value from router params
+// by the given key.
+func (ctx *Context) Param(key string) string {
+	v, ok := ctx.UserValue(key).(string)
+	if ok {
+		return v
+	}
+
+	return ""
 }
 
-// HostString returns requested host.
-func (ctx *Context) HostString() string {
-	return bytes2String(ctx.RequestCtx.URI().Host())
-}
+// ParamInt returns an integer value from router params
+// by the given key.
+func (ctx *Context) ParamInt(key string) int {
+	if v, err := strconv.Atoi(ctx.Param(key)); err == nil {
+		return v
+	}
 
-// PathString returns URI path.
-func (ctx *Context) PathString() string {
-	return bytes2String(ctx.RequestCtx.Request.URI().Path())
+	return 0
 }
 
 // IsAjax returns bool to indicate whether the current request
 // is an AJAX (XMLHttpRequest) request.
 func (ctx *Context) IsAjax() bool {
 	return bytes.Equal(ctx.RequestCtx.Request.Header.Peek(HeaderXRequestedWith), HeaderXMLHttpRequestBytes)
-}
-
-// IsOptions returns bool to indicate whether the current request
-// is an Options request.
-func (ctx *Context) IsOptions() bool {
-	return bytes.Equal(ctx.RequestCtx.Request.Header.Method(), MethodPostBytes)
 }
 
 // HTML responses HTML data and custom status code to client.
@@ -102,7 +100,7 @@ func (ctx *Context) JSON(code int, v interface{}) {
 		return
 	}
 	ctx.RequestCtx.Response.Header.SetContentType(HeaderContentTypeJSON)
-	ctx.Response.SetBody(data)
+	ctx.RequestCtx.Response.SetBody(data)
 }
 
 // JSONP responses JSONP data and custom status code to client.
@@ -117,13 +115,13 @@ func (ctx *Context) JSONP(code int, v interface{}, callback []byte) {
 	callback = append(callback, "("...)
 	callback = append(callback, data...)
 	callback = append(callback, ")"...)
-	ctx.Response.SetBody(callback)
+	ctx.RequestCtx.Response.SetBody(callback)
 }
 
 // XML responses XML data and custom status code to client.
 func (ctx *Context) XML(code int, v interface{}, headers ...string) {
 	ctx.RequestCtx.Response.Header.SetStatusCode(code)
-	xmlBytes, err := xml.MarshalIndent(v, "", `   `)
+	xmlBytes, err := xml.Marshal(v)
 	if err != nil {
 		ctx.Logger().Errorf("XML error: %s\n", err)
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -140,17 +138,5 @@ func (ctx *Context) XML(code int, v interface{}, headers ...string) {
 	bytes = append(bytes, xmlBytes...)
 
 	ctx.RequestCtx.Response.Header.SetContentType(HeaderContentTypeXML)
-	ctx.Response.SetBody(bytes)
-}
-
-// ReqHeader returns request header value
-// by the given key.
-func (ctx *Context) ReqHeader(key string) string {
-	return bytes2String(ctx.RequestCtx.Request.Header.Peek(key))
-}
-
-// RespHeader returns response header value
-// by the given key.
-func (ctx *Context) RespHeader(key string) string {
-	return bytes2String(ctx.RequestCtx.Response.Header.Peek(key))
+	ctx.RequestCtx.Response.SetBody(bytes)
 }
