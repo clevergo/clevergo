@@ -28,10 +28,15 @@ go get github.com/go-gem/gem
 
 ## Performance
 
-Waiting for rerunning the benchmark, see [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) for more information.
+![Gem benchmark](benchmark.png)
+
+I have sent a pull request, waiting for merging and rerunning the benchmark, 
+see [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) for more information.
 
 
 ## Example
+
+##### Quick Start
 
 ```
 package main
@@ -51,6 +56,7 @@ func main() {
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
 
+##### Router
 
 
 ## Semantic Versioning

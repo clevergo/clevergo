@@ -35,11 +35,11 @@ func TestBasicAuth(t *testing.T) {
 		ctx.HTML(fasthttp.StatusOK, fasthttp.StatusMessage(fasthttp.StatusOK))
 	})
 
+	srv := gem.New("", router.Handler())
+
 	if m.Skipper == nil {
 		t.Error(errSkipperNil)
 	}
-
-	srv := gem.New("", router.Handler)
 
 	var err error
 

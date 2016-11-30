@@ -26,11 +26,11 @@ func TestBodyLimit(t *testing.T) {
 		ctx.HTML(fasthttp.StatusOK, "OK")
 	})
 
+	srv := gem.New("", router.Handler())
+
 	if m.Skipper == nil {
 		t.Error(errSkipperNil)
 	}
-
-	srv := gem.New("", router.Handler)
 
 	var err error
 

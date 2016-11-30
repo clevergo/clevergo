@@ -5,6 +5,7 @@
 package middleware
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 
@@ -55,8 +56,7 @@ func NewCORS() *CORS {
 	}
 }
 
-// Handle implements Middleware's Handle function.
-func (m *CORS) Handle(next gem.Handler) gem.Handler {
+func (m *CORS) init() {
 	if m.Skipper == nil {
 		m.Skipper = defaultSkipper
 	}
@@ -66,10 +66,15 @@ func (m *CORS) Handle(next gem.Handler) gem.Handler {
 	if len(m.AllowMethods) == 0 {
 		m.AllowMethods = CORSAllowMethods
 	}
+}
 
-	allowMethods := strings.Join(m.AllowMethods, ",")
-	allowHeaders := strings.Join(m.AllowHeaders, ",")
-	exposeHeaders := strings.Join(m.ExposeHeaders, ",")
+// Handle implements Middleware's Handle function.
+func (m *CORS) Handle(next gem.Handler) gem.Handler {
+	m.init()
+
+	allowMethods := strings.Join(m.AllowMethods, ", ")
+	allowHeaders := strings.Join(m.AllowHeaders, ", ")
+	exposeHeaders := strings.Join(m.ExposeHeaders, ", ")
 	maxAge := strconv.Itoa(m.MaxAge)
 
 	return gem.HandlerFunc(func(ctx *gem.Context) {
@@ -90,9 +95,10 @@ func (m *CORS) Handle(next gem.Handler) gem.Handler {
 			}
 		}
 
+		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderOrigin)
+
 		// Simple request
-		if !IsCORSSimpleRequest(ctx) {
-			ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderOrigin)
+		if !bytes.Equal(gem.MethodOptionsBytes, ctx.RequestCtx.Request.Header.Method()) {
 			if origin == "" || allowedOrigin == "" {
 				next.Handle(ctx)
 				return
@@ -109,7 +115,6 @@ func (m *CORS) Handle(next gem.Handler) gem.Handler {
 		}
 
 		// Preflight request
-		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderOrigin)
 		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderAccessControlRequestMethod)
 		ctx.RequestCtx.Response.Header.Add(gem.HeaderVary, gem.HeaderAccessControlRequestHeaders)
 		if origin == "" || allowedOrigin == "" {
@@ -123,11 +128,6 @@ func (m *CORS) Handle(next gem.Handler) gem.Handler {
 		}
 		if allowHeaders != "" {
 			ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowHeaders, allowHeaders)
-		} else {
-			h := ctx.RequestCtx.Response.Header.Peek(gem.HeaderAccessControlRequestHeaders)
-			if len(h) > 0 {
-				ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlAllowHeaders, string(h))
-			}
 		}
 		if m.MaxAge > 0 {
 			ctx.RequestCtx.Response.Header.Set(gem.HeaderAccessControlMaxAge, maxAge)
@@ -135,33 +135,4 @@ func (m *CORS) Handle(next gem.Handler) gem.Handler {
 
 		ctx.Response.ResetBody()
 	})
-}
-
-const (
-	contentTypeText          = "text/plain"
-	contentTypeMultipartForm = "multipart/form-data"
-	contentTypeForm          = "application/x-www-form-urlencoded"
-)
-
-// IsCORSSimpleRequest returns bool to indicate whether
-// the current request is a simple request.
-func IsCORSSimpleRequest(ctx *gem.Context) bool {
-	// Simple request method should be HEAD, GET or POST.
-	if !ctx.IsHead() && !ctx.IsGet() && !ctx.IsPost() {
-		return false
-	}
-
-	// Content-Type should be one of the following:
-	// 	application/x-www-form-urlencoded
-	// 	multipart/form-data
-	// 	text/plain
-	ct := gem.Bytes2String(ctx.RequestCtx.Request.Header.ContentType())
-
-	if !strings.Contains(ct, contentTypeText) &&
-		!strings.Contains(ct, contentTypeMultipartForm) &&
-		!strings.Contains(ct, contentTypeForm) {
-		return false
-	}
-
-	return true
 }

@@ -22,7 +22,7 @@ func TestCompress(t *testing.T) {
 		ctx.HTML(fasthttp.StatusOK, fasthttp.StatusMessage(fasthttp.StatusOK))
 	})
 
-	srv := gem.New("", router.Handler)
+	srv := gem.New("", router.Handler())
 
 	var err error
 

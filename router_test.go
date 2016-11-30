@@ -37,7 +37,7 @@ func TestRouter(t *testing.T) {
 		ctx.Success("foo/bar", []byte("success"))
 	})
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -87,7 +87,7 @@ func TestRouterAPI(t *testing.T) {
 		deleted = true
 	})
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -198,7 +198,7 @@ func TestRouterChaining(t *testing.T) {
 
 	router2 := NewRouter()
 	router.NotFound = func(ctx *Context) {
-		router2.Handler(ctx)
+		router2.Handler().Handle(ctx)
 	}
 
 	fooHit := false
@@ -213,7 +213,7 @@ func TestRouterChaining(t *testing.T) {
 		ctx.SetStatusCode(fasthttp.StatusOK)
 	})
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -267,7 +267,7 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// test not allowed
 	// * (server)
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -384,7 +384,7 @@ func TestRouterNotAllowed(t *testing.T) {
 	router.POST("/path", handlerFunc)
 
 	// Test not allowed
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -450,7 +450,7 @@ func TestConvert(t *testing.T) {
 
 	router.GET("/", Convert(fastHandler))
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -489,7 +489,7 @@ func TestRouterNotFound(t *testing.T) {
 		{"/nope", 404},    // NotFound
 	}
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -538,7 +538,7 @@ func TestRouterNotFound(t *testing.T) {
 	// Test special case where no node for the prefix "/" exists
 	router = NewRouter()
 	router.GET("/a", handlerFunc)
-	srv = New("", router.Handler)
+	srv = New("", router.Handler())
 
 	test3 := tests.New(srv)
 	test3.Url = "/"
@@ -571,7 +571,7 @@ func TestRouterPanicHandler(t *testing.T) {
 		}
 	}()
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -666,7 +666,7 @@ func TestMiddleware(t *testing.T) {
 		ctx.Write([]byte("Hello"))
 	})
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 
@@ -688,7 +688,7 @@ func TestMiddleware(t *testing.T) {
 		ctx.Write([]byte("Hello"))
 	}, HandlerConfig{Middlewares: []Middleware{m}})
 
-	srv = New("", router2.Handler)
+	srv = New("", router2.Handler())
 	test2 := tests.New(srv)
 	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
 		if !strings.EqualFold(m.val, string(resp.Header.Peek(m.key))) {
@@ -723,7 +723,7 @@ func TestRouterServeFiles(t *testing.T) {
 
 	router.ServeFiles("/*filepath", os.TempDir())
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var err error
 

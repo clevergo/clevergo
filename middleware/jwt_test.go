@@ -44,11 +44,11 @@ func TestJWT(t *testing.T) {
 	router.GET("/", jwtHandler)
 	router.POST("/", jwtHandler)
 
+	srv := gem.New("", router.Handler())
+
 	if m.Skipper == nil {
 		t.Error(errSkipperNil)
 	}
-
-	srv := gem.New("", router.Handler)
 
 	// Empty jwt token.
 	test1 := tests.New(srv)

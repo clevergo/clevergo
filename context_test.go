@@ -66,7 +66,7 @@ func TestContext(t *testing.T) {
 		ctx.XML(fasthttp.StatusOK, invalidValue, xml.Header)
 	})
 
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	// HTML
 	test1 := tests.New(srv)
@@ -194,7 +194,7 @@ func TestContext(t *testing.T) {
 
 func TestContext_Param(t *testing.T) {
 	router := NewRouter()
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	router.GET("/user/:name", func(ctx *Context) {
 		ctx.HTML(fasthttp.StatusOK, ctx.Param("name"))
@@ -239,7 +239,7 @@ func TestContext_Param(t *testing.T) {
 
 func TestContext_ParamInt(t *testing.T) {
 	router := NewRouter()
-	srv := New("", router.Handler)
+	srv := New("", router.Handler())
 
 	var page int
 

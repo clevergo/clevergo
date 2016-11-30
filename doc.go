@@ -25,13 +25,9 @@ Run the following code, and then navigate to http://127.0.0.1:8080.
 	)
 
 	func main() {
-		router := gem.NewRouter()
-
-		router.GET("/", func(c *gem.Context) {
-			c.HTML(200, "Hello world.")
-		})
-
-		log.Fatal(gem.ListenAndServe(":8080", router.Handler))
+		log.Fatal(gem.ListenAndServe(":8080", func(c *gem.Context) {
+        		c.HTML(200, "Hello world.")
+    		}))
 	}
 
 
@@ -43,7 +39,7 @@ Server
 
 2. Create Server:
 
-	server := gem.New(":8080", router.Handler)
+	server := gem.New(":8080", router.Handler())
 
 3. Launch the server:
 

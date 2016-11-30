@@ -99,7 +99,7 @@ func TestServer_SetWaitTimeout(t *testing.T) {
 	srv.SetWaitTimeout(timeout)
 
 	if srv.waitTimeout != timeout {
-		t.Error(`expected waitTimeout: %v, got %v`, timeout, srv.waitTimeout)
+		t.Errorf(`expected waitTimeout: %v, got %v`, timeout, srv.waitTimeout)
 	}
 }
 
