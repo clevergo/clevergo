@@ -2,7 +2,7 @@
 
 Gem, a simple and fast web framework written in Go(golang), required `go1.8` or above.
 
-The current version is `2.0.0.alpha`, it locate at branch `master`, the old version is located at `v1`(deprecated), see [changes](#changes). 
+The current version is `2.0.0-alpha`, it locate at branch `master`, the old version is located at `v1`(deprecated), see [changes](#changes). 
 The APIs is currently unstable until the stable version `2.0.0` being released.
 
 
