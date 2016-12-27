@@ -64,7 +64,7 @@ type Router struct {
 	PanicHandler func(*Context, interface{})
 }
 
-// New returns a new initialized Router.
+// NewRouter returns a new initialized Router.
 // Path auto-correction, including trailing slashes, is enabled by default.
 func NewRouter() *Router {
 	return &Router{
@@ -75,6 +75,7 @@ func NewRouter() *Router {
 	}
 }
 
+// Use register middleware.
 func (r *Router) Use(middleware Middleware) {
 	r.middlewares = append(r.middlewares, middleware)
 }
@@ -233,6 +234,7 @@ func (r *Router) allowed(path, reqMethod string, ctx *Context) (allow string) {
 	return
 }
 
+// Handler returns a Handler that wrapped by middlewarers.
 func (r *Router) Handler() Handler {
 	var handler Handler = HandlerFunc(r.handle)
 	for i := len(r.middlewares) - 1; i >= 0; i-- {
