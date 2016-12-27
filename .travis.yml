@@ -5,6 +5,7 @@ go:
 
 before_install:
   - go get github.com/go-gem/log
+  - go get github.com/mattn/goveralls
 
 script:
   - $HOME/gopath/bin/goveralls -service=travis-ci

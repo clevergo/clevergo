@@ -1,6 +1,6 @@
 # Gem Web Framework [![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem) [![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem) [![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem) [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master) [![Join the chat at https://gitter.im/go-gem/gem](https://badges.gitter.im/go-gem/gem.svg)](https://gitter.im/go-gem/gem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Gem, a simple and fast web framework written in Go(golang).
+Gem, a simple and fast web framework written in Go(golang), required `go1.8` or above.
 
 The current version is `2.0.0.alpha`, it locate at branch `master`, the old version is located at `v1`(deprecated), see [changes](#changes). 
 The APIs is currently unstable until the stable version `2.0.0` being released.
