@@ -280,3 +280,13 @@ func TestContext_Push(t *testing.T) {
 		t.Errorf("expected push error: %q, got %q", err2, err)
 	}
 }
+
+func TestContext_SetServer(t *testing.T) {
+	srv := New("")
+	ctx := &Context{}
+	ctx.SetServer(srv)
+
+	if ctx.server != srv {
+		t.Error("failed to set server")
+	}
+}
