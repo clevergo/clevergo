@@ -97,6 +97,11 @@ func (ctx *Context) Logger() Logger {
 	return ctx.server.logger
 }
 
+// SetServer for testing, do not use it in other places.
+func (ctx *Context) SetServer(server *Server) {
+	ctx.server = server
+}
+
 // Redirect replies to the request with a redirect to url,
 // which may be a path relative to the request path.
 func (ctx *Context) Redirect(url string, code int) {
