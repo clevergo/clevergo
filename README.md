@@ -2,24 +2,223 @@
 
 Gem, a simple and fast web framework written in Go(golang), required `go1.8` or above.
 
-The current version is `2.0.0-alpha`, it locate at branch `master`, the old version is located at `v1`(deprecated), see [changes](#changes). 
-The APIs is currently unstable until the stable version `2.0.0` being released.
-
-
-## Install
-
-```
-go get github.com/go-gem/gem
-```
+The current version is `2.0.0-beta`, the old version `v1` is deprecated, see [changes](#changes). 
+The APIs is currently unstable until the stable version `2.0.0` and `go1.8` being released.
 
 
 ## Features
 
-- High performance
-- Friendly to REST API
-- HTTP/2 support
-- Leveled logging
-- Middlewares
+- **High performance**
+
+- Friendly to **REST API**
+
+- **Full test of all APIs** [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master)
+
+- Pretty and fast router - the router is custom version of [httprouter](https://github.com/julienschmidt/httprouter)
+
+- **HTTP/2 support** - support HTTP/2 server push(supported since `go1.8`)
+- **Leveled logging** - included four levels `debug`, `info`, `error` and `fatal`, there are many third-party implements the Logger: 
+    - [**logrus**](https://github.com/Sirupsen/logrus) - Structured, pluggable logging for Go
+    - [**go-logging**](https://github.com/op/go-logging) - Golang logging library
+    - [gem-log](https://github.com/go-gem/log) - default logger, maintained by Gem Authors
+    
+- [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
+
+- [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
+
+- [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
+
+- [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
+
+- **Frozen APIs** since the stable version `2.0.0` was released
+
+
+## Getting Started
+
+#### Install
+ 
+```
+$ go get -u github.com/go-gem/gem
+```
+
+#### Quick Start
+
+```
+package main
+
+import (
+    "log"
+
+    "github.com/go-gem/gem"
+)
+
+func index(ctx *gem.Context) {
+    ctx.HTML(200, "hello world")
+}
+
+func main() {
+    // Create server.
+    srv := gem.New(":8080")
+    
+    // Create router.
+    router := gem.NewRouter()
+    // Register handler
+    router.GET("/", index)
+    
+    // Start server.
+    log.Println(srv.ListenAndServe(router.Handler()))
+}
+```
+
+#### Logger
+
+AFAIK, the following leveled logging package is compatible with Gem web framework:
+
+- [**logrus**](https://github.com/Sirupsen/logrus) - Structured, pluggable logging for Go
+- [**go-logging**](https://github.com/op/go-logging) - Golang logging library
+- [gem-log](https://github.com/go-gem/log) - default logger, maintained by Gem Authors
+
+[Logger](https://godoc.org/github.com/go-gem/gem#Logger) includes four levels: `debug`, `info`, `error` and `fatal`, their APIs are 
+`Debug` and `Debugf`, `Info` and `Infof`, `Error` and `Errorf`, `Fatal` and `Fatalf`.
+
+We take `logrus` as example to show that how to set and use logger.
+
+```
+// set logrus logger as server's logger.
+srv.SetLogger(logrus.New())
+
+// we can use it in handler.
+router.GET("/logger", func(ctx *gem.Context) {
+		ctx.Logger().Debug("debug")
+		ctx.Logger().Info("info")
+		ctx.Logger().Error("error")
+})
+```
+
+#### Static Files
+
+```
+router.ServeFiles("/tmp/*filepath", http.Dir(os.TempDir()))
+```
+
+Note: the path(first parameter) must end with `*filepath`.
+
+#### REST APIs
+
+The router is friendly to REST APIs, we take `users` handler as example to show that how to build a RESTful server.
+
+```
+// register user list handler.
+router.GET("/users", func(ctx *gem.Context) {
+    ctx.JSON(200, userlist)    
+})
+
+// register user add handler.
+router.POST("/users", func(ctx *gem.Contexy) {
+    name := ctx.Request.FormValue("name")
+    
+    // add user
+    
+    ctx.JSON(200, msg)
+})
+
+// register user profile handler.
+router.GET("/users/:name", func(ctx *gem.Context) {
+    // firstly, we need get the username from the URL query.
+    name, ok := ctx.UserValue("name").(string)
+    if !ok {
+        ctx.JSON(404, userNotFound)
+        return
+    }
+    
+    // return user profile.
+    ctx.JSON(200, userProfileByName(name))
+})
+
+// register user profile update handler.
+router.PUT("/users/:name", func(ctx *gem.Context) {
+    // firstly, we need get the username from the URL query.
+    name, ok := ctx.UserValue("name").(string)
+    if !ok {
+        ctx.JSON(404, userNotFound)
+        return
+    }
+    
+    // get nickname
+    nickname := ctx.Request.FormValue("nickname")
+    
+    // update user nickname.
+    
+    ctx.JSON(200, msg)
+})
+
+// register user delete handler.
+router.DELETE("/users/:name", func(ctx *gem.Context) {
+    // firstly, we need get the username from the URL query.
+    name, ok := ctx.UserValue("name").(string)
+    if !ok {
+        ctx.JSON(404, userNotFound)
+        return
+    }
+    
+    // delete user.
+    
+    ctx.JSON(200, msg)
+}
+```
+
+#### Use Middleware
+
+It is easy to implement a middleware, see [Middleware](https://godoc.org/github.com/go-gem/gem#Middleware) interface,
+you just need to implement the `Wrap` function.
+
+```
+type Middleware interface {
+    Wrap(next Handler) Handler
+}
+```
+
+For example, we defined a simple debug middleware:
+
+```
+type Debug struct{}
+
+// Wrap implements the Middleware interface.
+func (d *Debug) Wrap(next gem.Handler) gem.Handler {
+    // gen.HandlerFunc is adapter like http.HandlerFunc.
+	return gem.HandlerFunc(func(ctx *gem.Context) {
+		// print request info.
+		log.Println(ctx.Request.URL, ctx.Request.Method)
+
+		// call the next handler.
+		next.Handle(ctx)
+	})
+}
+```
+
+and then we should register it:
+
+1. register the middleware for all handlers via [Router.Use](https://godoc.org/github.com/go-gem/gem#Router.Use).
+
+```
+router.Use(&Debug{})
+```
+
+2. we can also register the middleware for specific handler via [HandlerOption](https://godoc.org/github.com/go-gem/gem#HandlerOption). 
+
+```
+router.GET("/specific", specificHandler, &gem.HandlerOption{Middlewares:[]gem.Middleware{&Debug{}}})
+```
+
+Gem also provides some frequently used middlewares, such as: 
+
+- [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
+
+- [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
+
+- [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
+
+- [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
 
 
 ## Semantic Versioning
