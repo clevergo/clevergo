@@ -29,6 +29,8 @@ The APIs is currently unstable until the stable version `2.0.0` and `go1.8` bein
 ## Getting Started
 
 ### Install
+
+**This package requires `go1.8` or above.**
  
 ```
 $ go get -u github.com/go-gem/gem
