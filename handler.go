@@ -24,3 +24,11 @@ func (f HandlerFunc) Handle(ctx *Context) {
 type HandlerOption struct {
 	Middlewares []Middleware
 }
+
+// NewHandlerOption returns HandlerOption instance by the
+// given middlewares.
+func NewHandlerOption(middlewares ...Middleware) *HandlerOption {
+	return &HandlerOption{
+		Middlewares: middlewares,
+	}
+}
