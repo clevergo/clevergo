@@ -23,7 +23,7 @@ Features
 
 	logrus - Structured, pluggable logging for Go - https://github.com/Sirupsen/logrus
 	go-logging - Golang logging library - https://github.com/op/go-logging
-	gem-log - default logger, maintained by Gem Authors - https://github.com/go-gem/log
+	gem-log - default logger - https://github.com/go-gem/log
 
 7. Middlewares
 
@@ -197,7 +197,7 @@ For example, we defined a simple debug middleware:
 
 	// Wrap implements the Middleware interface.
 	func (d *Debug) Wrap(next gem.Handler) gem.Handler {
-	    // gen.HandlerFunc is adapter like http.HandlerFunc.
+		// gem.HandlerFunc is adapter like http.HandlerFunc.
 		return gem.HandlerFunc(func(ctx *gem.Context) {
 			// print request info.
 			log.Println(ctx.Request.URL, ctx.Request.Method)

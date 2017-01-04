@@ -1,6 +1,7 @@
 # Gem Web Framework [![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem) [![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem) [![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem) [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master) [![Join the chat at https://gitter.im/go-gem/gem](https://badges.gitter.im/go-gem/gem.svg)](https://gitter.im/go-gem/gem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Gem, a simple and fast web framework written in Go(golang), required `go1.8` or above.
+Gem is an easy to use and high performance web framework written in Go(golang), it support HTTP/2, 
+and provides leveled logger and frequently used middlewares, note: requires `go1.8` or above.
 
 The current version is `2.0.0-beta`, the old version `v1` is deprecated, see [changes](#changes). 
 The APIs is currently unstable until the stable version `2.0.0` and `go1.8` being released.
@@ -12,17 +13,19 @@ The APIs is currently unstable until the stable version `2.0.0` and `go1.8` bein
 - Friendly to REST API
 - Full test of all APIs [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master)
 - Pretty and fast router - the router is custom version of [httprouter](https://github.com/julienschmidt/httprouter)
-- HTTP/2 support - HTTP/2 server push are supported since `go1.8`
-- Leveled logging - included four levels `debug`, `info`, `error` and `fatal`, there are many third-party implements the Logger: 
-    - [logrus](https://github.com/Sirupsen/logrus) - Structured, pluggable logging for Go
-    - [go-logging](https://github.com/op/go-logging) - Golang logging library
-    - [gem-log](https://github.com/go-gem/log) - default logger, maintained by Gem Authors
-- [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
-- [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
-- [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
-- [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
-- [Compress Middleware](https://github.com/go-gem/middleware-compress) - Compress response body
-- [Request Body Limit Middleware](https://github.com/go-gem/middleware-body-limit) - limit request body maximum size
+- HTTP/2 support - HTTP/2 server push was supported since `go1.8`
+- Leveled logging - included four levels `debug`, `info`, `error` and `fatal`, there are many third-party implements the Logger
+    - [logrus](https://github.com/Sirupsen/logrus) - structured, pluggable logging for Go
+    - [go-logging](https://github.com/op/go-logging) - golang logging library
+    - [gem-log](https://github.com/go-gem/log) - default logger
+- A lot of [middlewares](#middlewares)
+    - [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
+    - [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
+    - [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
+    - [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
+    - [Compress Middleware](https://github.com/go-gem/middleware-compress) - Compress response body
+    - [Request Body Limit Middleware](https://github.com/go-gem/middleware-body-limit) - limit request body maximum size
+    - [RATE Limiting Middleware](https://github.com/go-gem/middleware-rate-limit) - limit API usage of each user
 - Frozen APIs since the stable version `2.0.0` was released
 
 
@@ -71,10 +74,17 @@ AFAIK, the following leveled logging packages are compatible with Gem web framew
 
 - [logrus](https://github.com/Sirupsen/logrus) - structured, pluggable logging for Go
 - [go-logging](https://github.com/op/go-logging) - golang logging library
-- [gem-log](https://github.com/go-gem/log) - default logger, maintained by Gem Authors
+- [gem-log](https://github.com/go-gem/log) - default logger
+- Please let me know if I am missing the other logging packages :)
 
-[Logger](https://godoc.org/github.com/go-gem/gem#Logger) includes four levels: `debug`, `info`, `error` and `fatal`, their APIs are 
-`Debug` and `Debugf`, `Info` and `Infof`, `Error` and `Errorf`, `Fatal` and `Fatalf`.
+[Logger](https://godoc.org/github.com/go-gem/gem#Logger) includes four levels: `debug`, `info`, `error` and `fatal`,
+ 
+**APIs**
+
+- `Debug` and `Debugf`
+- `Info` and `Infof`
+- `Error` and `Errorf`
+- `Fatal` and `Fatalf`
 
 We take `logrus` as example to show that how to set and use logger.
 
@@ -197,7 +207,7 @@ type Debug struct{}
 
 // Wrap implements the Middleware interface.
 func (d *Debug) Wrap(next gem.Handler) gem.Handler {
-    // gen.HandlerFunc is adapter like http.HandlerFunc.
+    // gem.HandlerFunc is adapter like http.HandlerFunc.
 	return gem.HandlerFunc(func(ctx *gem.Context) {
 		// print request info.
 		log.Println(ctx.Request.URL, ctx.Request.Method)
@@ -222,19 +232,9 @@ we can also register the middleware for specific handler via [HandlerOption](htt
 router.GET("/specific", specificHandler, &gem.HandlerOption{Middlewares:[]gem.Middleware{&Debug{}}})
 ```
 
-Gem also provides some frequently used middlewares, such as: 
+Gem also provides some frequently used middlewares, see [Middlewares](#middlewares).
 
-- [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
 
-- [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
-
-- [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
-
-- [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
-
-- [Compress Middleware](https://github.com/go-gem/middleware-compress) - Compress response body
-
-- [Request Body Limit Middleware](https://github.com/go-gem/middleware-body-limit) - limit request body maximum size
 
 ### Share data between middlewares
 
@@ -247,6 +247,19 @@ ctx.SetUserValue("name", "foo")
 // Get data from context in other middleware or hander
 ctx.UserValue("name")
 ```
+
+
+## Middlewares
+
+**Please let me know that you wrote some middlewares, I will mention it here, I believe it would be helpful to users.**
+
+- [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
+- [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
+- [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
+- [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
+- [Compress Middleware](https://github.com/go-gem/middleware-compress) - compress response body
+- [Request Body Limit Middleware](https://github.com/go-gem/middleware-body-limit) - limit request body maximum size
+- [RATE Limiting Middleware](https://github.com/go-gem/middleware-rate-limit) - limit API usage of each user
 
 ## Semantic Versioning
 
