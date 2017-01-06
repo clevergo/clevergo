@@ -148,6 +148,43 @@ func TestContext_FormValue(t *testing.T) {
 	}
 }
 
+func TestContext_PostFormValue(t *testing.T) {
+	req, _ := http.NewRequest(MethodGet, "", nil)
+
+	ctx := &Context{Request: req}
+	key := "key"
+	if ctx.PostFormValue(key) != req.PostFormValue(key) {
+		t.Error("failed to get post form value")
+	}
+}
+
+func TestContext_ParseForm(t *testing.T) {
+	req, _ := http.NewRequest(MethodGet, "", nil)
+
+	ctx := &Context{Request: req}
+	if ctx.ParseForm() != req.ParseForm() {
+		t.Error("failed to get parse form")
+	}
+}
+
+func TestContext_Host(t *testing.T) {
+	req, _ := http.NewRequest(MethodGet, "", nil)
+
+	ctx := &Context{Request: req}
+	if ctx.Host() != req.Host {
+		t.Error("failed to get request host value")
+	}
+}
+
+func TestContext_Referer(t *testing.T) {
+	req, _ := http.NewRequest(MethodGet, "", nil)
+
+	ctx := &Context{Request: req}
+	if ctx.Referer() != req.Referer() {
+		t.Error("failed to get referer")
+	}
+}
+
 func TestContext_URL(t *testing.T) {
 	req, _ := http.NewRequest(MethodGet, "", nil)
 

@@ -143,19 +143,39 @@ func (ctx *Context) SetContentType(v string) {
 	ctx.Response.Header().Set("Content-Type", v)
 }
 
-// URL is shortcut of *http.Request.URL.
+// URL is shortcut of http.Request.URL.
 func (ctx *Context) URL() *url.URL {
 	return ctx.Request.URL
 }
 
-// FormValue is a shortcut of *http.Request.FormValue.
+// FormValue is a shortcut of http.Request.FormValue.
 func (ctx *Context) FormValue(key string) string {
 	return ctx.Request.FormValue(key)
 }
 
-// FormFile is a shortcut of *http.Request.FormFile.
+// PostFormValue is a shortcut of http.Request.PostFormValue.
+func (ctx *Context) PostFormValue(key string) string {
+	return ctx.Request.PostFormValue(key)
+}
+
+// ParseForm is a shortcut of http.Request.ParseForm.
+func (ctx *Context) ParseForm() error {
+	return ctx.Request.ParseForm()
+}
+
+// FormFile is a shortcut of http.Request.FormFile.
 func (ctx *Context) FormFile(key string) (multipart.File, *multipart.FileHeader, error) {
 	return ctx.Request.FormFile(key)
+}
+
+// Host returns the value of http.Request.Host.
+func (ctx *Context) Host() string {
+	return ctx.Request.Host
+}
+
+// Referer is a shortcut of http.Request.Referer.
+func (ctx *Context) Referer() string {
+	return ctx.Request.Referer()
 }
 
 // Write is a shortcut of http.Response.Write.
