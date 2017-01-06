@@ -115,7 +115,7 @@ Note: the first parameter must end with `*filepath`.
 
 ### REST APIs
 
-The router is friendly to REST APIs, we take `users` handler as example to show that how to create a REST APIs.
+The router is friendly to REST APIs.
 
 ```
 // user list

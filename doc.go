@@ -107,14 +107,14 @@ Note: the path(first parameter) must end with `*filepath`.
 
 REST APIs
 
-The router is friendly to REST APIs, we take `users` handler as example to show that how to build a RESTful server.
+The router is friendly to REST APIs.
 
-	// register user list handler.
+	// user list
 	router.GET("/users", func(ctx *gem.Context) {
 	    ctx.JSON(200, userlist)
 	})
 
-	// register user add handler.
+	// add user
 	router.POST("/users", func(ctx *gem.Contexy) {
 	    ctx.Request.ParseForm()
 	    name := ctx.Request.FormValue("name")
@@ -124,7 +124,7 @@ The router is friendly to REST APIs, we take `users` handler as example to show 
 	    ctx.JSON(200, msg)
 	})
 
-	// register user profile handler.
+	// user profile.
 	router.GET("/users/:name", func(ctx *gem.Context) {
 	    // firstly, we need get the username from the URL query.
 	    name, ok := ctx.UserValue("name").(string)
@@ -137,7 +137,7 @@ The router is friendly to REST APIs, we take `users` handler as example to show 
 	    ctx.JSON(200, userProfileByName(name))
 	})
 
-	// register user profile update handler.
+	// update user profile
 	router.PUT("/users/:name", func(ctx *gem.Context) {
 	    // firstly, we need get the username from the URL query.
 	    name, ok := ctx.UserValue("name").(string)
@@ -155,7 +155,7 @@ The router is friendly to REST APIs, we take `users` handler as example to show 
 	    ctx.JSON(200, msg)
 	})
 
-	// register user delete handler.
+	// delete user
 	router.DELETE("/users/:name", func(ctx *gem.Context) {
 	    // firstly, we need get the username from the URL query.
 	    name, ok := ctx.UserValue("name").(string)
