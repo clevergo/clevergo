@@ -1,6 +1,6 @@
 # Gem Web Framework [![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem) [![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem) [![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem) [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master) [![Join the chat at https://gitter.im/go-gem/gem](https://badges.gitter.im/go-gem/gem.svg)](https://gitter.im/go-gem/gem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Gem is an easy to use and high performance web framework written in Go(golang), it support HTTP/2, 
+Gem is an easy to use and high performance web framework written in Go(golang), it supports HTTP/2, 
 and provides leveled logger and frequently used middlewares, note: requires `go1.8` or above.
 
 The current version is `2.0.0-beta`, the old version `v1` is deprecated, see [changes](#changes). 
@@ -14,18 +14,18 @@ The APIs is currently unstable until the stable version `2.0.0` and `go1.8` bein
 - Full test of all APIs [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master)
 - Pretty and fast router - the router is custom version of [httprouter](https://github.com/julienschmidt/httprouter)
 - HTTP/2 support - HTTP/2 server push was supported since `go1.8`
-- Leveled logging - included four levels `debug`, `info`, `error` and `fatal`, there are many third-party implements the Logger
+- Leveled logging - included four levels `debug`, `info`, `error` and `fatal`, the following packages are compatible with Gem
     - [logrus](https://github.com/Sirupsen/logrus) - structured, pluggable logging for Go
     - [go-logging](https://github.com/op/go-logging) - golang logging library
     - [gem-log](https://github.com/go-gem/log) - default logger
 - A lot of [middlewares](#middlewares)
-    - [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
     - [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
     - [AUTH Middleware](https://github.com/go-gem/middleware-auth) - HTTP Basic and HTTP Digest authentication
     - [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
     - [Compress Middleware](https://github.com/go-gem/middleware-compress) - Compress response body
     - [Request Body Limit Middleware](https://github.com/go-gem/middleware-body-limit) - limit request body maximum size
-    - [RATE Limiting Middleware](https://github.com/go-gem/middleware-rate-limit) - limit API usage of each user
+    - [Rate Limiting Middleware](https://github.com/go-gem/middleware-rate-limit) - limit API usage of each user
+    - [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
 - Frozen APIs since the stable version `2.0.0` was released
 
 
@@ -68,6 +68,11 @@ func main() {
 }
 ```
 
+### Context
+
+[Context](https://godoc.org/github.com/go-gem/gem#Context) embedded `http.ResponseWriter` and `*http.Request`, and 
+provides some useful APIs and shortcut, see https://godoc.org/github.com/go-gem/gem#Context.
+
 ### Logger
 
 AFAIK, the following leveled logging packages are compatible with Gem web framework:
@@ -75,7 +80,7 @@ AFAIK, the following leveled logging packages are compatible with Gem web framew
 - [logrus](https://github.com/Sirupsen/logrus) - structured, pluggable logging for Go
 - [go-logging](https://github.com/op/go-logging) - golang logging library
 - [gem-log](https://github.com/go-gem/log) - default logger
-- Please let me know if I am missing the other logging packages :)
+- Please let me know if I missed the other logging packages :)
 
 [Logger](https://godoc.org/github.com/go-gem/gem#Logger) includes four levels: `debug`, `info`, `error` and `fatal`,
  
@@ -106,19 +111,19 @@ router.GET("/logger", func(ctx *gem.Context) {
 router.ServeFiles("/tmp/*filepath", http.Dir(os.TempDir()))
 ```
 
-Note: the path(first parameter) must end with `*filepath`.
+Note: the first parameter must end with `*filepath`.
 
 ### REST APIs
 
-The router is friendly to REST APIs, we take `users` handler as example to show that how to build a RESTful server.
+The router is friendly to REST APIs, we take `users` handler as example to show that how to create a REST APIs.
 
 ```
-// register user list handler.
+// user list
 router.GET("/users", func(ctx *gem.Context) {
     ctx.JSON(200, userlist)    
 })
 
-// register user add handler.
+// add user
 router.POST("/users", func(ctx *gem.Contexy) {
     ctx.Request.ParseForm()
     name := ctx.Request.FormValue("name")
@@ -128,11 +133,11 @@ router.POST("/users", func(ctx *gem.Contexy) {
     ctx.JSON(200, msg)
 })
 
-// register user profile handler.
+// user profile.
 router.GET("/users/:name", func(ctx *gem.Context) {
     // firstly, we need get the username from the URL query.
-    name, ok := ctx.UserValue("name").(string)
-    if !ok {
+    name, err := gem.String(ctx.UserValue("name"))
+    if err != nil {
         ctx.JSON(404, userNotFound)
         return
     }
@@ -141,11 +146,11 @@ router.GET("/users/:name", func(ctx *gem.Context) {
     ctx.JSON(200, userProfileByName(name))
 })
 
-// register user profile update handler.
+// update user profile
 router.PUT("/users/:name", func(ctx *gem.Context) {
     // firstly, we need get the username from the URL query.
-    name, ok := ctx.UserValue("name").(string)
-    if !ok {
+    name, err := gem.String(ctx.UserValue("name"))
+    if err != nil {
         ctx.JSON(404, userNotFound)
         return
     }
@@ -159,11 +164,11 @@ router.PUT("/users/:name", func(ctx *gem.Context) {
     ctx.JSON(200, msg)
 })
 
-// register user delete handler.
+// delete user
 router.DELETE("/users/:name", func(ctx *gem.Context) {
     // firstly, we need get the username from the URL query.
-    name, ok := ctx.UserValue("name").(string)
-    if !ok {
+    name, err := gem.String(ctx.UserValue("name"))
+    if err != nil {
         ctx.JSON(404, userNotFound)
         return
     }
@@ -251,7 +256,7 @@ ctx.UserValue("name")
 
 ## Middlewares
 
-**Please let me know that you wrote some middlewares, I will mention it here, I believe it would be helpful to users.**
+**Please let me know that you composed some middlewares, I will mention it here, I believe it would be helpful to users.**
 
 - [CSRF Middleware](https://github.com/go-gem/middleware-csrf) - Cross-Site Request Forgery protection
 - [CORS Middleware](https://github.com/go-gem/middleware-cors) -  Cross-Origin Resource Sharing
@@ -259,7 +264,7 @@ ctx.UserValue("name")
 - [JWT Middleware](https://github.com/go-gem/middleware-jwt) - JSON WEB TOKEN authentication
 - [Compress Middleware](https://github.com/go-gem/middleware-compress) - compress response body
 - [Request Body Limit Middleware](https://github.com/go-gem/middleware-body-limit) - limit request body maximum size
-- [RATE Limiting Middleware](https://github.com/go-gem/middleware-rate-limit) - limit API usage of each user
+- [Rate Limiting Middleware](https://github.com/go-gem/middleware-rate-limit) - limit API usage of each user
 
 ## Semantic Versioning
 
