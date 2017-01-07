@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"reflect"
 	"testing"
@@ -257,6 +258,8 @@ func TestContext_XML(t *testing.T) {
 		t.Errorf("expected status code %d, got %d", http.StatusInternalServerError, resp.statusCode)
 	}
 
+	resp = &mockResponseWriter{}
+	ctx.Response = resp
 	header := `<?xml version="2.0" encoding="UTF-8"?>` + "\n"
 	ctx.XML(http.StatusOK, user, header)
 	if len(resp.body) < len(header) {
@@ -274,6 +277,36 @@ func TestContext_Logger(t *testing.T) {
 	}
 }
 
+func TestContext_Error(t *testing.T) {
+	code := http.StatusInternalServerError
+	err := http.StatusText(code)
+
+	resp := &mockResponseWriter{}
+	ctx := &Context{Response: resp}
+	ctx.Error(err, code)
+
+	if resp.statusCode != code {
+		t.Errorf("expected stauts code %d, got %d", code, resp.statusCode)
+	}
+	if string(resp.body) != fmt.Sprintln(err) {
+		t.Errorf("expected response body %q, got %q", fmt.Sprintln(err), resp.body)
+	}
+}
+
+func TestContext_NotFound(t *testing.T) {
+	resp := &mockResponseWriter{}
+	ctx := &Context{Response: resp}
+	ctx.NotFound()
+
+	if resp.statusCode != http.StatusNotFound {
+		t.Errorf("expected stauts code %d, got %d", http.StatusNotFound, resp.statusCode)
+	}
+	body := fmt.Sprintln("404 page not found")
+	if body != string(resp.body) {
+		t.Errorf("expected response body %q, got %q", body, resp.body)
+	}
+}
+
 func TestContext_SetContentType(t *testing.T) {
 	contentType := "text/html"
 
@@ -283,6 +316,19 @@ func TestContext_SetContentType(t *testing.T) {
 
 	if resp.Header().Get("Content-Type") != contentType {
 		t.Error("failed to set content type")
+	}
+}
+
+func TestContext_SetStatusCodet(t *testing.T) {
+	codes := []int{http.StatusOK, http.StatusNotFound, http.StatusInternalServerError}
+	for _, code := range codes {
+		resp := &mockResponseWriter{}
+		ctx := &Context{Response: resp}
+		ctx.SetStatusCode(code)
+
+		if resp.statusCode != code {
+			t.Errorf("expected stauts code %d, got %d", code, resp.statusCode)
+		}
 	}
 }
 

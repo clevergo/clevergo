@@ -138,9 +138,24 @@ func (ctx *Context) IsAjax() bool {
 	return ctx.Request.Header.Get("X-Requested-With") == "XMLHttpRequest"
 }
 
+// Error is a shortcut of http.Error
+func (ctx *Context) Error(error string, code int) {
+	http.Error(ctx.Response, error, code)
+}
+
+// NotFound is a shortcut of http.NotFound
+func (ctx *Context) NotFound() {
+	http.NotFound(ctx.Response, ctx.Request)
+}
+
 // SetContentType set response Content-Type.
 func (ctx *Context) SetContentType(v string) {
 	ctx.Response.Header().Set("Content-Type", v)
+}
+
+// SetStatusCode is shortcut of http.ResponseWriter.WriteHeader.
+func (ctx *Context) SetStatusCode(code int) {
+	ctx.Response.WriteHeader(code)
 }
 
 // URL is shortcut of http.Request.URL.

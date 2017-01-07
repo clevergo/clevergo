@@ -27,7 +27,7 @@ func (w *mockResponseWriter) Header() http.Header {
 }
 
 func (w *mockResponseWriter) Write(p []byte) (n int, err error) {
-	w.body = p
+	w.body = append(w.body, p...)
 	return len(p), nil
 }
 
