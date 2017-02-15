@@ -115,7 +115,7 @@ The router is friendly to REST APIs.
 	})
 
 	// add user
-	router.POST("/users", func(ctx *gem.Contexy) {
+	router.POST("/users", func(ctx *gem.Context) {
 	    ctx.Request.ParseForm()
 	    name := ctx.Request.FormValue("name")
 
