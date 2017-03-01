@@ -40,7 +40,7 @@ $ go get -u github.com/go-gem/gem
 
 ### Quick Start
 
-```
+```go
 package main
 
 import (
@@ -92,7 +92,7 @@ AFAIK, the following leveled logging packages are compatible with Gem web framew
 
 For example:
 
-```
+```go
 // set logrus logger as server's logger.
 srv.SetLogger(logrus.New())
 
@@ -106,7 +106,7 @@ router.GET("/logger", func(ctx *gem.Context) {
 
 ### Static Files
 
-```
+```go
 router.ServeFiles("/tmp/*filepath", http.Dir(os.TempDir()))
 ```
 
@@ -116,7 +116,7 @@ Note: the first parameter must end with `*filepath`.
 
 The router is friendly to REST APIs.
 
-```
+```go
 // user list
 router.GET("/users", func(ctx *gem.Context) {
     ctx.JSON(200, userlist)    
@@ -182,7 +182,7 @@ router.DELETE("/users/:name", func(ctx *gem.Context) {
 
 See https://github.com/go-gem/examples/tree/master/http2.
 
-```
+```go
 router.GET("/", func(ctx *gem.Context) {
 	if err := ctx.Push("/images/logo.png", nil); err != nil {
 		ctx.Logger().Info(err)
@@ -197,7 +197,7 @@ router.ServeFiles("/images/*filepath", http.Dir(imagesDir))
 
 It is easy to implement a middleware, see [Middleware](https://godoc.org/github.com/go-gem/gem#Middleware) interface,
 you just need to implement the `Wrap` function.
-
+go
 ```
 type Middleware interface {
     Wrap(next Handler) Handler
@@ -206,7 +206,7 @@ type Middleware interface {
 
 For example, we defined a simple debug middleware:
 
-```
+```go
 type Debug struct{}
 
 // Wrap implements the Middleware interface.
@@ -226,13 +226,13 @@ and then we should register it:
 
 register the middleware for all handlers via [Router.Use](https://godoc.org/github.com/go-gem/gem#Router.Use).
 
-```
+```go
 router.Use(&Debug{})
 ```
 
 we can also set up the middleware for specific handler via [HandlerOption](https://godoc.org/github.com/go-gem/gem#HandlerOption). 
 
-```
+```go
 router.GET("/specific", specificHandler, &gem.HandlerOption{Middlewares:[]gem.Middleware{&Debug{}}})
 ```
 
@@ -244,7 +244,7 @@ Gem also provides some frequently used middlewares, see [Middlewares](#middlewar
 
 Context provides two useful methods: `SetUserValue` and `UserValue` to share data between middlewares.
 
-```
+```go
 // Store data into context in one middleware
 ctx.SetUserValue("name", "foo")
 
