@@ -98,7 +98,7 @@ The usage of this package is very similar to httprouter, but there are serveral 
 
 - Give it a :star: and spread the package.
 - [File an issue](https://github.com/clevergo/clevergo/issues/new) for features or bugs.
-- Fork and make pull request.
+- Fork and make a pull request.
 
 ## FAQ
 
