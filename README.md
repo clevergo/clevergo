@@ -6,8 +6,9 @@ CleverGo is an enhanced version of [julienschmidt/httprouter](https://github.com
 ## Contents
 
 - [Extra Features](#extra-features)
-- [Differences](#difference)
 - [Usage](#usage)
+- [Differences](#difference)
+- [Contribute](#contribute)
 - [FAQ](#faq)
 
 ## Extra Features
@@ -92,6 +93,12 @@ The usage of this package is very similar to httprouter, but there are serveral 
 - `Router.PanicHandler` was removed, it is more reasonable to use RecoveryMiddleware in the top level instead.
 - `Router` methods `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS` were changed to `Get`, `Post`,
     `Put`, `Delete`, `Patch`, `Head`, `Options` respectively.
+
+## Contribute
+
+- Give it a :star: and spread the package.
+- [File an issue](https://github.com/clevergo/clevergo/issues/new) for features or bugs.
+- Fork and make pull request.
 
 ## FAQ
 
