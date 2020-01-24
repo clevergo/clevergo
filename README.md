@@ -88,10 +88,10 @@ The usage of this package is very similar to httprouter, but there are serveral 
     [Router.Handle](https://godoc.org/github.com/clevergo/clevergo#Router.Handle) and 
     [Router.HandleFunc](https://godoc.org/github.com/clevergo/clevergo#Router.HandleFunc) respectively. And [GetParams](https://godoc.org/github.com/clevergo/clevergo#GetParams) is the only way to retrieve
     `Params` in handler.
-- `Params.ByName` was renamed to [Params.Get](https://godoc.org/github.com/clevergo/clevergo#Params.Get).
-- `ParamsFromContext` was removed, use [GetParams](https://godoc.org/github.com/clevergo/clevergo#GetParams) instead.
-- `Router.PanicHandler` was removed, it is more reasonable to use RecoveryMiddleware in the top level instead.
-- `Router` methods `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS` were changed to `Get`, `Post`,
+- **Params.ByName** was renamed to [Params.Get](https://godoc.org/github.com/clevergo/clevergo#Params.Get).
+- **ParamsFromContext** was removed, use [GetParams](https://godoc.org/github.com/clevergo/clevergo#GetParams) instead.
+- **Router.PanicHandler** was removed, it is more reasonable to use RecoveryMiddleware in the top level instead.
+- `Router` methods `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS` were renamed to `Get`, `Post`,
     `Put`, `Delete`, `Patch`, `Head`, `Options` respectively.
 
 ## Contribute
