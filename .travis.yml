@@ -1,13 +1,17 @@
-sudo: false
+os:
+  - linux
+  - osx
 language: go
 go:
+  - 1.7.x
+  - 1.8.x
   - 1.9.x
   - 1.10.x
   - 1.11.x
   - 1.12.x
   - 1.13.x
   - master
-matrix:
+jobs:
   allow_failures:
     - go: master
   fast_finish: true
