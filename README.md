@@ -31,52 +31,7 @@ All usage and examples can be found at [GoDoc](http://godoc.org/github.com/cleve
 
 ## Middleware
 
-There are a lot of third-party middlewares can be used out of box, let's take [gorilla handlers](https://github.com/gorilla/handlers) as example:
-
-```go
-package main
-
-import (
-	"compress/gzip"
-	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
-
-	"github.com/clevergo/clevergo"
-	"github.com/gorilla/handlers"
-)
-
-func loggingMiddleware(out io.Writer) clevergo.Middleware {
-	// logging adapter
-	return func(next http.Handler) http.Handler {
-		return handlers.LoggingHandler(out, next)
-	}
-}
-
-func compressMiddleware(level int) clevergo.Middleware {
-	// compress adapter
-	return func(next http.Handler) http.Handler {
-		return handlers.CompressHandlerLevel(next, level)
-	}
-}
-
-func main() {
-    app := clevergo.New(":8080")
-    
-    // global middlewares.
-    app.Use(
-        handlers.RecoveryHandler(),
-        compressMiddleware(gzip.BestCompression),
-        loggingMiddleware(os.Stdout),
-    )
-    app.Get("/", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprint(w, "hello world")
-    })
-    log.Fatal(app.ListenAndServe())
-}
-```
+There are a lot of third-party middlewares can be used out of box, such as [clevergo/middleware](https://github.com/clevergo/middleware) and [gorilla/handlers](https://github.com/gorilla/handlers).
 
 ## Differences
 
