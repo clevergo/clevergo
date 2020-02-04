@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -31,15 +32,40 @@ type Param struct {
 // It is therefore safe to read values by the index.
 type Params []Param
 
-// Get returns the value of the first Param which key matches the given name.
+// String returns the value of the first Param which key matches the given name.
 // If no matching Param is found, an empty string is returned.
-func (ps Params) Get(name string) string {
+func (ps Params) String(name string) string {
 	for _, p := range ps {
 		if p.Key == name {
 			return p.Value
 		}
 	}
 	return ""
+}
+
+// Bool returns the boolean value of the given name.
+func (ps Params) Bool(name string) (bool, error) {
+	return strconv.ParseBool(ps.String(name))
+}
+
+// Float64 returns the float64 value of the given name.
+func (ps Params) Float64(name string) (float64, error) {
+	return strconv.ParseFloat(ps.String(name), 64)
+}
+
+// Int returns the int value of the given name.
+func (ps Params) Int(name string) (int, error) {
+	return strconv.Atoi(ps.String(name))
+}
+
+// Int64 returns the int64 value of the given name.
+func (ps Params) Int64(name string) (int64, error) {
+	return strconv.ParseInt(ps.String(name), 10, 64)
+}
+
+// Uint64 returns the uint64 value of the given name.
+func (ps Params) Uint64(name string) (uint64, error) {
+	return strconv.ParseUint(ps.String(name), 10, 64)
 }
 
 // GetParams returns params of the request.
@@ -274,7 +300,7 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 	fileServer := http.FileServer(root)
 
 	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
-		req.URL.Path = GetParams(req).Get("filepath")
+		req.URL.Path = GetParams(req).String("filepath")
 		fileServer.ServeHTTP(w, req)
 	})
 }

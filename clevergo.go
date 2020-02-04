@@ -22,7 +22,7 @@
 //
 //  func Hello(w http.ResponseWriter, r *http.Request) {
 //      ps := clevergo.GetParams(r)
-//      fmt.Fprintf(w, "hello, %s!\n", ps.Get("name"))
+//      fmt.Fprintf(w, "hello, %s!\n", ps.String("name"))
 //  }
 //
 //  func main() {
@@ -72,7 +72,7 @@
 // There are two ways to retrieve the value of a parameter:
 //  // by the name of the parameter
 //  ps := GetParams(req) // retrieves params of the given request
-//  user := ps.Get("user") // defined by :user or *user
+//  user := ps.String("user") // defined by :user or *user
 //
 //  // by the index of the parameter. This way you can also get the name (key)
 //  thirdKey   := ps[2].Key   // the name of the 3rd parameter

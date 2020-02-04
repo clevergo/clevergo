@@ -263,13 +263,13 @@ func ExampleRouteGroup() {
 	v1 := api.Group("/v1")
 	v1.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
 		params := GetParams(r)
-		fmt.Printf("v1 user: %s\n", params.Get("name"))
+		fmt.Printf("v1 user: %s\n", params.String("name"))
 	})
 
 	v2 := api.Group("/v2")
 	v2.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
 		params := GetParams(r)
-		fmt.Printf("v2 user: %s\n", params.Get("name"))
+		fmt.Printf("v2 user: %s\n", params.String("name"))
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)
@@ -287,7 +287,7 @@ func ExampleGetRoute() {
 	router := NewRouter()
 	router.Get("/posts/:page", func(_ http.ResponseWriter, r *http.Request) {
 		ps := GetParams(r)
-		page, _ := strconv.Atoi(ps.Get("page"))
+		page, _ := ps.Int("page")
 		route := GetRoute(r)
 		prev, _ := route.URL("page", strconv.Itoa(page-1))
 		next, _ := route.URL("page", strconv.Itoa(page+1))
