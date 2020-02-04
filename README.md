@@ -21,7 +21,7 @@ CleverGo is an enhanced version of [julienschmidt/httprouter](https://github.com
 
 ## Usage
 
-All usage and examples can be found at [GoDoc](http://godoc.org/github.com/clevergo/clevergo):
+All usage and examples can be found at [GoDoc](https://pkg.go.dev/github.com/clevergo/clevergo):
 
 - [Application](https://pkg.go.dev/github.com/clevergo/clevergo#example-Application)
 - [Routes group / subrouter](https://pkg.go.dev/github.com/clevergo/clevergo#example-RouteGroup)
