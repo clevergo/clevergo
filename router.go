@@ -32,9 +32,9 @@ type Param struct {
 // It is therefore safe to read values by the index.
 type Params []Param
 
-// String returns the value of the first Param which key matches the given name.
+// Get returns the value of the first Param which key matches the given name.
 // If no matching Param is found, an empty string is returned.
-func (ps Params) String(name string) string {
+func (ps Params) Get(name string) string {
 	for _, p := range ps {
 		if p.Key == name {
 			return p.Value
@@ -45,27 +45,27 @@ func (ps Params) String(name string) string {
 
 // Bool returns the boolean value of the given name.
 func (ps Params) Bool(name string) (bool, error) {
-	return strconv.ParseBool(ps.String(name))
+	return strconv.ParseBool(ps.Get(name))
 }
 
 // Float64 returns the float64 value of the given name.
 func (ps Params) Float64(name string) (float64, error) {
-	return strconv.ParseFloat(ps.String(name), 64)
+	return strconv.ParseFloat(ps.Get(name), 64)
 }
 
 // Int returns the int value of the given name.
 func (ps Params) Int(name string) (int, error) {
-	return strconv.Atoi(ps.String(name))
+	return strconv.Atoi(ps.Get(name))
 }
 
 // Int64 returns the int64 value of the given name.
 func (ps Params) Int64(name string) (int64, error) {
-	return strconv.ParseInt(ps.String(name), 10, 64)
+	return strconv.ParseInt(ps.Get(name), 10, 64)
 }
 
 // Uint64 returns the uint64 value of the given name.
 func (ps Params) Uint64(name string) (uint64, error) {
-	return strconv.ParseUint(ps.String(name), 10, 64)
+	return strconv.ParseUint(ps.Get(name), 10, 64)
 }
 
 // GetParams returns params of the request.
@@ -300,7 +300,7 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 	fileServer := http.FileServer(root)
 
 	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
-		req.URL.Path = GetParams(req).String("filepath")
+		req.URL.Path = GetParams(req).Get("filepath")
 		fileServer.ServeHTTP(w, req)
 	})
 }

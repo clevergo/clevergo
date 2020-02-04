@@ -263,13 +263,13 @@ func ExampleRouteGroup() {
 	v1 := api.Group("/v1")
 	v1.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
 		params := GetParams(r)
-		fmt.Printf("v1 user: %s\n", params.String("name"))
+		fmt.Printf("v1 user: %s\n", params.Get("name"))
 	})
 
 	v2 := api.Group("/v2")
 	v2.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
 		params := GetParams(r)
-		fmt.Printf("v2 user: %s\n", params.String("name"))
+		fmt.Printf("v2 user: %s\n", params.Get("name"))
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)

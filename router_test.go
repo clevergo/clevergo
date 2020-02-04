@@ -36,11 +36,11 @@ func TestParams(t *testing.T) {
 		Param{"param3", "value3"},
 	}
 	for i := range ps {
-		if val := ps.String(ps[i].Key); val != ps[i].Value {
+		if val := ps.Get(ps[i].Key); val != ps[i].Value {
 			t.Errorf("Wrong value for %s: Got %s; Want %s", ps[i].Key, val, ps[i].Value)
 		}
 	}
-	if val := ps.String("noKey"); val != "" {
+	if val := ps.Get("noKey"); val != "" {
 		t.Errorf("Expected empty string for not found key; got %q", val)
 	}
 }
@@ -878,7 +878,7 @@ func ExampleGetParams() {
 		// ps.Uint64("name") // converts to uint64.
 		// ps.Float64("name") // converts to float64.
 		// ps.Bool("name") // converts to boolean.
-		fmt.Printf("%s posted on %04d-%02d\n", ps.String("title"), year, month)
+		fmt.Printf("%s posted on %04d-%02d\n", ps.Get("title"), year, month)
 	})
 	req := httptest.NewRequest(http.MethodGet, "/post/2020/01/foo", nil)
 	router.ServeHTTP(nil, req)

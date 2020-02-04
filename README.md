@@ -43,7 +43,7 @@ The usage of this package is very similar to httprouter, but there are serveral 
     [Router.Handle](https://pkg.go.dev/github.com/clevergo/clevergo#Router.Handle) and 
     [Router.HandleFunc](https://pkg.go.dev/github.com/clevergo/clevergo#Router.HandleFunc) respectively. And [GetParams](https://pkg.go.dev/github.com/clevergo/clevergo#GetParams) is the only way to retrieve
     `Params` in handler.
-- **Params.ByName** was renamed to [Params.String](https://pkg.go.dev/github.com/clevergo/clevergo#Params.String), and added some useful functions for converts value type:
+- **Params.ByName** was renamed to [Params.Get](https://pkg.go.dev/github.com/clevergo/clevergo#Params.Get), and added some useful functions for converts value type:
     - [Params.Int](https://pkg.go.dev/github.com/clevergo/clevergo#Params.Int)
     - [Params.Int64](https://pkg.go.dev/github.com/clevergo/clevergo#Params.Int64)
     - [Params.Uint64](https://pkg.go.dev/github.com/clevergo/clevergo#Params.Uint64)

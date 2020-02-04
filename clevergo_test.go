@@ -301,7 +301,7 @@ func ExampleApplication() {
 	app.Get("/hello/:name", func(w http.ResponseWriter, r *http.Request) {
 		// retrieves parameters.
 		ps := GetParams(r)
-		fmt.Fprintf(w, "hello %s", ps.String("name"))
+		fmt.Fprintf(w, "hello %s", ps.Get("name"))
 	})
 
 	// APIs
