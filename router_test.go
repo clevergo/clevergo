@@ -878,7 +878,7 @@ func ExampleGetParams() {
 		// ps.Uint64("name") // converts to uint64.
 		// ps.Float64("name") // converts to float64.
 		// ps.Bool("name") // converts to boolean.
-		fmt.Printf("%s posted on %d-%d\n", ps.String("title"), year, month)
+		fmt.Printf("%s posted on %04d-%02d\n", ps.String("title"), year, month)
 	})
 	req := httptest.NewRequest(http.MethodGet, "/post/2020/01/foo", nil)
 	router.ServeHTTP(nil, req)
