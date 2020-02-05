@@ -31,7 +31,12 @@ All usage and examples can be found at [GoDoc](https://pkg.go.dev/github.com/cle
 
 ## Middleware
 
-There are a lot of third-party middlewares can be used out of box, such as [clevergo/middleware](https://github.com/clevergo/middleware) and [gorilla/handlers](https://github.com/gorilla/handlers).
+There are a lot of third-party middlewares can be used out of box, such as:
+
+- [clevergo/middleware](https://github.com/clevergo/middleware): a collection of HTTP middleware, adapter for gorilla handlers(compress and logging).
+- [gorilla/handlers](https://github.com/gorilla/handlers): a collection of useful middleware for Go HTTP services & web applications.
+- [goji/httpauth](https://github.com/goji/httpauth): basic auth middleware.
+- List other middlewares here by PR.
 
 ## Differences
 

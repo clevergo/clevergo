@@ -253,21 +253,15 @@ func TestApplicationServeTLS(t *testing.T) {
 }
 
 func ExampleApplication() {
-	// Application is wrapper of Router and http.Server.
+	// application is wrapper of Router and http.Server.
 	app := New("localhost:8080")
-	// clean up work.
+	// clean up.
 	defer app.CleanUp()
 
-	// here is a simple recovery middleware, just for showing the use case of middleware.
-	var recoveryMiddleware Middleware = func(next http.Handler) http.Handler {
+	// here is a simple server header middleware, just for showing the use case of middleware.
+	var serverHeaderMiddleware Middleware = func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if err := recover(); err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					log.Println(err)
-				}
-			}()
-
+			w.Header().Set("Server", "clevergo")
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -288,10 +282,14 @@ func ExampleApplication() {
 	*/
 
 	// use middlewares, global middleware that apply for all routes.
+	// it is easy to use third-party middleware, such as recovery, compress and
+	// logging middleware provided by clevergo middleware, gorilla handlers
+	// and other third-party packages.
 	app.Use(
-		// it is easy to use thirdparty middleware, such as recovery, compress and
-		// logging middleware provided by gorilla handlers.
-		recoveryMiddleware,
+		// handlers.RecoveryHandler(), // provided by gorilla/handlers.
+		// middleware.Compress(gzip.DefaultCompression), // provided by clevergo middleware.
+		// middleware.Logging(os.Stdout), // provided by clevergo middleware.
+		serverHeaderMiddleware,
 	)
 
 	// registers routes
