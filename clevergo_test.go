@@ -266,20 +266,12 @@ func ExampleApplication() {
 		})
 	}
 
-	// initialize components, such as database.
-	/*
-		db, err := sql.Open("", "")
-		if err != nil {
-			log.Fatal(err)
-		}
-		// these functions will be called in order before closing application,
-		// it equals to defer db.Close(), one benefits is that it allows you
-		// to registers these functions in any place, makes main function more
-		// clearer.
-		app.RegisterOnCleanUp(func() {
-			db.Close()
-		})
-	*/
+	// registers clean up functions.
+	app.RegisterOnCleanUp(func() {
+		// db.Close()
+		// file.Close()
+		// ...
+	})
 
 	// use middlewares, global middleware that apply for all routes.
 	// it is easy to use third-party middleware, such as recovery, compress and
