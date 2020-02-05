@@ -736,6 +736,7 @@ func TestRouterMatchedRoutePath(t *testing.T) {
 	}
 
 	router := NewRouter()
+	router.SaveMatchedRoute = true
 	router.HandleFunc(http.MethodGet, route1, handle1)
 	router.HandleFunc(http.MethodGet, route2, handle2)
 	router.HandleFunc(http.MethodGet, route3, handle3)

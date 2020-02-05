@@ -285,6 +285,7 @@ func ExampleRouteGroup() {
 
 func ExampleGetRoute() {
 	router := NewRouter()
+	router.SaveMatchedRoute = true
 	router.Get("/posts/:page", func(_ http.ResponseWriter, r *http.Request) {
 		ps := GetParams(r)
 		page, _ := ps.Int("page")
