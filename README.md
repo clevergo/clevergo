@@ -5,13 +5,36 @@ CleverGo is an enhanced version of [julienschmidt/httprouter](https://github.com
 
 ## Contents
 
-- [Extra Features](#extra-features)
+- [Motivation](#motivation)
+- [Features](#features)
 - [Usage](#usage)
 - [Differences](#difference)
 - [Contribute](#contribute)
 - [FAQ](#faq)
 
-## Extra Features
+## Motivation
+
+CleverGo isn't **an another web framework**, it aims to be a **lightweight**, **feature-rich** and **high performance** HTTP router which can be intergrates with any third-party packages(such as HTTP middlewares) easily.
+
+## Features
+
+**Only explicit matches:** With other routers, like [`http.ServeMux`](https://golang.org/pkg/net/http/#ServeMux), a requested URL path could match multiple patterns. Therefore they have some awkward pattern priority rules, like *longest match* or *first registered, first matched*. By design of this router, a request can only match exactly one or no route. As a result, there are also no unintended matches, which makes it great for SEO and improves the user experience.
+
+**Stop caring about trailing slashes:** Choose the URL style you like, the router automatically redirects the client if a trailing slash is missing or if there is one extra. Of course it only does so, if the new path has a handler. If you don't like it, you can [turn off this behavior](https://pkg.go.dev/github.com/clevergo/clevergo#Router.RedirectTrailingSlash).
+
+**Path auto-correction:** Besides detecting the missing or additional trailing slash at no extra cost, the router can also fix wrong cases and remove superfluous path elements (like `../` or `//`). Is [CAPTAIN CAPS LOCK](http://www.urbandictionary.com/define.php?term=Captain+Caps+Lock) one of your users? HttpRouter can help him by making a case-insensitive look-up and redirecting him to the correct URL.
+
+**Parameters in your routing pattern:** Stop parsing the requested URL path, just give the path segment a name and the router delivers the dynamic value to you. Because of the design of the router, path parameters are very cheap.
+
+**Zero Garbage:** The matching and dispatching process generates zero bytes of garbage. The only heap allocations that are made are building the slice of the key-value pairs for path parameters, and building new context and request objects (the latter only in the standard `Handler`/`HandlerFunc` API). In the 3-argument API, if the request path contains no parameters not a single heap allocation is necessary.
+
+**High Performance:** CleverGo is based on [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter).
+
+**Perfect for APIs:** The router design encourages to build sensible, hierarchical RESTful APIs. Moreover it has built-in native support for [OPTIONS requests](http://zacstewart.com/2012/04/14/http-options-method.html) and `405 Method Not Allowed` replies.
+
+Of course you can also set **custom [`NotFound`](https://pkg.go.dev/github.com/clevergo/clevergo#Router.NotFound) and  [`MethodNotAllowed`](https://pkg.go.dev/github.com/clevergo/clevergo#Router.MethodNotAllowed) handlers** and [**serve static files**](https://pkg.go.dev/github.com/clevergo/clevergo#Router.ServeFiles).
+
+### Extra Features
 
 - **Named Routes:** allow the reverse route generation of URLs.
 - **Save Matched Route:** allow to retrieve matched route in handler, it is useful to generate URLs of the current route.
@@ -37,6 +60,10 @@ There are a lot of third-party middlewares can be used out of box, such as:
 - [gorilla/handlers](https://github.com/gorilla/handlers): a collection of useful middleware for Go HTTP services & web applications.
 - [goji/httpauth](https://github.com/goji/httpauth): basic auth middleware.
 - List other middlewares here by PR.
+
+### Chaining
+
+[Chain](https://pkg.go.dev/github.com/clevergo/clevergo#Chain) allow to attach any middlewares on a `http.Handler`.
 
 ## Differences
 
