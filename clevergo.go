@@ -26,11 +26,11 @@
 //  }
 //
 //  func main() {
-//      app := clevergo.New()
+//      app := clevergo.New(":8080")
 //      app.Get("/", Index)
 //      app.Get("/hello/:name", Hello)
 //
-//      log.Fatal(http.ListenAndServe(":8080", router))
+//      log.Fatal(app.ListenAndServe())
 //  }
 //
 // The router matches incoming requests by the request method and the path.
