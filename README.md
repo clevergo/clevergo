@@ -14,7 +14,7 @@ CleverGo is an enhanced version of [julienschmidt/httprouter](https://github.com
 
 ## Motivation
 
-CleverGo isn't **an another web framework**, it aims to be a **lightweight**, **feature-rich** and **high performance** HTTP router which can be intergrates with any third-party packages(such as HTTP middlewares) easily.
+CleverGo **isn't an another web framework**, it aims to be a **lightweight**, **feature-rich** and **high performance** HTTP router which can be intergrates with any third-party packages(such as HTTP middlewares) easily.
 
 ## Features
 
@@ -28,7 +28,7 @@ CleverGo isn't **an another web framework**, it aims to be a **lightweight**, **
 
 **Zero Garbage:** The matching and dispatching process generates zero bytes of garbage. The only heap allocations that are made are building the slice of the key-value pairs for path parameters, and building new context and request objects (the latter only in the standard `Handler`/`HandlerFunc` API). In the 3-argument API, if the request path contains no parameters not a single heap allocation is necessary.
 
-**High Performance:** CleverGo is based on [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter).
+**High Performance**
 
 **Perfect for APIs:** The router design encourages to build sensible, hierarchical RESTful APIs. Moreover it has built-in native support for [OPTIONS requests](http://zacstewart.com/2012/04/14/http-options-method.html) and `405 Method Not Allowed` replies.
 
