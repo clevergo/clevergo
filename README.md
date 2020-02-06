@@ -100,6 +100,6 @@ There are multiple reasons:
 
 - Slow maintenance, such as the PR of [subrouter](https://github.com/julienschmidt/httprouter/pull/89) is still unaccepted.
 - Missing some [useful features](#extra-features) I mentioned above.
-- Breaking compatibility for introduing features, see [differences](#differences) above.
+- Breaking compatibility for introducing features, see [differences](#differences) above.
 
 Anyway, httprouter is definitely an awesome package.
