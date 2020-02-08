@@ -13,6 +13,46 @@ import (
 	"strings"
 )
 
+// IRouter is an router interface.
+type IRouter interface {
+	// Group creates a sub IRouter with the given optional route group options.
+	Group(path string, opts ...RouteGroupOption) IRouter
+
+	// Get registers a new GET request handler function with the given path and optional route options.
+	Get(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Head registers a new HEAD request handler function with the given path and optional route options.
+	Head(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Options registers a new Options request handler function with the given path and optional route options.
+	Options(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Post registers a new POST request handler function with the given path and optional route options.
+	Post(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Put registers a new PUT request handler function with the given path and optional route options.
+	Put(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Patch registers a new PATCH request handler function with the given path and optional route options.
+	Patch(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Delete registers a new DELETE request handler function with the given path and optional route options.
+	Delete(path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// HandleFunc registers a new request handler function with the given path, method and optional route options.
+	//
+	// For Get, Head, Options, Post, Put, Patch and Delete requests the respective shortcut
+	// functions can be used.
+	//
+	// This function is intended for bulk loading and to allow the usage of less
+	// frequently used, non-standardized or custom methods (e.g. for internal
+	// communication with a proxy).
+	HandleFunc(method, path string, handle http.HandlerFunc, opts ...RouteOption)
+
+	// Handle registers a new request handler with the given path, method and optional route options.
+	Handle(method, path string, handler http.Handler, opts ...RouteOption)
+}
+
 var routeParamRegexp = regexp.MustCompile(`([\:|\*])([^\:\*\/]+)`)
 
 // Route is a HTTP request handler.
@@ -144,17 +184,17 @@ func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *Route
 	return route
 }
 
-// Group creates route group with the given path and optional route options.
-func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) *RouteGroup {
+// Group implements IRouter.Group.
+func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) IRouter {
 	return newRouteGroup(r.parent, r.subPath(path), opts...)
 }
 
-// HandleFunc is a shortcut of RouteGroup.Handle(http.MethodDelete, path, http.HandlerFunc(handle), opts ...)
+// HandleFunc implements IRouter.HandleFunc.
 func (r *RouteGroup) HandleFunc(method, path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.Handle(method, path, http.HandlerFunc(handle), opts...)
 }
 
-// Handle registers a new request handler with the given path, method and optional route options.
+// Handle implements IRouter.Handle.
 func (r *RouteGroup) Handle(method, path string, handler http.Handler, opts ...RouteOption) {
 	handler = Chain(handler, r.middlewares...)
 
@@ -166,37 +206,37 @@ func (r *RouteGroup) Handle(method, path string, handler http.Handler, opts ...R
 	r.parent.Handle(method, r.subPath(path), handler, opts...)
 }
 
-// Get is a shortcut of RouteGroup.HandleFunc(http.MethodGet, path, handle, opts ...)
+// Get implements IRouter.Get.
 func (r *RouteGroup) Get(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodGet, path, handle, opts...)
 }
 
-// Head is a shortcut of RouteGroup.HandleFunc(http.MethodHead, path, handle, opts ...)
+// Head implements IRouter.Head.
 func (r *RouteGroup) Head(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodHead, path, handle, opts...)
 }
 
-// Options is a shortcut of RouteGroup.HandleFunc(http.MethodOptions, path, handle, opts ...)
+// Options implements IRouter.Options.
 func (r *RouteGroup) Options(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodOptions, path, handle, opts...)
 }
 
-// Post is a shortcut of RouteGroup.HandleFunc(http.MethodPost, path, handle, opts ...)
+// Post implements IRouter.Post.
 func (r *RouteGroup) Post(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodPost, path, handle, opts...)
 }
 
-// Put is a shortcut of RouteGroup.HandleFunc(http.MethodPut, path, handle, opts ...)
+// Put implements IRouter.Put.
 func (r *RouteGroup) Put(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodPut, path, handle, opts...)
 }
 
-// Patch is a shortcut of RouteGroup.HandleFunc(http.MethodPatch, path, handle, opts ...)
+// Patch implements IRouter.Patch.
 func (r *RouteGroup) Patch(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodPatch, path, handle, opts...)
 }
 
-// Delete is a shortcut of RouteGroup.HandleFunc(http.MethodDelete, path, handle, opts ...)
+// Delete implements IRouter.Delete.
 func (r *RouteGroup) Delete(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodDelete, path, handle, opts...)
 }

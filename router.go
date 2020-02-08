@@ -180,54 +180,47 @@ func (r *Router) URL(name string, args ...string) (*url.URL, error) {
 	return nil, fmt.Errorf("route %q does not exist", name)
 }
 
-// Group creates route group with the given path and optional route options.
-func (r *Router) Group(path string, opts ...RouteGroupOption) *RouteGroup {
+// Group implements IRouter.Group.
+func (r *Router) Group(path string, opts ...RouteGroupOption) IRouter {
 	return newRouteGroup(r, path, opts...)
 }
 
-// Get is a shortcut of Router.HandleFunc(http.MethodGet, path, handle, opts ...)
+// Get implements IRouter.Get.
 func (r *Router) Get(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodGet, path, handle, opts...)
 }
 
-// Head is a shortcut of Router.HandleFunc(http.MethodHead, path, handle, opts ...)
+// Head implements IRouter.Head.
 func (r *Router) Head(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodHead, path, handle)
 }
 
-// Options is a shortcut of Router.HandleFunc(http.MethodOptions, path, handle, opts ...)
+// Options implements IRouter.Options.
 func (r *Router) Options(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodOptions, path, handle)
 }
 
-// Post is a shortcut of Router.HandleFunc(http.MethodPost, path, handle, opts ...)
+// Post implements IRouter.Post.
 func (r *Router) Post(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodPost, path, handle)
 }
 
-// Put is a shortcut of Router.HandleFunc(http.MethodPut, path, handle, opts ...)
+// Put implements IRouter.Put.
 func (r *Router) Put(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodPut, path, handle)
 }
 
-// Patch is a shortcut of Router.HandleFunc(http.MethodPatch, path, handle, opts ...)
+// Patch implements IRouter.Patch.
 func (r *Router) Patch(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodPatch, path, handle)
 }
 
-// Delete is a shortcut of Router.HandleFunc(http.MethodDelete, path, handle, opts ...)
+// Delete implements IRouter.Delete.
 func (r *Router) Delete(path string, handle http.HandlerFunc, opts ...RouteOption) {
 	r.HandleFunc(http.MethodDelete, path, handle)
 }
 
-// HandleFunc registers a new request handler function with the given path, method and optional route options.
-//
-// For Get, Head, Options, Post, Put, Patch and Delete requests the respective shortcut
-// functions can be used.
-//
-// This function is intended for bulk loading and to allow the usage of less
-// frequently used, non-standardized or custom methods (e.g. for internal
-// communication with a proxy).
+// HandleFunc implements IRouter.HandleFunc.
 func (r *Router) HandleFunc(method, path string, handle http.HandlerFunc, opts ...RouteOption) {
 	if handle == nil {
 		panic("handle must not be nil")
@@ -235,7 +228,7 @@ func (r *Router) HandleFunc(method, path string, handle http.HandlerFunc, opts .
 	r.Handle(method, path, http.HandlerFunc(handle), opts...)
 }
 
-// Handle registers a new request handler with the given path, method and optional route options.
+// Handle implements IRouter.Handle.
 func (r *Router) Handle(method, path string, handler http.Handler, opts ...RouteOption) {
 	if method == "" {
 		panic("method must not be empty")
