@@ -5,80 +5,26 @@
 package clevergo
 
 import (
-	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync"
 )
 
-type contextKey int
+type Handle func(ctx *Context)
 
-const (
-	paramsKey contextKey = iota
-	routeKey
-)
-
-// Param is a single URL parameter, consisting of a key and a value.
-type Param struct {
-	Key   string
-	Value string
-}
-
-// Params is a Param-slice, as returned by the router.
-// The slice is ordered, the first URL parameter is also the first slice value.
-// It is therefore safe to read values by the index.
-type Params []Param
-
-// Get returns the value of the first Param which key matches the given name.
-// If no matching Param is found, an empty string is returned.
-func (ps Params) Get(name string) string {
-	for _, p := range ps {
-		if p.Key == name {
-			return p.Value
-		}
+func HandleHandler(handler http.Handler) Handle {
+	return func(ctx *Context) {
+		handler.ServeHTTP(ctx.Response, ctx.Request)
 	}
-	return ""
 }
 
-// Bool returns the boolean value of the given name.
-func (ps Params) Bool(name string) (bool, error) {
-	return strconv.ParseBool(ps.Get(name))
-}
-
-// Float64 returns the float64 value of the given name.
-func (ps Params) Float64(name string) (float64, error) {
-	return strconv.ParseFloat(ps.Get(name), 64)
-}
-
-// Int returns the int value of the given name.
-func (ps Params) Int(name string) (int, error) {
-	return strconv.Atoi(ps.Get(name))
-}
-
-// Int64 returns the int64 value of the given name.
-func (ps Params) Int64(name string) (int64, error) {
-	return strconv.ParseInt(ps.Get(name), 10, 64)
-}
-
-// Uint64 returns the uint64 value of the given name.
-func (ps Params) Uint64(name string) (uint64, error) {
-	return strconv.ParseUint(ps.Get(name), 10, 64)
-}
-
-// GetParams returns params of the request.
-func GetParams(req *http.Request) Params {
-	ps, _ := req.Context().Value(paramsKey).(Params)
-	return ps
-}
-
-// GetRoute returns matched route of the request, it
-// only works if Router.SaveMatchedRoute is turn on.
-func GetRoute(req *http.Request) *Route {
-	r, _ := req.Context().Value(routeKey).(*Route)
-	return r
+func HandleHandlerFunc(f http.HandlerFunc) Handle {
+	return func(ctx *Context) {
+		f(ctx.Response, ctx.Request)
+	}
 }
 
 // Router is a http.Handler which can be used to dispatch requests to different
@@ -91,10 +37,6 @@ type Router struct {
 
 	paramsPool sync.Pool
 	maxParams  uint16
-
-	// If enabled, adds the matched route onto the http.Request context
-	// before invoking the handler.
-	SaveMatchedRoute bool
 
 	// Enables automatic redirection if the current route can't be matched but a
 	// handler for the path with (without) the trailing slash exists.
@@ -145,6 +87,8 @@ type Router struct {
 	// The "Allow" header with allowed request methods is set before the handler
 	// is called.
 	MethodNotAllowed http.Handler
+
+	ErrorHandler ErrorHandler
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -186,55 +130,50 @@ func (r *Router) Group(path string, opts ...RouteGroupOption) IRouter {
 }
 
 // Get implements IRouter.Get.
-func (r *Router) Get(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodGet, path, handle, opts...)
+func (r *Router) Get(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodGet, path, handle, opts...)
 }
 
 // Head implements IRouter.Head.
-func (r *Router) Head(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodHead, path, handle)
+func (r *Router) Head(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodHead, path, handle)
 }
 
 // Options implements IRouter.Options.
-func (r *Router) Options(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodOptions, path, handle)
+func (r *Router) Options(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodOptions, path, handle)
 }
 
 // Post implements IRouter.Post.
-func (r *Router) Post(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodPost, path, handle)
+func (r *Router) Post(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodPost, path, handle)
 }
 
 // Put implements IRouter.Put.
-func (r *Router) Put(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodPut, path, handle)
+func (r *Router) Put(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodPut, path, handle)
 }
 
 // Patch implements IRouter.Patch.
-func (r *Router) Patch(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodPatch, path, handle)
+func (r *Router) Patch(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodPatch, path, handle)
 }
 
 // Delete implements IRouter.Delete.
-func (r *Router) Delete(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodDelete, path, handle)
-}
-
-// HandleFunc implements IRouter.HandleFunc.
-func (r *Router) HandleFunc(method, path string, handle http.HandlerFunc, opts ...RouteOption) {
-	if handle == nil {
-		panic("handle must not be nil")
-	}
-	r.Handle(method, path, http.HandlerFunc(handle), opts...)
+func (r *Router) Delete(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodDelete, path, handle, opts...)
 }
 
 // Handle implements IRouter.Handle.
-func (r *Router) Handle(method, path string, handler http.Handler, opts ...RouteOption) {
+func (r *Router) Handle(method, path string, handle Handle, opts ...RouteOption) {
 	if method == "" {
 		panic("method must not be empty")
 	}
 	if len(path) < 1 || path[0] != '/' {
 		panic("path must begin with '/' in path '" + path + "'")
+	}
+	if handle == nil {
+		panic("handle must not be nil")
 	}
 	if r.trees == nil {
 		r.trees = make(map[string]*node)
@@ -248,7 +187,7 @@ func (r *Router) Handle(method, path string, handler http.Handler, opts ...Route
 		r.globalAllowed = r.allowed("*", "")
 	}
 
-	route := newRoute(path, handler, opts...)
+	route := newRoute(path, handle, opts...)
 	if route.name != "" {
 		if _, ok := r.routes[route.name]; ok {
 			panic("route name " + route.name + " is already registered")
@@ -274,6 +213,14 @@ func (r *Router) Handle(method, path string, handler http.Handler, opts ...Route
 	}
 }
 
+func (r *Router) Handler(method, path string, handler http.Handler, opts ...RouteOption) {
+	r.Handle(method, path, HandleHandler(handler), opts...)
+}
+
+func (r *Router) HandlerFunc(method, path string, f http.HandlerFunc, opts ...RouteOption) {
+	r.Handle(method, path, HandleHandlerFunc(f), opts...)
+}
+
 // ServeFiles serves files from the given file system root.
 // The path must end with "/*filepath", files are then served from the local
 // path /defined/root/dir/*filepath.
@@ -291,9 +238,9 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 
 	fileServer := http.FileServer(root)
 
-	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
-		req.URL.Path = GetParams(req).Get("filepath")
-		fileServer.ServeHTTP(w, req)
+	r.Get(path, func(ctx *Context) {
+		ctx.Request.URL.Path = ctx.Params.String("filepath")
+		fileServer.ServeHTTP(ctx.Response, ctx.Request)
 	})
 }
 
@@ -372,16 +319,13 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if root := r.trees[req.Method]; root != nil {
 		if route, ps, tsr := root.getValue(path, r.getParams); route != nil {
+			ctx := NewContext(w, req)
+			ctx.Route = route
 			if ps != nil {
-				ctx := context.WithValue(req.Context(), paramsKey, *ps)
-				req = req.WithContext(ctx)
 				r.putParams(ps)
+				ctx.Params = *ps
 			}
-			if r.SaveMatchedRoute {
-				ctx := context.WithValue(req.Context(), routeKey, route)
-				req = req.WithContext(ctx)
-			}
-			route.handler.ServeHTTP(w, req)
+			route.handle(ctx)
 			return
 		} else if req.Method != http.MethodConnect && path != "/" {
 			// Moved Permanently, request with Get method
@@ -446,4 +390,19 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	} else {
 		http.NotFound(w, req)
 	}
+}
+
+func (r *Router) handleError(ctx *Context, err error) {
+	if r.ErrorHandler != nil {
+		r.ErrorHandler.Handle(ctx, err)
+		return
+	}
+
+	if err2, ok := err.(Error); ok {
+		ctx.Error(err2.Error(), err2.Status())
+		return
+	}
+
+	log.Println(err)
+	ctx.Error(http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }

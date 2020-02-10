@@ -73,29 +73,29 @@ func TestRouteGroupAPI(t *testing.T) {
 
 	router := NewRouter()
 	api := router.Group("/api")
-	api.Get("/GET", func(w http.ResponseWriter, r *http.Request) {
+	api.Get("/GET", func(ctx *Context) {
 		get = true
 	})
-	api.Head("/GET", func(w http.ResponseWriter, r *http.Request) {
+	api.Head("/GET", func(ctx *Context) {
 		head = true
 	})
-	api.Options("/GET", func(w http.ResponseWriter, r *http.Request) {
+	api.Options("/GET", func(ctx *Context) {
 		options = true
 	})
-	api.Post("/POST", func(w http.ResponseWriter, r *http.Request) {
+	api.Post("/POST", func(ctx *Context) {
 		post = true
 	})
-	api.Put("/PUT", func(w http.ResponseWriter, r *http.Request) {
+	api.Put("/PUT", func(ctx *Context) {
 		put = true
 	})
-	api.Patch("/PATCH", func(w http.ResponseWriter, r *http.Request) {
+	api.Patch("/PATCH", func(ctx *Context) {
 		patch = true
 	})
-	api.Delete("/DELETE", func(w http.ResponseWriter, r *http.Request) {
+	api.Delete("/DELETE", func(ctx *Context) {
 		delete = true
 	})
-	api.Handle(http.MethodGet, "/Handler", httpHandler)
-	api.HandleFunc(http.MethodGet, "/HandlerFunc", func(w http.ResponseWriter, r *http.Request) {
+	api.Handler(http.MethodGet, "/Handler", httpHandler)
+	api.HandlerFunc(http.MethodGet, "/HandlerFunc", func(w http.ResponseWriter, r *http.Request) {
 		handlerFunc = true
 	})
 
@@ -261,15 +261,13 @@ func ExampleRouteGroup() {
 	api := router.Group("/api")
 
 	v1 := api.Group("/v1")
-	v1.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
-		params := GetParams(r)
-		fmt.Printf("v1 user: %s\n", params.Get("name"))
+	v1.Get("/users/:name", func(ctx *Context) {
+		fmt.Printf("v1 user: %s\n", ctx.Params.String("name"))
 	})
 
 	v2 := api.Group("/v2")
-	v2.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {
-		params := GetParams(r)
-		fmt.Printf("v2 user: %s\n", params.Get("name"))
+	v2.Get("/users/:name", func(ctx *Context) {
+		fmt.Printf("v2 user: %s\n", ctx.Params.String("name"))
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)
@@ -285,11 +283,9 @@ func ExampleRouteGroup() {
 
 func ExampleGetRoute() {
 	router := NewRouter()
-	router.SaveMatchedRoute = true
-	router.Get("/posts/:page", func(_ http.ResponseWriter, r *http.Request) {
-		ps := GetParams(r)
-		page, _ := ps.Int("page")
-		route := GetRoute(r)
+	router.Get("/posts/:page", func(ctx *Context) {
+		page, _ := ctx.Params.Int("page")
+		route := ctx.Route
 		prev, _ := route.URL("page", strconv.Itoa(page-1))
 		next, _ := route.URL("page", strconv.Itoa(page+1))
 		fmt.Printf("prev page url: %s\n", prev)

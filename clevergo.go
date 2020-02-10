@@ -5,6 +5,7 @@
 package clevergo
 
 import (
+	"log"
 	"net"
 	"net/http"
 )
@@ -14,8 +15,8 @@ type Application struct {
 	*Router
 	*http.Server
 
-	middlewares []Middleware
-	onCleanUp   []func()
+	middlewares []MiddlewareFunc
+	onCleanup   []func()
 }
 
 // New returns an application.
@@ -29,12 +30,13 @@ func New(addr string) *Application {
 }
 
 // Use registers middlewares.
-func (app *Application) Use(middlewares ...Middleware) {
+func (app *Application) Use(middlewares ...MiddlewareFunc) {
 	app.middlewares = append(app.middlewares, middlewares...)
 }
 
 func (app *Application) prepare() {
-	app.Server.Handler = Chain(app.Router, app.middlewares...)
+	//app.Server.Handler = Chain(app.Router, app.middlewares...)
+	app.Server.Handler = app.Router
 }
 
 // ListenAndServe overrides http.Server.ListenAndServe with extra preparations.
@@ -71,14 +73,24 @@ func (app *Application) ServeTLS(l net.Listener, certFile, keyFile string) error
 	return app.Server.ServeTLS(l, certFile, keyFile)
 }
 
-// RegisterOnCleanUp registers a function to call on CleanUp.
-func (app *Application) RegisterOnCleanUp(fs func()) {
-	app.onCleanUp = append(app.onCleanUp, fs)
+// RegisterOnCleanup registers a function to call on CleanUp.
+func (app *Application) RegisterOnCleanup(f func()) {
+	cleanup := func() {
+		defer app.cleanupRecover()
+		f()
+	}
+	app.onCleanup = append(app.onCleanup, cleanup)
 }
 
-// CleanUp calls clean up functions before closing server.
-func (app *Application) CleanUp() {
-	for _, f := range app.onCleanUp {
+func (app *Application) cleanupRecover() {
+	if r := recover(); r != nil {
+		log.Println("recovered in cleanup", r)
+	}
+}
+
+// Cleanup calls clean up functions before closing server.
+func (app *Application) Cleanup() {
+	for _, f := range app.onCleanup {
 		f()
 	}
 }

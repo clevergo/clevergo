@@ -19,25 +19,25 @@ type IRouter interface {
 	Group(path string, opts ...RouteGroupOption) IRouter
 
 	// Get registers a new GET request handler function with the given path and optional route options.
-	Get(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Get(path string, handle Handle, opts ...RouteOption)
 
 	// Head registers a new HEAD request handler function with the given path and optional route options.
-	Head(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Head(path string, handle Handle, opts ...RouteOption)
 
 	// Options registers a new Options request handler function with the given path and optional route options.
-	Options(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Options(path string, handle Handle, opts ...RouteOption)
 
 	// Post registers a new POST request handler function with the given path and optional route options.
-	Post(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Post(path string, handle Handle, opts ...RouteOption)
 
 	// Put registers a new PUT request handler function with the given path and optional route options.
-	Put(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Put(path string, handle Handle, opts ...RouteOption)
 
 	// Patch registers a new PATCH request handler function with the given path and optional route options.
-	Patch(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Patch(path string, handle Handle, opts ...RouteOption)
 
 	// Delete registers a new DELETE request handler function with the given path and optional route options.
-	Delete(path string, handle http.HandlerFunc, opts ...RouteOption)
+	Delete(path string, handle Handle, opts ...RouteOption)
 
 	// HandleFunc registers a new request handler function with the given path, method and optional route options.
 	//
@@ -47,10 +47,11 @@ type IRouter interface {
 	// This function is intended for bulk loading and to allow the usage of less
 	// frequently used, non-standardized or custom methods (e.g. for internal
 	// communication with a proxy).
-	HandleFunc(method, path string, handle http.HandlerFunc, opts ...RouteOption)
+	Handle(method, path string, handle Handle, opts ...RouteOption)
 
-	// Handle registers a new request handler with the given path, method and optional route options.
-	Handle(method, path string, handler http.Handler, opts ...RouteOption)
+	Handler(method, path string, handler http.Handler, opts ...RouteOption)
+
+	HandlerFunc(method, path string, f http.HandlerFunc, opts ...RouteOption)
 }
 
 var routeParamRegexp = regexp.MustCompile(`([\:|\*])([^\:\*\/]+)`)
@@ -61,14 +62,14 @@ type Route struct {
 	name    string
 	pattern string
 	params  []routeParam
-	handler http.Handler
+	handle  Handle
 }
 
-func newRoute(path string, handler http.Handler, opts ...RouteOption) *Route {
+func newRoute(path string, handle Handle, opts ...RouteOption) *Route {
 	r := &Route{
 		path:    path,
 		pattern: path,
-		handler: handler,
+		handle:  handle,
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -142,9 +143,9 @@ func RouteName(name string) RouteOption {
 }
 
 // RouteMiddleware is a route option for chainging middlewares to a route.
-func RouteMiddleware(middlewares ...Middleware) RouteOption {
+func RouteMiddleware(middlewares ...MiddlewareFunc) RouteOption {
 	return func(r *Route) {
-		r.handler = Chain(r.handler, middlewares...)
+		r.handle = Chain(r.handle, middlewares...)
 	}
 }
 
@@ -152,7 +153,7 @@ func RouteMiddleware(middlewares ...Middleware) RouteOption {
 type RouteGroupOption func(*RouteGroup)
 
 // RouteGroupMiddleware is a option for chainging middlewares to a route group.
-func RouteGroupMiddleware(middlewares ...Middleware) RouteGroupOption {
+func RouteGroupMiddleware(middlewares ...MiddlewareFunc) RouteGroupOption {
 	return func(r *RouteGroup) {
 		r.middlewares = append(r.middlewares, middlewares...)
 	}
@@ -163,7 +164,7 @@ func RouteGroupMiddleware(middlewares ...Middleware) RouteGroupOption {
 type RouteGroup struct {
 	parent      *Router
 	path        string
-	middlewares []Middleware
+	middlewares []MiddlewareFunc
 }
 
 func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *RouteGroup {
@@ -189,56 +190,59 @@ func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) IRouter {
 	return newRouteGroup(r.parent, r.subPath(path), opts...)
 }
 
-// HandleFunc implements IRouter.HandleFunc.
-func (r *RouteGroup) HandleFunc(method, path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.Handle(method, path, http.HandlerFunc(handle), opts...)
-}
-
 // Handle implements IRouter.Handle.
-func (r *RouteGroup) Handle(method, path string, handler http.Handler, opts ...RouteOption) {
-	handler = Chain(handler, r.middlewares...)
+func (r *RouteGroup) Handle(method, path string, handle Handle, opts ...RouteOption) {
+	handle = Chain(handle, r.middlewares...)
 
 	opts = append(opts, func(route *Route) {
 		if route.name != "" {
 			route.name = r.path + "/" + route.name
 		}
 	})
-	r.parent.Handle(method, r.subPath(path), handler, opts...)
+	r.parent.Handle(method, r.subPath(path), handle, opts...)
+}
+
+func (r *RouteGroup) Handler(method, path string, handler http.Handler, opts ...RouteOption) {
+	r.Handle(method, path, HandleHandler(handler), opts...)
+}
+
+func (r *RouteGroup) HandlerFunc(method, path string, f http.HandlerFunc, opts ...RouteOption) {
+	r.Handle(method, path, HandleHandlerFunc(f), opts...)
 }
 
 // Get implements IRouter.Get.
-func (r *RouteGroup) Get(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodGet, path, handle, opts...)
+func (r *RouteGroup) Get(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodGet, path, handle, opts...)
 }
 
 // Head implements IRouter.Head.
-func (r *RouteGroup) Head(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodHead, path, handle, opts...)
+func (r *RouteGroup) Head(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodHead, path, handle, opts...)
 }
 
 // Options implements IRouter.Options.
-func (r *RouteGroup) Options(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodOptions, path, handle, opts...)
+func (r *RouteGroup) Options(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodOptions, path, handle, opts...)
 }
 
 // Post implements IRouter.Post.
-func (r *RouteGroup) Post(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodPost, path, handle, opts...)
+func (r *RouteGroup) Post(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodPost, path, handle, opts...)
 }
 
 // Put implements IRouter.Put.
-func (r *RouteGroup) Put(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodPut, path, handle, opts...)
+func (r *RouteGroup) Put(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodPut, path, handle, opts...)
 }
 
 // Patch implements IRouter.Patch.
-func (r *RouteGroup) Patch(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodPatch, path, handle, opts...)
+func (r *RouteGroup) Patch(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodPatch, path, handle, opts...)
 }
 
 // Delete implements IRouter.Delete.
-func (r *RouteGroup) Delete(path string, handle http.HandlerFunc, opts ...RouteOption) {
-	r.HandleFunc(http.MethodDelete, path, handle, opts...)
+func (r *RouteGroup) Delete(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(http.MethodDelete, path, handle, opts...)
 }
 
 func (r *RouteGroup) subPath(path string) string {

@@ -95,7 +95,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestApplicationUse(t *testing.T) {
-	tests := [][]Middleware{
+	tests := [][]MiddlewareFunc{
 		{echoMiddleware("one"), echoMiddleware("two")},
 		{echoMiddleware("foo"), echoMiddleware("bar")},
 	}
@@ -106,12 +106,12 @@ func TestApplicationUse(t *testing.T) {
 			t.Fatalf("middlewares count doesn't match, expected %d, got %d", len(middlewares), len(app.middlewares))
 		}
 
-		handler1 := Chain(echoHandler(""), middlewares...)
+		handle1 := Chain(echoHandler(""), middlewares...)
 		resp1 := httptest.NewRecorder()
-		handler1.ServeHTTP(resp1, nil)
-		handler2 := Chain(echoHandler(""), app.middlewares...)
+		handle1(NewContext(resp1, nil))
+		handle2 := Chain(echoHandler(""), app.middlewares...)
 		resp2 := httptest.NewRecorder()
-		handler2.ServeHTTP(resp2, nil)
+		handle2(NewContext(resp2, nil))
 		for resp1.Body.String() != resp2.Body.String() {
 			t.Errorf("failed to use middlewares, expected body %q, got %q", resp1.Body.String(), resp2.Body.String())
 		}
@@ -119,17 +119,23 @@ func TestApplicationUse(t *testing.T) {
 }
 
 func TestApplicationCleanUp(t *testing.T) {
-	cleanOne := false
-	cleanTwo := false
+	var cleanOne, cleanTwo, cleanThree bool
 	app := New("")
-	app.RegisterOnCleanUp(func() { cleanOne = true })
-	app.RegisterOnCleanUp(func() { cleanTwo = true })
-	app.CleanUp()
+	app.RegisterOnCleanup(func() { cleanOne = true })
+	app.RegisterOnCleanup(func() {
+		cleanTwo = true
+		panic("panic in two")
+	})
+	app.RegisterOnCleanup(func() { cleanThree = true })
+	app.Cleanup()
 	if !cleanOne {
 		t.Error("failed to invoke clean up one")
 	}
 	if !cleanTwo {
 		t.Error("failed to invoke clean up two")
+	}
+	if !cleanThree {
+		t.Error("failed to invoke clean up three")
 	}
 }
 
@@ -256,18 +262,18 @@ func ExampleApplication() {
 	// application is wrapper of Router and http.Server.
 	app := New("localhost:8080")
 	// clean up.
-	defer app.CleanUp()
+	defer app.Cleanup()
 
 	// here is a simple server header middleware, just for showing the use case of middleware.
-	var serverHeaderMiddleware Middleware = func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Server", "clevergo")
-			next.ServeHTTP(w, r)
-		})
+	var serverHeaderMiddleware MiddlewareFunc = func(handle Handle) Handle {
+		return func(ctx *Context) {
+			ctx.Response.Header().Set("Server", "clevergo")
+			handle(ctx)
+		}
 	}
 
 	// registers clean up functions.
-	app.RegisterOnCleanUp(func() {
+	app.RegisterOnCleanup(func() {
 		// db.Close()
 		// file.Close()
 		// ...
@@ -285,13 +291,11 @@ func ExampleApplication() {
 	)
 
 	// registers routes
-	app.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "hello world")
+	app.Get("/", func(ctx *Context) {
+		ctx.WriteString("hello world")
 	})
-	app.Get("/hello/:name", func(w http.ResponseWriter, r *http.Request) {
-		// retrieves parameters.
-		ps := GetParams(r)
-		fmt.Fprintf(w, "hello %s", ps.Get("name"))
+	app.Get("/hello/:name", func(ctx *Context) {
+		ctx.WriteString(fmt.Sprintf("hello %s", ctx.Params.String("name")))
 	})
 
 	// APIs
@@ -306,14 +310,14 @@ func ExampleApplication() {
 	// RESTful APIs
 	v1.Get(
 		"/users",
-		func(w http.ResponseWriter, r *http.Request) {},
+		func(ctx *Context) {},
 		// middlewares for current route, such as request body limit.
 		RouteMiddleware(),
 	)
-	v1.Post("/users", func(w http.ResponseWriter, r *http.Request) {})
-	v1.Get("/users/:name", func(w http.ResponseWriter, r *http.Request) {})
-	v1.Put("/users/:name", func(w http.ResponseWriter, r *http.Request) {})
-	v1.Delete("/users/:name", func(w http.ResponseWriter, r *http.Request) {})
+	v1.Post("/users", func(ctx *Context) {})
+	v1.Get("/users/:name", func(ctx *Context) {})
+	v1.Put("/users/:name", func(ctx *Context) {})
+	v1.Delete("/users/:name", func(ctx *Context) {})
 
 	// v2 etc...
 	// v2 := api.Group("/v2")

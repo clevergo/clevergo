@@ -4,15 +4,13 @@
 
 package clevergo
 
-import "net/http"
-
-// Middleware is a function which receives an http.Handler and returns another http.Handler.
-type Middleware func(http.Handler) http.Handler
+// MiddlewareFunc is a function which receives an http.Handler and returns another http.Handler.
+type MiddlewareFunc func(Handle) Handle
 
 // Chain wraps handler with middlewares, middlewares will be invoked in sequence.
-func Chain(handler http.Handler, middlewares ...Middleware) http.Handler {
+func Chain(handle Handle, middlewares ...MiddlewareFunc) Handle {
 	for i := len(middlewares) - 1; i >= 0; i-- {
-		handler = middlewares[i](handler)
+		handle = middlewares[i](handle)
 	}
-	return handler
+	return handle
 }

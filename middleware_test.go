@@ -6,50 +6,49 @@ package clevergo
 
 import (
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func echoHandler(s string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, s)
-	})
-}
-
-func echoMiddleware(s string) Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, s+" ")
-			next.ServeHTTP(w, r)
-		})
+func echoHandler(s string) Handle {
+	return func(ctx *Context) {
+		ctx.WriteString(s)
 	}
 }
 
-func terminatedMiddleware() Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "terminated")
-		})
+func echoMiddleware(s string) MiddlewareFunc {
+	return func(handle Handle) Handle {
+		return func(ctx *Context) {
+			ctx.WriteString(s + " ")
+			handle(ctx)
+		}
+	}
+}
+
+func terminatedMiddleware() MiddlewareFunc {
+	return func(handle Handle) Handle {
+		return func(ctx *Context) {
+			ctx.WriteString("terminated")
+		}
 	}
 }
 
 type chainTest struct {
-	handler     http.Handler
-	middlewares []Middleware
+	handle      Handle
+	middlewares []MiddlewareFunc
 	body        string
 }
 
 func TestChain(t *testing.T) {
 	tests := []chainTest{
-		{echoHandler("foo"), []Middleware{}, "foo"},
-		{echoHandler("foo"), []Middleware{echoMiddleware("one"), echoMiddleware("two")}, "one two foo"},
-		{echoHandler("foo"), []Middleware{echoMiddleware("one"), terminatedMiddleware()}, "one terminated"},
+		{echoHandler("foo"), []MiddlewareFunc{}, "foo"},
+		{echoHandler("foo"), []MiddlewareFunc{echoMiddleware("one"), echoMiddleware("two")}, "one two foo"},
+		{echoHandler("foo"), []MiddlewareFunc{echoMiddleware("one"), terminatedMiddleware()}, "one terminated"},
 	}
 	for _, test := range tests {
 		w := httptest.NewRecorder()
-		handler := Chain(test.handler, test.middlewares...)
-		handler.ServeHTTP(w, nil)
+		handle := Chain(test.handle, test.middlewares...)
+		handle(&Context{Response: w})
 		if test.body != w.Body.String() {
 			t.Errorf("expected body %q, got %q", test.body, w.Body.String())
 		}
@@ -57,22 +56,21 @@ func TestChain(t *testing.T) {
 }
 
 func ExampleChain() {
-	m1 := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "m1 ")
-			next.ServeHTTP(w, r)
-		})
+	m1 := func(handle Handle) Handle {
+		return func(ctx *Context) {
+			ctx.WriteString("m1 ")
+			handle(ctx)
+		}
 	}
-	m2 := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, "m2 ")
-			next.ServeHTTP(w, r)
-		})
+	m2 := func(handle Handle) Handle {
+		return func(ctx *Context) {
+			ctx.WriteString("m2 ")
+			handle(ctx)
+		}
 	}
-	handler := echoHandler("hello")
-	handler = Chain(handler, m1, m2)
+	handle := Chain(echoHandler("hello"), m1, m2)
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, nil)
+	handle(&Context{Response: w})
 	fmt.Println(w.Body.String())
 	// Output:
 	// m1 m2 hello
