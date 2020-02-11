@@ -124,15 +124,15 @@ Middleware also can be used in route group, see [Route Group](#route-group) for 
 ```go
 router := clevergo.NewRouter()
 
-api := router.Group("/api", RouteGroupMiddleware(
+api := router.Group("/api", clevergo.RouteGroupMiddleware(
     // middlewares for APIs, such as CORS, authenticator, authorization
 ))
 
-apiV1 := api.Group("/v1", RouteGroupMiddleware(
+apiV1 := api.Group("/v1", clevergo.RouteGroupMiddleware(
     // middlewares for v1's APIs
 ))
 
-apiV2 := api.Group("v2", RouteGroupMiddleware(
+apiV2 := api.Group("v2", clevergo.RouteGroupMiddleware(
     // middlewares for v2's APIs
 ))
 ```
