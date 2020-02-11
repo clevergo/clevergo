@@ -105,9 +105,9 @@ url, _ := router.URL("post", "year", "2020", "month", "02", "slug", "hello world
 ```go
 authenticator := func (handle clevergo.Handle) clevergo.Handle {
     return func(ctx *clevergo.Context) {
-		// 身份验证, 验证失败则终止请求。
+	// 身份验证, 验证失败则终止请求。
 		
-		// 在中间件间共享数据。
+	// 在中间件间共享数据。
         ctx.WithValue("user", "foo")
         handle(ctx)
     }
