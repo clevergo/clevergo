@@ -10,7 +10,7 @@ CleverGo is a trie based high performance HTTP request router.
 
 - [Benchmark](#benchmark)
 - [Features](#features)
-- [Example](#example)
+- [Examples](#examples)
 - [Contribute](#contribute)
 
 ## Benchmark
@@ -26,8 +26,9 @@ Lower is better!
 - **[Reverse Route Generation](#reverse-route-generation):** there are two ways to generate URL by a route: named route and matched route.
 - **Route Group:** as known as subrouter, see [route group](#route-group).
 - **Friendly to APIs:** it is easy to design [RESTful APIs](#restful-apis) and versioning your APIs by [route group](#route-group).
+- **Middleware:** allow to plug middleware in route group or particular middleware, see [middleware](#middleware) exmaple.
 
-## Example
+## Examples
 
 ```go
 package main
