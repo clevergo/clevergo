@@ -4,34 +4,34 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://pkg.go.dev/github.com/clevergo/clevergo)
 
-[简体中文](README-ZH.md)
+[English](README.md)
 
-CleverGo is a lightweight, feature-rich and trie based high performance HTTP request router.
+CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
-## Contents
+## 目录
 
-- [Benchmark](#benchmark)
-- [Features](#features)
-- [Examples](#examples)
-- [Contribute](#contribute)
+- [基准测试](#基准测试)
+- [功能特性]](#功能特性)
+- [举个栗子]](#举个栗子)
+- [贡献](#贡献)
 
-## Benchmark
+## 基准测试
 
-Date: 2020/02/11
+日期: 2020/02/11
 
-**Lower is better!**
+**越小性能越好**
 
 [![Benchmark](https://imgur.com/n8q1CCd)](https://github.com/razonyang/go-http-routing-benchmark)
 
-## Features
+## 功能特性
 
-- **High Performance:** see [Benchmark](#benchmark) shown above.
-- **[Reverse Route Generation](#reverse-route-generation):** there are two ways to generate URL by a route: named route and matched route.
-- **Route Group:** as known as subrouter, see [route group](#route-group).
-- **Friendly to APIs:** it is easy to design [RESTful APIs](#restful-apis) and versioning your APIs by [route group](#route-group).
-- **Middleware:** allow to plug middleware in route group or particular route, supports global middleware as well, see [middleware](#middleware) exmaple.
+- **高性能：** 参见[基准测试](#基准测试)。
+- **[反向路由生成](#反向路由生成):** 可以通过**命名路由**和**匹配路由**生成 URL。
+- **路由组:** 亦称子路由, 参看[路由组](#路由组)。
+- **对 APIs 友好:** 很容易设计 [RESTful APIs](#restful-apis) 和通过[路由组](#路由组)进行 APIs 版本化。
+- **中间件:** 可以在路由组或特定路由插入中间件，也可以使用全局中间件, 请参看[中间件](#中间件)例子。
 
-## Examples
+## 举个栗子
 
 ```go
 package main
@@ -59,9 +59,9 @@ func main() {
 }
 ```
 
-### Params
+### 参数
 
-There are some useful functions to retrieve the parameter value.
+可以通过多种方式获取各种类型的参数值。
 
 ```go
 func (ctx *clevergo.Context) {
@@ -74,40 +74,40 @@ func (ctx *clevergo.Context) {
 }
 ```
 
-### Static Files
+### 静态文件
 
 ```go
 router.ServeFiles("/static/*filepath", http.Dir("/path/to/static"))
 
-// sometimes, it is useful to treat http.FileServer as NotFoundHandler,
-// such as "/favicon.ico".
+// 有时候，将 http.FileServer 作为 NotFound 处理器很有用处。
+// 比如 "/favicon.ico"。
 router.NotFound = http.FileServer(http.Dir("public"))
 ```
 
-### Reverse Route Generation
+### 反向路由生成
 
 ```go
 queryPost := func (ctx *clevergo.Context) {
-	// generates URL by matched route.
+	// 通过匹配路由生成 URL
 	url, _ := ctx.Route.URL("year", "2020", "month", "02", "slug", "hello world")
 }
 
 router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
 
-// generates URL by named route.
+// 通过命名路由生成 URL
 url, _ := router.URL("post", "year", "2020", "month", "02", "slug", "hello world")
 ```
 
-### Middleware
+### 中间件
 
-Middleware is a function defined as `func (clevergo.Handle) clevergo.Handle`.
+中间件是一个定义为 `func (clevergo.Handle) clevergo.Handle` 的函数。
 
 ```go
 authenticator := func (handle clevergo.Handle) clevergo.Handle {
     return func(ctx *clevergo.Context) {
-		// authenticate, terminate request if failed.
+		// 身份验证, 验证失败则终止请求。
 		
-		// share data between middlewares and handle.
+		// 在中间件间共享数据。
         ctx.WithValue("user", "foo")
         handle(ctx)
     }
@@ -116,20 +116,20 @@ authenticator := func (handle clevergo.Handle) clevergo.Handle {
 router.Get("/auth", func(ctx *clevergo.Context) {
     ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
 }, RouteMiddleware(
-	// middleware for current route.
+	// 中间件，只在当前路由生效。
 	authenticator,
 ))
 ```
 
-Middleware also can be used in route group, see [Route Group](#route-group) for details.
+Middleware also can be used in route group, see [路由组](#路由组) for details.
 
-### Route Group
+### 组路由
 
 ```go
 router := clevergo.NewRouter()
 
 api := router.Group("/api", clevergo.RouteGroupMiddleware(
-    // middlewares for APIs, such as CORS, authenticator, authorization
+    // APIs 的中间件，如：CORS、身份验证、授权验证等。
 ))
 
 apiV1 := api.Group("/v1", clevergo.RouteGroupMiddleware(
@@ -151,14 +151,10 @@ router.Put("/users/:id", updateUser)
 router.Delete("/users/:id", deleteUser)
 ```
 
-See [Route Group](#route-group) for versioning your APIs.
+可以通过[路由组](#路由组)对你的 APIs 进行版本化。
 
-## Contribute
+## 贡献
 
-- Give it a :star: and spread the package.
-- [File an issue](https://github.com/clevergo/clevergo/issues/new) for features or bugs.
-- Fork and make a pull request.
-
-## Credit
-
-- [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
+- 给颗 :star:。
+- [提交问题](https://github.com/clevergo/clevergo/issues/new) 以报告 Bug 或者请求新特性。
+- Fork 和提交 PR。
