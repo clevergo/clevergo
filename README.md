@@ -16,6 +16,7 @@ CleverGo is a trie based high performance HTTP request router.
 ## Benchmark
 
 Date: 2020/02/11
+
 Lower is better!
 
 [![Benchmark](https://i.imgur.com/iKwcbFn.png)](https://github.com/razonyang/go-http-routing-benchmark)
