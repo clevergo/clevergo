@@ -1,0 +1,22 @@
+os:
+  - linux
+  - osx
+language: go
+go:
+  - 1.9.x
+  - 1.10.x
+  - 1.11.x
+  - 1.12.x
+  - 1.13.x
+  - master
+jobs:
+  allow_failures:
+    - go: master
+  fast_finish: true
+before_install:
+  - go get github.com/mattn/goveralls
+script:
+  - travis_retry go test -v -covermode=count -coverprofile=coverage.out
+  - travis_retry go vet ./...
+  - travis_retry test -z "$(gofmt -d -s . | tee /dev/stderr)"
+  - travis_retry $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
