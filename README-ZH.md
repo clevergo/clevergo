@@ -11,8 +11,8 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 ## 目录
 
 - [基准测试](#基准测试)
-- [功能特性]](#功能特性)
-- [举个栗子]](#举个栗子)
+- [功能特性](#功能特性)
+- [举个栗子](#举个栗子)
 - [贡献](#贡献)
 
 ## 基准测试
@@ -21,7 +21,7 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
 **越小性能越好**
 
-[![Benchmark](https://imgur.com/n8q1CCd)](https://github.com/razonyang/go-http-routing-benchmark)
+[![Benchmark](https://i.imgur.com/n8q1CCd.png)](https://github.com/razonyang/go-http-routing-benchmark)
 
 ## 功能特性
 
@@ -119,11 +119,14 @@ router.Get("/auth", func(ctx *clevergo.Context) {
 	// 中间件，只在当前路由生效。
 	authenticator,
 ))
+
+// 全局路由，以 gorilla compress 中间件为例。
+http.ListenAndServe(":8080", handlers.CompressHandler(router))
 ```
 
-Middleware also can be used in route group, see [路由组](#路由组) for details.
+中间件也可以在[路由组](#路由组)中使用。
 
-### 组路由
+### 路由组
 
 ```go
 router := clevergo.NewRouter()

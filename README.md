@@ -21,7 +21,7 @@ Date: 2020/02/11
 
 **Lower is better!**
 
-[![Benchmark](https://imgur.com/n8q1CCd)](https://github.com/razonyang/go-http-routing-benchmark)
+[![Benchmark](https://i.imgur.com/n8q1CCd.png)](https://github.com/razonyang/go-http-routing-benchmark)
 
 ## Features
 
@@ -119,6 +119,9 @@ router.Get("/auth", func(ctx *clevergo.Context) {
 	// middleware for current route.
 	authenticator,
 ))
+
+// global middleware, takes gorilla compress middleware as exmaple.
+http.ListenAndServe(":8080", handlers.CompressHandler(router))
 ```
 
 Middleware also can be used in route group, see [Route Group](#route-group) for details.
