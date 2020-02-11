@@ -105,9 +105,9 @@ Middleware is a function defined as `func (clevergo.Handle) clevergo.Handle`.
 ```go
 authenticator := func (handle clevergo.Handle) clevergo.Handle {
     return func(ctx *clevergo.Context) {
-		// authenticate, terminate request if failed.
+	// authenticate, terminate request if failed.
 		
-		// share data between middlewares and handle.
+	// share data between middlewares and handle.
         ctx.WithValue("user", "foo")
         handle(ctx)
     }
