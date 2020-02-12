@@ -170,12 +170,13 @@ func TestRouter(t *testing.T) {
 	router := NewRouter()
 
 	routed := false
-	router.Handle(http.MethodGet, "/user/:name", func(ctx *Context) {
+	router.Handle(http.MethodGet, "/user/:name", func(ctx *Context) error {
 		routed = true
 		want := Params{Param{"name", "gopher"}}
 		if !reflect.DeepEqual(ctx.Params, want) {
 			t.Fatalf("wrong wildcard values: want %v, got %v", want, ctx.Params)
 		}
+		return nil
 	})
 
 	w := new(mockResponseWriter)
@@ -202,26 +203,33 @@ func TestRouterAPI(t *testing.T) {
 	httpHandler := handlerStruct{&handler}
 
 	router := NewRouter()
-	router.Get("/GET", func(ctx *Context) {
+	router.Get("/GET", func(ctx *Context) error {
 		get = true
+		return nil
 	})
-	router.Head("/GET", func(ctx *Context) {
+	router.Head("/GET", func(ctx *Context) error {
 		head = true
+		return nil
 	})
-	router.Options("/GET", func(ctx *Context) {
+	router.Options("/GET", func(ctx *Context) error {
 		options = true
+		return nil
 	})
-	router.Post("/POST", func(ctx *Context) {
+	router.Post("/POST", func(ctx *Context) error {
 		post = true
+		return nil
 	})
-	router.Put("/PUT", func(ctx *Context) {
+	router.Put("/PUT", func(ctx *Context) error {
 		put = true
+		return nil
 	})
-	router.Patch("/PATCH", func(ctx *Context) {
+	router.Patch("/PATCH", func(ctx *Context) error {
 		patch = true
+		return nil
 	})
-	router.Delete("/DELETE", func(ctx *Context) {
+	router.Delete("/DELETE", func(ctx *Context) error {
 		delete = true
+		return nil
 	})
 	router.Handler(http.MethodGet, "/Handler", httpHandler)
 	router.HandlerFunc(http.MethodGet, "/HandlerFunc", func(w http.ResponseWriter, r *http.Request) {
@@ -288,7 +296,9 @@ func TestRouterAPI(t *testing.T) {
 func TestRouterInvalidInput(t *testing.T) {
 	router := NewRouter()
 
-	handle := func(ctx *Context) {}
+	handle := func(ctx *Context) error {
+		return nil
+	}
 
 	recv := catchPanic(func() {
 		router.Handle("", "/", handle)
@@ -325,15 +335,17 @@ func TestRouterChaining(t *testing.T) {
 	router1.NotFound = router2
 
 	fooHit := false
-	router1.Post("/foo", func(ctx *Context) {
+	router1.Post("/foo", func(ctx *Context) error {
 		fooHit = true
 		ctx.Response.WriteHeader(http.StatusOK)
+		return nil
 	})
 
 	barHit := false
-	router2.Post("/bar", func(ctx *Context) {
+	router2.Post("/bar", func(ctx *Context) error {
 		barHit = true
 		ctx.Response.WriteHeader(http.StatusOK)
+		return nil
 	})
 
 	r, _ := http.NewRequest(http.MethodPost, "/foo", nil)
@@ -362,7 +374,9 @@ func TestRouterChaining(t *testing.T) {
 }
 
 func BenchmarkAllowed(b *testing.B) {
-	handlerFunc := func(ctx *Context) {}
+	handlerFunc := func(ctx *Context) error {
+		return nil
+	}
 
 	router := NewRouter()
 	router.Post("/path", handlerFunc)
@@ -383,7 +397,9 @@ func BenchmarkAllowed(b *testing.B) {
 }
 
 func TestRouterOPTIONS(t *testing.T) {
-	handlerFunc := func(ctx *Context) {}
+	handlerFunc := func(ctx *Context) error {
+		return nil
+	}
 
 	router := NewRouter()
 	router.Post("/path", handlerFunc)
@@ -448,8 +464,9 @@ func TestRouterOPTIONS(t *testing.T) {
 
 	// custom handler
 	var custom bool
-	router.Options("/path", func(ctx *Context) {
+	router.Options("/path", func(ctx *Context) error {
 		custom = true
+		return nil
 	})
 
 	// test again
@@ -479,7 +496,9 @@ func TestRouterOPTIONS(t *testing.T) {
 }
 
 func TestRouterNotAllowed(t *testing.T) {
-	handlerFunc := func(ctx *Context) {}
+	handlerFunc := func(ctx *Context) error {
+		return nil
+	}
 
 	router := NewRouter()
 	router.Post("/path", handlerFunc)
@@ -528,7 +547,9 @@ func TestRouterNotAllowed(t *testing.T) {
 }
 
 func TestRouterNotFound(t *testing.T) {
-	handlerFunc := func(ctx *Context) {}
+	handlerFunc := func(ctx *Context) error {
+		return nil
+	}
 
 	router := NewRouter()
 	router.Get("/path", handlerFunc)
@@ -594,8 +615,9 @@ func TestRouterNotFound(t *testing.T) {
 
 func TestRouterLookup(t *testing.T) {
 	routed := false
-	wantHandle := func(ctx *Context) {
+	wantHandle := func(ctx *Context) error {
 		routed = true
+		return nil
 	}
 	wantParams := Params{Param{"name", "gopher"}}
 
@@ -662,21 +684,23 @@ func TestRouterParamsFromContext(t *testing.T) {
 	routed := false
 
 	wantParams := Params{Param{"name", "gopher"}}
-	handlerFunc := func(ctx *Context) {
+	handlerFunc := func(ctx *Context) error {
 		if !reflect.DeepEqual(ctx.Params, wantParams) {
 			t.Fatalf("Wrong parameter values: want %v, got %v", wantParams, ctx.Params)
 		}
 
 		routed = true
+		return nil
 	}
 
 	var nilParams Params
-	handlerFuncNil := func(ctx *Context) {
+	handlerFuncNil := func(ctx *Context) error {
 		if !reflect.DeepEqual(ctx.Params, nilParams) {
 			t.Fatalf("Wrong parameter values: want %v, got %v", nilParams, ctx.Params)
 		}
 
 		routed = true
+		return nil
 	}
 	router := NewRouter()
 	router.Handle(http.MethodGet, "/user", handlerFuncNil)
@@ -700,29 +724,32 @@ func TestRouterParamsFromContext(t *testing.T) {
 func TestRouterMatchedRoutePath(t *testing.T) {
 	route1 := "/user/:name"
 	routed1 := false
-	handle1 := func(ctx *Context) {
+	handle1 := func(ctx *Context) error {
 		if ctx.Route.path != route1 {
 			t.Fatalf("Wrong matched route: want %s, got %s", route1, ctx.Route.path)
 		}
 		routed1 = true
+		return nil
 	}
 
 	route2 := "/user/:name/details"
 	routed2 := false
-	handle2 := func(ctx *Context) {
+	handle2 := func(ctx *Context) error {
 		if ctx.Route.path != route2 {
 			t.Fatalf("Wrong matched route: want %s, got %s", route2, ctx.Route.path)
 		}
 		routed2 = true
+		return nil
 	}
 
 	route3 := "/"
 	routed3 := false
-	handle3 := func(ctx *Context) {
+	handle3 := func(ctx *Context) error {
 		if ctx.Route.path != route3 {
 			t.Fatalf("Wrong matched route: want %s, got %s", route3, ctx.Route.path)
 		}
 		routed3 = true
+		return nil
 	}
 
 	router := NewRouter()
@@ -793,7 +820,10 @@ func TestRouterNamedRoute(t *testing.T) {
 	}
 	router := NewRouter()
 	for _, test := range tests {
-		router.Handle(http.MethodGet, test.path, func(ctx *Context) {}, RouteName(test.name))
+		router.Handle(http.MethodGet, test.path, func(ctx *Context) error {
+
+			return nil
+		}, RouteName(test.name))
 		url, err := router.URL(test.name, test.args...)
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
@@ -811,7 +841,9 @@ func TestRouterNamedRoute(t *testing.T) {
 
 	// registers same route name.
 	recv := catchPanic(func() {
-		router.Handle(http.MethodGet, "/same", func(ctx *Context) {}, RouteName("home"))
+		router.Handle(http.MethodGet, "/same", func(ctx *Context) error {
+			return nil
+		}, RouteName("home"))
 	})
 	if recv == nil {
 		t.Error("expected a panic, got nil")
@@ -820,16 +852,22 @@ func TestRouterNamedRoute(t *testing.T) {
 
 func ExampleRouter_URL() {
 	router := NewRouter()
-	router.Get("/hello/:name", func(ctx *Context) {}, RouteName("hello"))
+	router.Get("/hello/:name", func(ctx *Context) error {
+		return nil
+	}, RouteName("hello"))
 	// nested routes group
 	api := router.Group("/api")
 
 	v1 := api.Group("/v1")
 	// the group path will become the prefix of route name.
-	v1.Get("/users/:name", func(ctx *Context) {}, RouteName("user"))
+	v1.Get("/users/:name", func(ctx *Context) error {
+		return nil
+	}, RouteName("user"))
 
 	v2 := api.Group("/v2")
-	v2.Get("/users/:name", func(ctx *Context) {}, RouteName("user"))
+	v2.Get("/users/:name", func(ctx *Context) error {
+		return nil
+	}, RouteName("user"))
 
 	routes := []struct {
 		name string
@@ -859,7 +897,7 @@ func ExampleRouter_URL() {
 
 func ExampleParams() {
 	router := NewRouter()
-	router.Get("/post/:year/:month/:title", func(ctx *Context) {
+	router.Get("/post/:year/:month/:title", func(ctx *Context) error {
 		// converts param value to int.
 		year, _ := ctx.Params.Int("year")
 		month, _ := ctx.Params.Int("month")
@@ -868,6 +906,7 @@ func ExampleParams() {
 		// ps.Float64("name") // converts to float64.
 		// ps.Bool("name") // converts to boolean.
 		fmt.Printf("%s posted on %04d-%02d\n", ctx.Params.String("title"), year, month)
+		return nil
 	})
 	req := httptest.NewRequest(http.MethodGet, "/post/2020/01/foo", nil)
 	router.ServeHTTP(nil, req)

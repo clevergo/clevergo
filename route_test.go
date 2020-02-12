@@ -73,26 +73,33 @@ func TestRouteGroupAPI(t *testing.T) {
 
 	router := NewRouter()
 	api := router.Group("/api")
-	api.Get("/GET", func(ctx *Context) {
+	api.Get("/GET", func(ctx *Context) error {
 		get = true
+		return nil
 	})
-	api.Head("/GET", func(ctx *Context) {
+	api.Head("/GET", func(ctx *Context) error {
 		head = true
+		return nil
 	})
-	api.Options("/GET", func(ctx *Context) {
+	api.Options("/GET", func(ctx *Context) error {
 		options = true
+		return nil
 	})
-	api.Post("/POST", func(ctx *Context) {
+	api.Post("/POST", func(ctx *Context) error {
 		post = true
+		return nil
 	})
-	api.Put("/PUT", func(ctx *Context) {
+	api.Put("/PUT", func(ctx *Context) error {
 		put = true
+		return nil
 	})
-	api.Patch("/PATCH", func(ctx *Context) {
+	api.Patch("/PATCH", func(ctx *Context) error {
 		patch = true
+		return nil
 	})
-	api.Delete("/DELETE", func(ctx *Context) {
+	api.Delete("/DELETE", func(ctx *Context) error {
 		delete = true
+		return nil
 	})
 	api.Handler(http.MethodGet, "/Handler", httpHandler)
 	api.HandlerFunc(http.MethodGet, "/HandlerFunc", func(w http.ResponseWriter, r *http.Request) {
@@ -226,13 +233,14 @@ func TestNestedRouteGroup(t *testing.T) {
 
 func ExampleRoute() {
 	router := NewRouter()
-	router.Get("/posts/:page", func(ctx *Context) {
+	router.Get("/posts/:page", func(ctx *Context) error {
 		page, _ := ctx.Params.Int("page")
 		route := ctx.Route
 		prev, _ := route.URL("page", strconv.Itoa(page-1))
 		next, _ := route.URL("page", strconv.Itoa(page+1))
 		fmt.Printf("prev page url: %s\n", prev)
 		fmt.Printf("next page url: %s\n", next)
+		return nil
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/posts/3", nil)

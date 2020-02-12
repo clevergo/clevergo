@@ -13,19 +13,21 @@ import (
 )
 
 // Handle is a function which handle incoming request and manage outgoing response.
-type Handle func(ctx *Context)
+type Handle func(ctx *Context) error
 
 // HandleHandler converts http.Handler to Handle.
 func HandleHandler(handler http.Handler) Handle {
-	return func(ctx *Context) {
+	return func(ctx *Context) error {
 		handler.ServeHTTP(ctx.Response, ctx.Request)
+		return nil
 	}
 }
 
 // HandleHandlerFunc converts http.HandlerFunc to Handle.
 func HandleHandlerFunc(f http.HandlerFunc) Handle {
-	return func(ctx *Context) {
+	return func(ctx *Context) error {
 		f(ctx.Response, ctx.Request)
+		return nil
 	}
 }
 
@@ -91,6 +93,9 @@ type Router struct {
 	// The "Allow" header with allowed request methods is set before the handler
 	// is called.
 	MethodNotAllowed http.Handler
+
+	// Error Handler.
+	ErrorHandler ErrorHandler
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -256,9 +261,10 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 
 	fileServer := http.FileServer(root)
 
-	r.Get(path, func(ctx *Context) {
+	r.Get(path, func(ctx *Context) error {
 		ctx.Request.URL.Path = ctx.Params.String("filepath")
 		fileServer.ServeHTTP(ctx.Response, ctx.Request)
+		return nil
 	})
 }
 
@@ -334,18 +340,21 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
+	ctx := r.getContext()
+	ctx.Request = req
+	ctx.Response = w
 
 	if root := r.trees[req.Method]; root != nil {
 		if route, ps, tsr := root.getValue(path, r.getParams); route != nil {
-			ctx := r.getContext()
 			ctx.Route = route
-			ctx.Request = req
-			ctx.Response = w
 			if ps != nil {
 				r.putParams(ps)
 				ctx.Params = *ps
 			}
-			route.handle(ctx)
+			err := route.handle(ctx)
+			if err != nil {
+				r.handleError(ctx, err)
+			}
 			r.putContext(ctx)
 			return
 		} else if req.Method != http.MethodConnect && path != "/" {
@@ -396,10 +405,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if r.MethodNotAllowed != nil {
 				r.MethodNotAllowed.ServeHTTP(w, req)
 			} else {
-				http.Error(w,
-					http.StatusText(http.StatusMethodNotAllowed),
-					http.StatusMethodNotAllowed,
-				)
+				r.handleError(ctx, ErrMethodNotAllowed)
 			}
 			return
 		}
@@ -409,6 +415,20 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if r.NotFound != nil {
 		r.NotFound.ServeHTTP(w, req)
 	} else {
-		http.NotFound(w, req)
+		r.handleError(ctx, ErrNotFound)
+	}
+}
+
+func (r *Router) handleError(ctx *Context, err error) {
+	if r.ErrorHandler != nil {
+		r.ErrorHandler.Handle(ctx, err)
+		return
+	}
+
+	switch e := err.(type) {
+	case StatusError:
+		ctx.Error(err.Error(), e.Status())
+	default:
+		ctx.Error(err.Error(), http.StatusInternalServerError)
 	}
 }

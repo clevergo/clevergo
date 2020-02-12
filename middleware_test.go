@@ -11,24 +11,27 @@ import (
 )
 
 func echoHandler(s string) Handle {
-	return func(ctx *Context) {
+	return func(ctx *Context) error {
 		ctx.WriteString(s)
+
+		return nil
 	}
 }
 
 func echoMiddleware(s string) MiddlewareFunc {
 	return func(handle Handle) Handle {
-		return func(ctx *Context) {
+		return func(ctx *Context) error {
 			ctx.WriteString(s + " ")
-			handle(ctx)
+			return handle(ctx)
 		}
 	}
 }
 
 func terminatedMiddleware() MiddlewareFunc {
 	return func(handle Handle) Handle {
-		return func(ctx *Context) {
+		return func(ctx *Context) error {
 			ctx.WriteString("terminated")
+			return nil
 		}
 	}
 }
@@ -57,15 +60,15 @@ func TestChain(t *testing.T) {
 
 func ExampleChain() {
 	m1 := func(handle Handle) Handle {
-		return func(ctx *Context) {
+		return func(ctx *Context) error {
 			ctx.WriteString("m1 ")
-			handle(ctx)
+			return handle(ctx)
 		}
 	}
 	m2 := func(handle Handle) Handle {
-		return func(ctx *Context) {
+		return func(ctx *Context) error {
 			ctx.WriteString("m2 ")
-			handle(ctx)
+			return handle(ctx)
 		}
 	}
 	handle := Chain(echoHandler("hello"), m1, m2)
