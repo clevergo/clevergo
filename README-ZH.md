@@ -30,6 +30,7 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 - **路由组:** 亦称子路由, 参看[路由组](#路由组)。
 - **对 APIs 友好:** 很容易设计 [RESTful APIs](#restful-apis) 和通过[路由组](#路由组)进行 APIs 版本化。
 - **中间件:** 可以在路由组或特定路由插入中间件，也可以使用全局中间件, 请参看[中间件](#中间件)例子。
+- **[错误处理器](#错误处理器)** 可以自定义错误响应，比如显示一个错误页面。
 
 ## 举个栗子
 
@@ -43,12 +44,14 @@ import (
 	"github.com/clevergo/clevergo"
 )
 
-func home(ctx *clevergo.Context) {
+func home(ctx *clevergo.Context) error {
 	ctx.WriteString("hello world")
+	return nil
 }
 
-func hello(ctx *clevergo.Context) {
+func hello(ctx *clevergo.Context) error {
 	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Params.String("name")))
+	return nil
 }
 
 func main() {
@@ -64,13 +67,14 @@ func main() {
 可以通过多种方式获取各种类型的参数值。
 
 ```go
-func (ctx *clevergo.Context) {
+func (ctx *clevergo.Context) error {
 	name := ctx.Params.String("name")
 	page, err := ctx.Params.Int("page")
 	num, err := ctx.Params.Int64("num")
 	amount, err := ctx.Params.Uint64("amount")
 	enable, err := ctx.Params.Bool("enable")
 	price, err := ctx.Params.Float64("price")
+	return err
 }
 ```
 
@@ -87,9 +91,10 @@ router.NotFound = http.FileServer(http.Dir("public"))
 ### 反向路由生成
 
 ```go
-queryPost := func (ctx *clevergo.Context) {
+queryPost := func (ctx *clevergo.Context) error {
 	// 通过匹配路由生成 URL
 	url, _ := ctx.Route.URL("year", "2020", "month", "02", "slug", "hello world")
+	return nil
 }
 
 router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
@@ -98,23 +103,45 @@ router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
 url, _ := router.URL("post", "year", "2020", "month", "02", "slug", "hello world")
 ```
 
+### 错误处理器
+
+错误处理器可以自定义错误响应。
+
+```go
+type MyErrorHandler struct {
+	Tmpl *template.Template
+}
+
+func (meh MyErrorHandler) Handle(ctx *clevergo.Context, err error) {
+	// 显示一个错误页面。
+	if err := meh.Tmpl.Execute(ctx.Response, err); err != nil {
+		ctx.Error(err.Error(), http.StatusInternalServerError)
+	}
+}
+
+router.ErrorHandler = MyErrorHandler{
+	Tmpl: template.Must(template.New("error").Parse(`<html><body><h1>{{ .Error }}</h1></body></html>`)),
+}
+```
+
 ### 中间件
 
 中间件是一个定义为 `func (clevergo.Handle) clevergo.Handle` 的函数。
 
 ```go
 authenticator := func (handle clevergo.Handle) clevergo.Handle {
-    return func(ctx *clevergo.Context) {
+    return func(ctx *clevergo.Context) error {
 	// 身份验证, 验证失败则终止请求。
 		
 	// 在中间件间共享数据。
         ctx.WithValue("user", "foo")
-        handle(ctx)
+        return handle(ctx)
     }
 }
 
-router.Get("/auth", func(ctx *clevergo.Context) {
-    ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
+router.Get("/auth", func(ctx *clevergo.Context) error {
+	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
+	return nil
 }, RouteMiddleware(
 	// 中间件，只在当前路由生效。
 	authenticator,
