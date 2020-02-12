@@ -21,7 +21,7 @@ Date: 2020/02/11
 
 **Lower is better!**
 
-[![Benchmark](https://i.imgur.com/n8q1CCd.png)](https://github.com/razonyang/go-http-routing-benchmark)
+[![Benchmark](https://errlogs.com/wp-content/uploads/2020/02/68747470733a2f2f692e696d6775722e636f6d2f6e3871314343642e706e67.png)](https://github.com/razonyang/go-http-routing-benchmark)
 
 ## Features
 
