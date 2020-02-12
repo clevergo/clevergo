@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/clevergo/clevergo.svg?branch=master)](https://travis-ci.org/clevergo/clevergo)
 [![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://pkg.go.dev/github.com/clevergo/clevergo)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
 
 [简体中文](README-ZH.md)
 
@@ -12,6 +12,7 @@ CleverGo is a lightweight, feature-rich and trie based high performance HTTP req
 
 - [Benchmark](#benchmark)
 - [Features](#features)
+- [Installation](#installation)
 - [Examples](#examples)
 - [Contribute](#contribute)
 
@@ -31,6 +32,12 @@ Date: 2020/02/11
 - **Friendly to APIs:** it is easy to design [RESTful APIs](#restful-apis) and versioning your APIs by [route group](#route-group).
 - **Middleware:** allow to plug middleware in route group or particular route, supports global middleware as well, see [middleware](#middleware) exmaple.
 - **[Error Handler](#error-handler)** allow to custom error response, for example, display an error page.
+
+## Installation
+
+```shell
+GO111MODULE=on go get github.com/clevergo/clevergo@v0.2.0
+```
 
 ## Examples
 
