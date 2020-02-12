@@ -353,7 +353,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			}
 			err := route.handle(ctx)
 			if err != nil {
-				r.handleError(ctx, err)
+				r.HandleError(ctx, err)
 			}
 			r.putContext(ctx)
 			return
@@ -405,7 +405,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if r.MethodNotAllowed != nil {
 				r.MethodNotAllowed.ServeHTTP(w, req)
 			} else {
-				r.handleError(ctx, ErrMethodNotAllowed)
+				r.HandleError(ctx, ErrMethodNotAllowed)
 			}
 			return
 		}
@@ -415,11 +415,12 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if r.NotFound != nil {
 		r.NotFound.ServeHTTP(w, req)
 	} else {
-		r.handleError(ctx, ErrNotFound)
+		r.HandleError(ctx, ErrNotFound)
 	}
 }
 
-func (r *Router) handleError(ctx *Context, err error) {
+// HandleError handles error.
+func (r *Router) HandleError(ctx *Context, err error) {
 	if r.ErrorHandler != nil {
 		r.ErrorHandler.Handle(ctx, err)
 		return

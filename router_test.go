@@ -928,3 +928,56 @@ func ExampleRouter_ServeFiles() {
 	// such as "/favicon.ico".
 	router.NotFound = http.FileServer(http.Dir("public"))
 }
+
+type testErrorHandler struct {
+	status int
+}
+
+func (eh testErrorHandler) Handle(ctx *Context, err error) {
+	ctx.Error(err.Error(), eh.status)
+}
+
+func TestRouter_ErrorHandler(t *testing.T) {
+	router := NewRouter()
+	router.ErrorHandler = &testErrorHandler{http.StatusInternalServerError}
+	router.Get("/error/:msg", func(ctx *Context) error {
+		return errors.New(ctx.Params.String("msg"))
+	})
+
+	msgs := []string{"foo", "bar"}
+	for _, msg := range msgs {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/error/"+msg, nil)
+		router.ServeHTTP(w, req)
+		if w.Body.String() != fmt.Sprintln(msg) {
+			t.Errorf("expected error body %q, got %q", fmt.Sprintln(msg), w.Body)
+		}
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("expected error status code %d, got %d", http.StatusInternalServerError, w.Code)
+		}
+	}
+}
+
+func TestRouter_HandleError(t *testing.T) {
+	router := NewRouter()
+	tests := []struct {
+		err  error
+		body string
+		code int
+	}{
+		{errors.New("foo"), "foo", http.StatusInternalServerError},
+		{ErrNotFound, ErrNotFound.Error(), ErrNotFound.Code},
+		{ErrMethodNotAllowed, ErrMethodNotAllowed.Error(), ErrMethodNotAllowed.Code},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		router.HandleError(ctx, test.err)
+		if w.Body.String() != fmt.Sprintln(test.body) {
+			t.Errorf("expected error body %q, got %q", test.body, w.Body)
+		}
+		if w.Code != test.code {
+			t.Errorf("expected error status code %d, got %d", test.code, w.Code)
+		}
+	}
+}
