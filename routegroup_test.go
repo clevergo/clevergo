@@ -48,13 +48,15 @@ func ExampleRouteGroup() {
 	api := router.Group("/api")
 
 	v1 := api.Group("/v1")
-	v1.Get("/users/:name", func(ctx *Context) {
+	v1.Get("/users/:name", func(ctx *Context) error {
 		fmt.Printf("v1 user: %s\n", ctx.Params.String("name"))
+		return nil
 	})
 
 	v2 := api.Group("/v2")
-	v2.Get("/users/:name", func(ctx *Context) {
+	v2.Get("/users/:name", func(ctx *Context) error {
 		fmt.Printf("v2 user: %s\n", ctx.Params.String("name"))
+		return nil
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)

@@ -26,8 +26,9 @@ func printChildren(n *node, prefix string) {
 var fakeHandlerValue string
 
 func fakeHandler(val string) Handle {
-	return func(ctx *Context) {
+	return func(ctx *Context) error {
 		fakeHandlerValue = val
+		return nil
 	}
 }
 
