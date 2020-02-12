@@ -30,6 +30,7 @@ Date: 2020/02/11
 - **Route Group:** as known as subrouter, see [route group](#route-group).
 - **Friendly to APIs:** it is easy to design [RESTful APIs](#restful-apis) and versioning your APIs by [route group](#route-group).
 - **Middleware:** allow to plug middleware in route group or particular route, supports global middleware as well, see [middleware](#middleware) exmaple.
+- **[Error Handler](#error-handler)** allow to custom error response, for example, display an error page.
 
 ## Examples
 
@@ -43,12 +44,14 @@ import (
 	"github.com/clevergo/clevergo"
 )
 
-func home(ctx *clevergo.Context) {
+func home(ctx *clevergo.Context) error {
 	ctx.WriteString("hello world")
+	return nil
 }
 
-func hello(ctx *clevergo.Context) {
+func hello(ctx *clevergo.Context) error {
 	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Params.String("name")))
+	return nil
 }
 
 func main() {
@@ -64,13 +67,14 @@ func main() {
 There are some useful functions to retrieve the parameter value.
 
 ```go
-func (ctx *clevergo.Context) {
+func (ctx *clevergo.Context) error {
 	name := ctx.Params.String("name")
 	page, err := ctx.Params.Int("page")
 	num, err := ctx.Params.Int64("num")
 	amount, err := ctx.Params.Uint64("amount")
 	enable, err := ctx.Params.Bool("enable")
 	price, err := ctx.Params.Float64("price")
+	return err
 }
 ```
 
@@ -87,9 +91,10 @@ router.NotFound = http.FileServer(http.Dir("public"))
 ### Reverse Route Generation
 
 ```go
-queryPost := func (ctx *clevergo.Context) {
+queryPost := func (ctx *clevergo.Context) error {
 	// generates URL by matched route.
 	url, _ := ctx.Route.URL("year", "2020", "month", "02", "slug", "hello world")
+	return nil
 }
 
 router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
@@ -98,24 +103,48 @@ router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
 url, _ := router.URL("post", "year", "2020", "month", "02", "slug", "hello world")
 ```
 
+### Error Handler
+
+Error handler allow to custom error response.
+
+```go
+type MyErrorHandler struct {
+	Tmpl *template.Template
+}
+
+func (meh MyErrorHandler) Handle(ctx *clevergo.Context, err error) {
+	// display an error page.
+	if err := meh.Tmpl.Execute(ctx.Response, err); err != nil {
+		ctx.Error(err.Error(), http.StatusInternalServerError)
+	}
+}
+
+router.ErrorHandler = MyErrorHandler{
+	Tmpl: template.Must(template.New("error").Parse(`<html><body><h1>{{ .Error }}</h1></body></html>`)),
+}
+```
+
 ### Middleware
 
 Middleware is a function defined as `func (clevergo.Handle) clevergo.Handle`.
 
 ```go
 authenticator := func (handle clevergo.Handle) clevergo.Handle {
-    return func(ctx *clevergo.Context) {
+    return func(ctx *clevergo.Context) error {
 	// authenticate, terminate request if failed.
 		
 	// share data between middlewares and handle.
         ctx.WithValue("user", "foo")
-        handle(ctx)
+        return handle(ctx)
     }
 }
 
-router.Get("/auth", func(ctx *clevergo.Context) {
-    ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
-}, RouteMiddleware(
+auth := func(ctx *clevergo.Context) error {
+	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
+	return nil
+}
+
+router.Get("/auth", auth, RouteMiddleware(
 	// middleware for current route.
 	authenticator,
 ))
