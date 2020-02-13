@@ -5,6 +5,7 @@
 package clevergo
 
 import (
+	"errors"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -19,20 +20,16 @@ func echoHandler(s string) Handle {
 }
 
 func echoMiddleware(s string) MiddlewareFunc {
-	return func(handle Handle) Handle {
-		return func(ctx *Context) error {
-			ctx.WriteString(s + " ")
-			return handle(ctx)
-		}
+	return func(ctx *Context) error {
+		ctx.WriteString(s + " ")
+		return nil
 	}
 }
 
 func terminatedMiddleware() MiddlewareFunc {
-	return func(handle Handle) Handle {
-		return func(ctx *Context) error {
-			ctx.WriteString("terminated")
-			return nil
-		}
+	return func(ctx *Context) error {
+		ctx.WriteString("terminated")
+		return errors.New("terminated")
 	}
 }
 
@@ -59,17 +56,13 @@ func TestChain(t *testing.T) {
 }
 
 func ExampleChain() {
-	m1 := func(handle Handle) Handle {
-		return func(ctx *Context) error {
-			ctx.WriteString("m1 ")
-			return handle(ctx)
-		}
+	m1 := func(ctx *Context) error {
+		ctx.WriteString("m1 ")
+		return nil
 	}
-	m2 := func(handle Handle) Handle {
-		return func(ctx *Context) error {
-			ctx.WriteString("m2 ")
-			return handle(ctx)
-		}
+	m2 := func(ctx *Context) error {
+		ctx.WriteString("m2 ")
+		return nil
 	}
 	handle := Chain(echoHandler("hello"), m1, m2)
 	w := httptest.NewRecorder()

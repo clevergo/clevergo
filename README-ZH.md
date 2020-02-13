@@ -134,23 +134,27 @@ router.ErrorHandler = MyErrorHandler{
 
 ### 中间件
 
-中间件是一个定义为 `func (clevergo.Handle) clevergo.Handle` 的函数。
+中间件是一个 `Handle` 函数。
 
 ```go
-authenticator := func (handle clevergo.Handle) clevergo.Handle {
-    return func(ctx *clevergo.Context) error {
-	// 身份验证, 验证失败则终止请求。
-		
-	// 在中间件间共享数据。
-        ctx.WithValue("user", "foo")
-        return handle(ctx)
-    }
+authenticator := func(ctx *clevergo.Context) error {
+	// authenticate 返回一个 user 和一个布尔值表示提供的凭证是否有效。
+	if user, ok := authenticate(ctx); !ok {
+		// 返回一个错误，以终止后续的中间件和 Handle。
+		return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
+	}
+
+	// 在中间件之间共享数据。
+    ctx.WithValue("user", user)
+    return nil
 }
 
-router.Get("/auth", func(ctx *clevergo.Context) error {
-	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
+auth := func(ctx *clevergo.Context) error {
+	ctx.WriteString(fmt.Sprintf("hello %v", ctx.Value("user")))
 	return nil
-}, RouteMiddleware(
+}
+
+router.Get("/auth", auth, RouteMiddleware(
 	// 中间件，只在当前路由生效。
 	authenticator,
 ))

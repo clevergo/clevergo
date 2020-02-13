@@ -133,21 +133,23 @@ router.ErrorHandler = MyErrorHandler{
 
 ### Middleware
 
-Middleware is a function defined as `func (clevergo.Handle) clevergo.Handle`.
+Middleware is a `Handle`.
 
 ```go
-authenticator := func (handle clevergo.Handle) clevergo.Handle {
-    return func(ctx *clevergo.Context) error {
-	// authenticate, terminate request if failed.
-		
+authenticator := func(ctx *clevergo.Context) error {
+	// authenticate returns an user instance and a boolean value indicates whether the provided credential is valid.
+	if user, ok := authenticate(ctx); !ok {
+		// returns an error if failed, in order to stop subsequent middlewares and handle.
+		return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
+	}
+
 	// share data between middlewares and handle.
-        ctx.WithValue("user", "foo")
-        return handle(ctx)
-    }
+    ctx.WithValue("user", user)
+    return nil
 }
 
 auth := func(ctx *clevergo.Context) error {
-	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Value("user")))
+	ctx.WriteString(fmt.Sprintf("hello %v", ctx.Value("user")))
 	return nil
 }
 
