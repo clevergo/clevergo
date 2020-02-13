@@ -4,13 +4,18 @@
 
 package clevergo
 
-// MiddlewareFunc is a function which receives an Handle and returns another Handle.
-type MiddlewareFunc func(Handle) Handle
+// MiddlewareFunc is a Handle.
+type MiddlewareFunc Handle
 
 // Chain wraps handle with middlewares, middlewares will be invoked in sequence.
 func Chain(handle Handle, middlewares ...MiddlewareFunc) Handle {
-	for i := len(middlewares) - 1; i >= 0; i-- {
-		handle = middlewares[i](handle)
+	return func(ctx *Context) (err error) {
+		for _, f := range middlewares {
+			if err = f(ctx); err != nil {
+				return
+			}
+		}
+
+		return handle(ctx)
 	}
-	return handle
 }
