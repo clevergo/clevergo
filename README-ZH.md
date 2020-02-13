@@ -138,13 +138,13 @@ router.ErrorHandler = MyErrorHandler{
 
 ```go
 authenticator := func(ctx *clevergo.Context) error {
-	// authenticate 返回一个 user 和一个布尔值表示提供的凭证是否有效。
-	if user, ok := authenticate(ctx); !ok {
-		// 返回一个错误，以终止后续的中间件和 Handle。
-		return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
-	}
+    // authenticate 返回一个 user 和一个布尔值表示提供的凭证是否有效。
+    if user, ok := authenticate(ctx); !ok {
+        // 返回一个错误，以终止后续的中间件和 Handle。
+        return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
+    }
 
-	// 在中间件之间共享数据。
+    // 在中间件之间共享数据。
     ctx.WithValue("user", user)
     return nil
 }

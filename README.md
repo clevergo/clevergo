@@ -137,13 +137,13 @@ Middleware is a `Handle`.
 
 ```go
 authenticator := func(ctx *clevergo.Context) error {
-	// authenticate returns an user instance and a boolean value indicates whether the provided credential is valid.
-	if user, ok := authenticate(ctx); !ok {
-		// returns an error if failed, in order to stop subsequent middlewares and handle.
-		return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
-	}
+    // authenticate returns an user instance and a boolean value indicates whether the provided credential is valid.
+    if user, ok := authenticate(ctx); !ok {
+        // returns an error if failed, in order to stop subsequent middlewares and handle.
+        return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
+    }
 
-	// share data between middlewares and handle.
+    // share data between middlewares and handle.
     ctx.WithValue("user", user)
     return nil
 }
