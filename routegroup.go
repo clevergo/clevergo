@@ -44,7 +44,12 @@ func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *Route
 
 // Group implements IRouter.Group.
 func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) IRouter {
-	return newRouteGroup(r.parent, r.subPath(path), opts...)
+	router := newRouteGroup(r.parent, r.subPath(path), opts...)
+
+	// inherit middlewares.
+	router.middlewares = append(r.middlewares, router.middlewares...)
+
+	return router
 }
 
 // Handle implements IRouter.Handle.

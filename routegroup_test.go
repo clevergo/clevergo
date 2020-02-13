@@ -45,27 +45,31 @@ func TestNewRouteGroup(t *testing.T) {
 
 func ExampleRouteGroup() {
 	router := NewRouter()
-	api := router.Group("/api")
+	api := router.Group("/api", RouteGroupMiddleware(echoMiddleware("api")))
 
-	v1 := api.Group("/v1")
+	v1 := api.Group("/v1", RouteGroupMiddleware(echoMiddleware("v1")))
 	v1.Get("/users/:name", func(ctx *Context) error {
-		fmt.Printf("v1 user: %s\n", ctx.Params.String("name"))
+		ctx.WriteString(fmt.Sprintf("user: %s", ctx.Params.String("name")))
 		return nil
 	})
 
-	v2 := api.Group("/v2")
+	v2 := api.Group("/v2", RouteGroupMiddleware(echoMiddleware("v2")))
 	v2.Get("/users/:name", func(ctx *Context) error {
-		fmt.Printf("v2 user: %s\n", ctx.Params.String("name"))
+		ctx.WriteString(fmt.Sprintf("user: %s", ctx.Params.String("name")))
 		return nil
 	})
 
+	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)
-	router.ServeHTTP(nil, req)
+	router.ServeHTTP(w, req)
+	fmt.Println(w.Body.String())
 
+	w = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/api/v2/users/bar", nil)
-	router.ServeHTTP(nil, req)
+	router.ServeHTTP(w, req)
+	fmt.Println(w.Body.String())
 
 	// Output:
-	// v1 user: foo
-	// v2 user: bar
+	// api v1 user: foo
+	// api v2 user: bar
 }
