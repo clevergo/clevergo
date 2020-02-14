@@ -3,6 +3,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
+[![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
 
 [English](README.md)
 
@@ -12,6 +13,7 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
 - [基准测试](#基准测试)
 - [功能特性](#功能特性)
+- [安装](#安装)
 - [举个栗子](#举个栗子)
 - [贡献](#贡献)
 
@@ -31,6 +33,14 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 - **对 APIs 友好:** 很容易设计 [RESTful APIs](#restful-apis) 和通过[路由组](#路由组)进行 APIs 版本化。
 - **中间件:** 可以在路由组或特定路由插入中间件，也可以使用全局中间件, 请参看[中间件](#中间件)例子。
 - **[错误处理器](#错误处理器)** 可以自定义错误响应，比如显示一个错误页面。
+
+## 安装
+
+最新版本：[![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)，替换 `latest` 为对应版本号即可。
+
+```shell
+GO111MODULE=on go get github.com/clevergo/clevergo@latest
+```
 
 ## 举个栗子
 
