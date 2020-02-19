@@ -36,11 +36,17 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
 ## 安装
 
-最新版本：[![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)，替换 `latest` 为对应版本号即可。
+```shell
+GO111MODULE=on go get github.com/clevergo/clevergo
+```
+
+或者安装特定[版本](https://github.com/clevergo/clevergo/releases):
 
 ```shell
-GO111MODULE=on go get github.com/clevergo/clevergo@latest
+GO111MODULE=on go get github.com/clevergo/clevergo@version
 ```
+
+> 替换 `version` 为具体版本即可。
 
 ## 举个栗子
 

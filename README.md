@@ -36,11 +36,17 @@ Date: 2020/02/11
 
 ## Installation
 
-Latest release: [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases), replace `latest` to particular version.
+```shell
+GO111MODULE=on go get github.com/clevergo/clevergo
+```
+
+or install particular [releases](https://github.com/clevergo/clevergo/releases):
 
 ```shell
-GO111MODULE=on go get github.com/clevergo/clevergo@latest
+GO111MODULE=on go get github.com/clevergo/clevergo@version
 ```
+
+> Replace `version` to particular version.
 
 ## Examples
 
