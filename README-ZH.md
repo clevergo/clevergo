@@ -203,6 +203,24 @@ router.Delete("/users/:id", deleteUser)
 
 可以通过[路由组](#路由组)对你的 APIs 进行版本化。
 
+### 判断请求方法
+
+```go
+func (ctx *clevergo.Context) error {
+	// 等同于 ctx.IsMethod(http.MethodGet).
+	if ctx.IsGet() {
+
+	}
+	// others shortcuts:
+	//ctx.IsDelete()
+	//ctx.IsPatch()
+	//ctx.IsPost()
+	//ctx.IsPut()
+	//ctx.IsOptions()
+	return nil
+}
+```
+
 ## 贡献
 
 - 给颗 :star:。

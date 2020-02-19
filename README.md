@@ -203,6 +203,24 @@ router.Delete("/users/:id", deleteUser)
 
 See [Route Group](#route-group) for versioning your APIs.
 
+### Determine Request Method
+
+```go
+func (ctx *clevergo.Context) error {
+	// equals to ctx.IsMethod(http.MethodGet).
+	if ctx.IsGet() {
+
+	}
+	// others shortcuts:
+	//ctx.IsDelete()
+	//ctx.IsPatch()
+	//ctx.IsPost()
+	//ctx.IsPut()
+	//ctx.IsOptions()
+	return nil
+}
+```
+
 ## Contribute
 
 - Give it a :star: and spread the package.
