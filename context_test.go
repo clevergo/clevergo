@@ -152,3 +152,38 @@ func TestContext_WithValue(t *testing.T) {
 		}
 	}
 }
+
+func TestIsMethod(t *testing.T) {
+	tests := []struct {
+		method string
+		f      func(ctx *Context, method string) bool
+	}{
+		{http.MethodGet, func(ctx *Context, method string) bool {
+			return ctx.IsGet()
+		}},
+		{http.MethodDelete, func(ctx *Context, method string) bool {
+			return ctx.IsDelete()
+		}},
+		{http.MethodPatch, func(ctx *Context, method string) bool {
+			return ctx.IsPatch()
+		}},
+		{http.MethodPost, func(ctx *Context, method string) bool {
+			return ctx.IsPost()
+		}},
+		{http.MethodPut, func(ctx *Context, method string) bool {
+			return ctx.IsPut()
+		}},
+		{http.MethodOptions, func(ctx *Context, method string) bool {
+			return ctx.IsOptions()
+		}},
+		{http.MethodHead, func(ctx *Context, method string) bool {
+			return ctx.IsMethod(method)
+		}},
+	}
+	for _, test := range tests {
+		ctx := newContext(nil, httptest.NewRequest(test.method, "/", nil))
+		if !test.f(ctx, test.method) {
+			t.Errorf("failed to determine request method")
+		}
+	}
+}

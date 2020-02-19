@@ -91,3 +91,38 @@ func (ctx *Context) WithValue(key, val interface{}) {
 func (ctx *Context) Value(key interface{}) interface{} {
 	return ctx.Request.Context().Value(key)
 }
+
+// IsMethod returns a boolean value indicates whether the request method is the given method.
+func (ctx *Context) IsMethod(method string) bool {
+	return ctx.Request.Method == method
+}
+
+// IsDelete returns a boolean value indicates whether the request method is DELETE.
+func (ctx *Context) IsDelete() bool {
+	return ctx.IsMethod(http.MethodDelete)
+}
+
+// IsGet returns a boolean value indicates whether the request method is GET.
+func (ctx *Context) IsGet() bool {
+	return ctx.IsMethod(http.MethodGet)
+}
+
+// IsOptions returns a boolean value indicates whether the request method is OPTIONS.
+func (ctx *Context) IsOptions() bool {
+	return ctx.IsMethod(http.MethodOptions)
+}
+
+// IsPatch returns a boolean value indicates whether the request method is PATCH.
+func (ctx *Context) IsPatch() bool {
+	return ctx.IsMethod(http.MethodPatch)
+}
+
+// IsPost returns a boolean value indicates whether the request method is POST.
+func (ctx *Context) IsPost() bool {
+	return ctx.IsMethod(http.MethodPost)
+}
+
+// IsPut returns a boolean value indicates whether the request method is PUT.
+func (ctx *Context) IsPut() bool {
+	return ctx.IsMethod(http.MethodPut)
+}
