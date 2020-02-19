@@ -211,7 +211,7 @@ func (ctx *clevergo.Context) error {
 	if ctx.IsGet() {
 
 	}
-	// others shortcuts:
+	// other shortcuts:
 	//ctx.IsDelete()
 	//ctx.IsPatch()
 	//ctx.IsPost()
