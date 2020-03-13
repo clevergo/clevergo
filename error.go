@@ -32,12 +32,17 @@ type StatusError struct {
 	Err  error
 }
 
+// NewError returns a status error with the given code and error.
+func NewError(code int, err error) StatusError {
+	return StatusError{code, err}
+}
+
 // Error implements error.Error.
-func (se StatusError) Error() string {
-	return se.Err.Error()
+func (e StatusError) Error() string {
+	return e.Err.Error()
 }
 
 // Status implements Error.Status.
-func (se StatusError) Status() int {
-	return se.Code
+func (e StatusError) Status() int {
+	return e.Code
 }
