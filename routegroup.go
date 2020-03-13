@@ -9,6 +9,13 @@ import "net/http"
 // RouteGroupOption applies options to a route group.
 type RouteGroupOption func(*RouteGroup)
 
+// RouteGroupName set the name of route group.
+func RouteGroupName(name string) RouteGroupOption {
+	return func(r *RouteGroup) {
+		r.name = name
+	}
+}
+
 // RouteGroupMiddleware is a option for chainging middlewares to a route group.
 func RouteGroupMiddleware(middlewares ...MiddlewareFunc) RouteGroupOption {
 	return func(r *RouteGroup) {
@@ -21,6 +28,7 @@ func RouteGroupMiddleware(middlewares ...MiddlewareFunc) RouteGroupOption {
 type RouteGroup struct {
 	parent      *Router
 	path        string
+	name        string
 	middlewares []MiddlewareFunc
 }
 
@@ -34,7 +42,7 @@ func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *Route
 		path = path[:len(path)-1]
 	}
 
-	route := &RouteGroup{parent: parent, path: path}
+	route := &RouteGroup{parent: parent, path: path, name: path}
 	for _, opt := range opts {
 		opt(route)
 	}
@@ -58,7 +66,7 @@ func (r *RouteGroup) Handle(method, path string, handle Handle, opts ...RouteOpt
 
 	opts = append(opts, func(route *Route) {
 		if route.name != "" {
-			route.name = r.path + "/" + route.name
+			route.name = r.name + "/" + route.name
 		}
 	})
 	r.parent.Handle(method, r.subPath(path), handle, opts...)

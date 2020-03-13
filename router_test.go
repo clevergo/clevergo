@@ -864,7 +864,8 @@ func ExampleRouter_URL() {
 		return nil
 	}, RouteName("user"))
 
-	v2 := api.Group("/v2")
+	// specified the name of the route group.
+	v2 := api.Group("/v2", RouteGroupName("/apiV2"))
 	v2.Get("/users/:name", func(ctx *Context) error {
 		return nil
 	}, RouteName("user"))
@@ -877,8 +878,8 @@ func ExampleRouter_URL() {
 		{"hello", []string{"name", "bar"}},
 		{"/api/v1/user", []string{"name", "foo"}},
 		{"/api/v1/user", []string{"name", "bar"}},
-		{"/api/v2/user", []string{"name", "foo"}},
-		{"/api/v2/user", []string{"name", "bar"}},
+		{"/apiV2/user", []string{"name", "foo"}},
+		{"/apiV2/user", []string{"name", "bar"}},
 	}
 
 	for _, route := range routes {

@@ -40,6 +40,9 @@ func TestNewRouteGroup(t *testing.T) {
 		if test.expectedPath != route.path {
 			t.Errorf("expected path %q, got %q", test.expectedPath, route.path)
 		}
+		if test.expectedPath != route.name {
+			t.Errorf("expected name %q, got %q", test.expectedPath, route.name)
+		}
 	}
 }
 
@@ -72,4 +75,14 @@ func ExampleRouteGroup() {
 	// Output:
 	// api v1 user: foo
 	// api v2 user: bar
+}
+
+func TestRouteGroupName(t *testing.T) {
+	for _, name := range []string{"foo", "bar"} {
+		g := &RouteGroup{}
+		RouteGroupName(name)(g)
+		if g.name != name {
+			t.Errorf("expected name %s, got %s", name, g.name)
+		}
+	}
 }
