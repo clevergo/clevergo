@@ -19,11 +19,15 @@ CleverGo is a lightweight, feature-rich and trie based high performance HTTP req
 
 ## Benchmark
 
-Date: 2020/02/11
+- Date: 2020/03/13
+- CPU: 4 Core
+- RAM: 8G 
+- Go: 1.14
+- [Source](https://github.com/razonyang/go-http-routing-benchmark)
 
 **Lower is better!**
 
-[![Benchmark](https://errlogs.com/wp-content/uploads/2020/02/68747470733a2f2f692e696d6775722e636f6d2f6e3871314343642e706e67.png)](https://github.com/razonyang/go-http-routing-benchmark)
+[![Benchmark](https://razonyang.com/wp-content/uploads/2020/03/benchmark.png)](BENCHMARK.md)
 
 ## Features
 
