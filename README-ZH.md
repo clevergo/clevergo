@@ -25,7 +25,7 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 - CPU: 4 Core
 - RAM: 8G 
 - Go: 1.14
-- [Source](https://github.com/razonyang/go-http-routing-benchmark)
+- [详情](BENCHMARK.md)
 
 **值越小性能越好**
 
