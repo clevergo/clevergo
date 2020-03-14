@@ -1,6 +1,6 @@
 # CleverGo 
 [![Build Status](https://travis-ci.org/clevergo/clevergo.svg?branch=master)](https://travis-ci.org/clevergo/clevergo)
-[![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
+[![Financial Contributors on Open Collective](https://opencollective.com/clevergo/all/badge.svg?label=financial+contributors)](https://opencollective.com/clevergo) [![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
@@ -234,3 +234,33 @@ func (ctx *clevergo.Context) error {
 ## Credit
 
 - [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
+
+## Contributors
+
+### Code Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/clevergo/clevergo/graphs/contributors"><img src="https://opencollective.com/clevergo/contributors.svg?width=890&button=false" /></a>
+
+### Financial Contributors
+
+Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/clevergo/contribute)]
+
+#### Individuals
+
+<a href="https://opencollective.com/clevergo"><img src="https://opencollective.com/clevergo/individuals.svg?width=890"></a>
+
+#### Organizations
+
+Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/clevergo/contribute)]
+
+<a href="https://opencollective.com/clevergo/organization/0/website"><img src="https://opencollective.com/clevergo/organization/0/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/1/website"><img src="https://opencollective.com/clevergo/organization/1/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/2/website"><img src="https://opencollective.com/clevergo/organization/2/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/3/website"><img src="https://opencollective.com/clevergo/organization/3/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/4/website"><img src="https://opencollective.com/clevergo/organization/4/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/5/website"><img src="https://opencollective.com/clevergo/organization/5/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/6/website"><img src="https://opencollective.com/clevergo/organization/6/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/7/website"><img src="https://opencollective.com/clevergo/organization/7/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/8/website"><img src="https://opencollective.com/clevergo/organization/8/avatar.svg"></a>
+<a href="https://opencollective.com/clevergo/organization/9/website"><img src="https://opencollective.com/clevergo/organization/9/avatar.svg"></a>
