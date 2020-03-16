@@ -187,3 +187,17 @@ func TestIsMethod(t *testing.T) {
 		}
 	}
 }
+
+func TestContext_SetCookie(t *testing.T) {
+	w := httptest.NewRecorder()
+	ctx := &Context{Response: w}
+	cookie := &http.Cookie{Name: "foo", Value: "bar"}
+	ctx.SetCookie(cookie)
+	actual := w.Result().Cookies()[0]
+	if cookie.Name != actual.Name {
+		t.Errorf("expected cookie name %s, got %s", cookie.Name, actual.Name)
+	}
+	if cookie.Value != actual.Value {
+		t.Errorf("expected cookie value %s, got %s", cookie.Value, actual.Value)
+	}
+}

@@ -72,6 +72,11 @@ func (ctx *Context) SetContentTypeXML() {
 	ctx.SetContentType("application/xml")
 }
 
+// SetCookie is a shortcut of http.SetCookie.
+func (ctx *Context) SetCookie(cookie *http.Cookie) {
+	http.SetCookie(ctx.Response, cookie)
+}
+
 // Write is a shortcut of http.ResponseWriter.Write.
 func (ctx *Context) Write(data []byte) (int, error) {
 	return ctx.Response.Write(data)
