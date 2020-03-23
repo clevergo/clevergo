@@ -5,6 +5,7 @@
 package clevergo
 
 import (
+	"net/url"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -323,7 +324,7 @@ func (n *node) insertChild(path, fullPath string, route *Route) {
 // If no handle can be found, a TSR (trailing slash redirect) recommendation is
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
-func (n *node) getValue(path string, params func() *Params) (route *Route, ps *Params, tsr bool) {
+func (n *node) getValue(path string, params func() *Params, useRawPath bool) (route *Route, ps *Params, tsr bool) {
 walk: // Outer loop for walking the tree
 	for {
 		prefix := n.path
@@ -369,10 +370,15 @@ walk: // Outer loop for walking the tree
 						// Expand slice within preallocated capacity
 						i := len(*ps)
 						*ps = (*ps)[:i+1]
-						(*ps)[i] = Param{
-							Key:   n.path[1:],
-							Value: path[:end],
+						param := Param{
+							Key: n.path[1:],
 						}
+						if useRawPath {
+							param.Value, _ = url.PathUnescape(path[:end])
+						} else {
+							param.Value = path[:end]
+						}
+						(*ps)[i] = param
 					}
 
 					// We need to go deeper!
@@ -408,10 +414,15 @@ walk: // Outer loop for walking the tree
 						// Expand slice within preallocated capacity
 						i := len(*ps)
 						*ps = (*ps)[:i+1]
-						(*ps)[i] = Param{
-							Key:   n.path[2:],
-							Value: path,
+						param := Param{
+							Key: n.path[2:],
 						}
+						if useRawPath {
+							param.Value, _ = url.PathUnescape(path)
+						} else {
+							param.Value = path
+						}
+						(*ps)[i] = param
 					}
 
 					route = n.route

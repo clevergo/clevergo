@@ -982,3 +982,63 @@ func TestRouter_HandleError(t *testing.T) {
 		}
 	}
 }
+
+func TestRouterUseRawPath(t *testing.T) {
+	router := NewRouter()
+	router.UseRawPath = true
+	handled := false
+	handle := func(ctx *Context) error {
+		expected := Params{Param{"name", "foo/bar"}}
+		if !reflect.DeepEqual(expected, ctx.Params) {
+			t.Errorf("expected params %v, got %v", expected, ctx.Params)
+		}
+		handled = true
+		return nil
+	}
+	router.Get("/hello/:name", handle)
+	req := httptest.NewRequest(http.MethodGet, "/hello/foo%2fbar", nil)
+	router.ServeHTTP(nil, req)
+	if !handled {
+		t.Error("raw path routing failed")
+	}
+}
+
+func TestRouterUseRawPathMixed(t *testing.T) {
+	router := NewRouter()
+	router.UseRawPath = true
+	handled := false
+	handle := func(ctx *Context) error {
+		expected := Params{Param{"date", "2020/03/23"}, Param{"slug", "hello world"}}
+		if !reflect.DeepEqual(expected, ctx.Params) {
+			t.Errorf("expected params %v, got %v", expected, ctx.Params)
+		}
+		handled = true
+		return nil
+	}
+	router.Get("/post/:date/:slug", handle)
+	req := httptest.NewRequest(http.MethodGet, "/post/2020%2f03%2f23/hello%20world", nil)
+	router.ServeHTTP(nil, req)
+	if !handled {
+		t.Error("raw path routing failed")
+	}
+}
+
+func TestRouterUseRawPathCatchAll(t *testing.T) {
+	router := NewRouter()
+	router.UseRawPath = true
+	handled := false
+	handle := func(ctx *Context) error {
+		expected := Params{Param{"slug", "/2020/03/23-hello world"}}
+		if !reflect.DeepEqual(expected, ctx.Params) {
+			t.Errorf("expected params %v, got %v", expected, ctx.Params)
+		}
+		handled = true
+		return nil
+	}
+	router.Get("/post/*slug", handle)
+	req := httptest.NewRequest(http.MethodGet, "/post/2020%2f03%2f23-hello%20world", nil)
+	router.ServeHTTP(nil, req)
+	if !handled {
+		t.Error("raw path routing failed")
+	}
+}
