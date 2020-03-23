@@ -1,11 +1,9 @@
-# CleverGo 
+# CleverGo [简体中文](README-ZH.md)
 [![Build Status](https://travis-ci.org/clevergo/clevergo.svg?branch=master)](https://travis-ci.org/clevergo/clevergo)
 [![Financial Contributors on Open Collective](https://opencollective.com/clevergo/all/badge.svg?label=financial+contributors)](https://opencollective.com/clevergo) [![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
-
-[简体中文](README-ZH.md)
 
 CleverGo is a lightweight, feature-rich and trie based high performance HTTP request router.
 
@@ -180,7 +178,8 @@ authenticator := func(next clevergo.Handle) clevergo.Handle {
 		// authenticate returns an user instance and a boolean value indicates whether the provided credential is valid.
 		if user, ok := authenticate(ctx); !ok {
 			// returns an error if failed, in order to stop subsequent middlewares and handle.
-			return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
+			// you can also write response here, and return nil.
+			return clevergo.NewError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 		}
 
 		// share data between middlewares and handle.

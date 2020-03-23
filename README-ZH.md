@@ -1,11 +1,9 @@
-# CleverGo 
+# CleverGo [English](README.md)
 [![Build Status](https://travis-ci.org/clevergo/clevergo.svg?branch=master)](https://travis-ci.org/clevergo/clevergo)
 [![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
-
-[English](README.md)
 
 CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
@@ -181,7 +179,8 @@ authenticator := func(next clevergo.Handle) clevergo.Handle {
 		// authenticate 返回一个 user 和一个布尔值表示提供的凭证是否有效。
 		if user, ok := authenticate(ctx); !ok {
 			// 返回一个错误，以终止后续的中间件和 Handle。
-			return clevergo.StatusError{http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)}
+			// 也可以在这发送响应，并返回 nil。
+			return clevergo.NewError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 		}
 
 		// 在中间件之间共享数据。
