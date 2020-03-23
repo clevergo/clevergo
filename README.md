@@ -154,6 +154,12 @@ router.ErrorHandler = MyErrorHandler{
 
 Middleware is a function `func(next Handle) Handle`.
 
+**Built-in middlewares:**
+
+- [Recovery](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#Recovery)
+
+**Example:**
+
 ```go
 // global middlewares.
 serverHeader := func(next clevergo.Handle) clevergo.Handle {
@@ -164,6 +170,7 @@ serverHeader := func(next clevergo.Handle) clevergo.Handle {
 	}
 }
 router.Use(
+	clevergo.Recovery(true),
 	serverHeader,
 	// ...
 )
