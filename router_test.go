@@ -1057,13 +1057,11 @@ func TestRouterUse(t *testing.T) {
 		t.Errorf("expeceted body %s, got %s", "m1 m2 foobar", w.Body.String())
 	}
 
-	router.Use(func(_ *Context) error {
-		return NewError(http.StatusForbidden, errors.New("forbidden"))
-	})
+	router.Use(terminatedMiddleware())
 	w = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "m1 m2 forbidden\n" {
-		t.Errorf("expected body %q, got %q", "m1 m2 forbidden\n", w.Body.String())
+	if w.Body.String() != "m1 m2 terminated" {
+		t.Errorf("expected body %q, got %q", "m1 m2 terminated", w.Body.String())
 	}
 }
