@@ -98,6 +98,12 @@ func (ctx *clevergo.Context) error {
 }
 ```
 
+`Router.UseRawPath` allows to match parameter that contains escaped slash `%2f`:
+
+```go
+router.UseRawPath = true
+```
+
 ### Static Files
 
 ```go

@@ -100,6 +100,12 @@ func (ctx *clevergo.Context) error {
 }
 ```
 
+`Router.UseRawPath` 允许匹配带有空格转义符 `%2f` 的参数:
+
+```go
+router.UseRawPath = true
+```
+
 ### 静态文件
 
 ```go
