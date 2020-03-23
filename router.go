@@ -101,6 +101,7 @@ type Router struct {
 	UseRawPath bool
 
 	middlewares []MiddlewareFunc
+	handle      Handle
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -153,6 +154,8 @@ func (r *Router) Group(path string, opts ...RouteGroupOption) IRouter {
 // Use attaches global middlewares.
 func (r *Router) Use(middlewares ...MiddlewareFunc) {
 	r.middlewares = append(r.middlewares, middlewares...)
+
+	r.handle = Chain(r.handleRequest, r.middlewares...)
 }
 
 // Get implements IRouter.Get.
@@ -353,34 +356,39 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx.Request = req
 	ctx.Response = w
 	defer r.putContext(ctx)
-	for _, f := range r.middlewares {
-		if err := f(ctx); err != nil {
-			r.HandleError(ctx, err)
-			return
-		}
+
+	var err error
+	if r.handle != nil {
+		err = r.handle(ctx)
+	} else {
+		err = r.handleRequest(ctx)
+	}
+	if err != nil {
+		r.HandleError(ctx, err)
+	}
+}
+
+func (r *Router) handleRequest(ctx *Context) (err error) {
+
+	path := ctx.Request.URL.Path
+	if r.UseRawPath && ctx.Request.URL.RawPath != "" {
+		path = ctx.Request.URL.RawPath
 	}
 
-	path := req.URL.Path
-	if r.UseRawPath && req.URL.RawPath != "" {
-		path = req.URL.RawPath
-	}
-
-	if root := r.trees[req.Method]; root != nil {
+	if root := r.trees[ctx.Request.Method]; root != nil {
 		if route, ps, tsr := root.getValue(path, r.getParams, r.UseRawPath); route != nil {
 			ctx.Route = route
 			if ps != nil {
 				r.putParams(ps)
 				ctx.Params = *ps
 			}
-			err := route.handle(ctx)
-			if err != nil {
-				r.HandleError(ctx, err)
-			}
+
+			err = route.handle(ctx)
 			return
-		} else if req.Method != http.MethodConnect && path != "/" {
+		} else if ctx.Request.Method != http.MethodConnect && path != "/" {
 			// Moved Permanently, request with Get method
 			code := http.StatusMovedPermanently
-			if req.Method != http.MethodGet {
+			if ctx.Request.Method != http.MethodGet {
 				// Permanent Redirect, request with same method
 				code = http.StatusPermanentRedirect
 			}
@@ -391,7 +399,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				} else {
 					path = path + "/"
 				}
-				http.Redirect(w, req, path, code)
+				ctx.Redirect(path, code)
 				return
 			}
 
@@ -402,40 +410,40 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 					r.RedirectTrailingSlash,
 				)
 				if found {
-					http.Redirect(w, req, fixedPath, code)
+					ctx.Redirect(fixedPath, code)
 					return
 				}
 			}
 		}
 	}
 
-	if req.Method == http.MethodOptions && r.HandleOPTIONS {
+	if ctx.Request.Method == http.MethodOptions && r.HandleOPTIONS {
 		// Handle OPTIONS requests
 		if allow := r.allowed(path, http.MethodOptions); allow != "" {
-			w.Header().Set("Allow", allow)
+			ctx.Response.Header().Set("Allow", allow)
 			if r.GlobalOPTIONS != nil {
-				r.GlobalOPTIONS.ServeHTTP(w, req)
+				r.GlobalOPTIONS.ServeHTTP(ctx.Response, ctx.Request)
 			}
 			return
 		}
 	} else if r.HandleMethodNotAllowed { // Handle 405
-		if allow := r.allowed(path, req.Method); allow != "" {
-			w.Header().Set("Allow", allow)
+		if allow := r.allowed(path, ctx.Request.Method); allow != "" {
+			ctx.Response.Header().Set("Allow", allow)
 			if r.MethodNotAllowed != nil {
-				r.MethodNotAllowed.ServeHTTP(w, req)
-			} else {
-				r.HandleError(ctx, ErrMethodNotAllowed)
+				r.MethodNotAllowed.ServeHTTP(ctx.Response, ctx.Request)
+				return
 			}
-			return
+			return ErrMethodNotAllowed
 		}
 	}
 
 	// Handle 404
 	if r.NotFound != nil {
-		r.NotFound.ServeHTTP(w, req)
-	} else {
-		r.HandleError(ctx, ErrNotFound)
+		r.NotFound.ServeHTTP(ctx.Response, ctx.Request)
+		return
 	}
+
+	return ErrNotFound
 }
 
 // HandleError handles error.
