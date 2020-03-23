@@ -81,7 +81,6 @@ func TestRecovery(t *testing.T) {
 	router.Use(m)
 	router.Get("/", func(_ *Context) error {
 		panic("foobar")
-		return nil
 	})
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/", nil))
