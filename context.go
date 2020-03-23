@@ -87,6 +87,11 @@ func (ctx *Context) WriteString(data string) (int, error) {
 	return io.WriteString(ctx.Response, data)
 }
 
+// WriteHeader is a shortcut of http.ResponseWriter.WriteHeader.
+func (ctx *Context) WriteHeader(code int) {
+	ctx.Response.WriteHeader(code)
+}
+
 // WithValue stores the given value under the given key.
 func (ctx *Context) WithValue(key, val interface{}) {
 	ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), key, val))

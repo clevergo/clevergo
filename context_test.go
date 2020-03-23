@@ -201,3 +201,15 @@ func TestContext_SetCookie(t *testing.T) {
 		t.Errorf("expected cookie value %s, got %s", cookie.Value, actual.Value)
 	}
 }
+
+func TestContext_WriteHeader(t *testing.T) {
+	codes := []int{http.StatusOK, http.StatusForbidden, http.StatusInternalServerError, http.StatusUnauthorized}
+	for _, code := range codes {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.WriteHeader(code)
+		if w.Code != code {
+			t.Errorf("expected status code %d, got %d", code, w.Code)
+		}
+	}
+}
