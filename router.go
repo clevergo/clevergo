@@ -99,6 +99,8 @@ type Router struct {
 
 	// If enabled, use the request.URL.RawPath instead of request.URL.Path.
 	UseRawPath bool
+
+	middlewares []MiddlewareFunc
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -146,6 +148,11 @@ func (r *Router) URL(name string, args ...string) (*url.URL, error) {
 // Group implements IRouter.Group.
 func (r *Router) Group(path string, opts ...RouteGroupOption) IRouter {
 	return newRouteGroup(r, path, opts...)
+}
+
+// Use attaches a global middleware.
+func (r *Router) Use(middlewares ...MiddlewareFunc) {
+	r.middlewares = append(r.middlewares, middlewares...)
 }
 
 // Get implements IRouter.Get.
@@ -342,13 +349,21 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	ctx := r.getContext()
+	ctx.Request = req
+	ctx.Response = w
+	defer r.putContext(ctx)
+	for _, f := range r.middlewares {
+		if err := f(ctx); err != nil {
+			r.HandleError(ctx, err)
+			return
+		}
+	}
+
 	path := req.URL.Path
 	if r.UseRawPath && req.URL.RawPath != "" {
 		path = req.URL.RawPath
 	}
-	ctx := r.getContext()
-	ctx.Request = req
-	ctx.Response = w
 
 	if root := r.trees[req.Method]; root != nil {
 		if route, ps, tsr := root.getValue(path, r.getParams, r.UseRawPath); route != nil {
@@ -361,7 +376,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				r.HandleError(ctx, err)
 			}
-			r.putContext(ctx)
 			return
 		} else if req.Method != http.MethodConnect && path != "/" {
 			// Moved Permanently, request with Get method

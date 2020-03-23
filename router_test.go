@@ -1042,3 +1042,28 @@ func TestRouterUseRawPathCatchAll(t *testing.T) {
 		t.Error("raw path routing failed")
 	}
 }
+
+func TestRouterUse(t *testing.T) {
+	router := NewRouter()
+	router.Use(
+		echoMiddleware("m1"),
+		echoMiddleware("m2"),
+	)
+	router.Get("/", echoHandler("foobar"))
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	router.ServeHTTP(w, req)
+	if w.Body.String() != "m1 m2 foobar" {
+		t.Errorf("expeceted body %s, got %s", "m1 m2 foobar", w.Body.String())
+	}
+
+	router.Use(func(_ *Context) error {
+		return NewError(http.StatusForbidden, errors.New("forbidden"))
+	})
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/", nil)
+	router.ServeHTTP(w, req)
+	if w.Body.String() != "m1 m2 forbidden\n" {
+		t.Errorf("expected body %q, got %q", "m1 m2 forbidden\n", w.Body.String())
+	}
+}
