@@ -4,6 +4,12 @@
 
 package clevergo
 
+import (
+	"log"
+	"net/http"
+	"runtime/debug"
+)
+
 // MiddlewareFunc is a function that receives a handle and returns a handle.
 type MiddlewareFunc func(Handle) Handle
 
@@ -14,4 +20,31 @@ func Chain(handle Handle, middlewares ...MiddlewareFunc) Handle {
 	}
 
 	return handle
+}
+
+type recovery struct {
+	debug bool
+}
+
+func (r *recovery) handle(ctx *Context, err interface{}) {
+	ctx.Response.WriteHeader(http.StatusInternalServerError)
+	log.Println(err)
+	if r.debug {
+		debug.PrintStack()
+	}
+}
+
+// Recovery returns a recovery middleware.
+func Recovery(debug bool) MiddlewareFunc {
+	m := &recovery{debug: debug}
+	return func(next Handle) Handle {
+		return func(ctx *Context) error {
+			defer func() {
+				if err := recover(); err != nil {
+					m.handle(ctx, err)
+				}
+			}()
+			return next(ctx)
+		}
+	}
 }

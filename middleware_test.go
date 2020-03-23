@@ -5,8 +5,12 @@
 package clevergo
 
 import (
+	"bytes"
 	"fmt"
+	"log"
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -67,4 +71,24 @@ func ExampleChain() {
 	fmt.Println(w.Body.String())
 	// Output:
 	// m1 m2 hello
+}
+
+func TestRecovery(t *testing.T) {
+	m := Recovery(true)
+	router := NewRouter()
+	out := &bytes.Buffer{}
+	log.SetOutput(out)
+	router.Use(m)
+	router.Get("/", func(_ *Context) error {
+		panic("foobar")
+		return nil
+	})
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status code %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+	if !strings.Contains(out.String(), "foobar") {
+		t.Errorf("expected output contains %s, got %s", "foobar", out.String())
+	}
 }
