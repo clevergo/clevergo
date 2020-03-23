@@ -96,6 +96,9 @@ type Router struct {
 
 	// Error Handler.
 	ErrorHandler ErrorHandler
+
+	// If enabled, use the request.URL.RawPath instead of request.URL.Path.
+	UseRawPath bool
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -275,7 +278,7 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 // the same path with an extra / without the trailing slash should be performed.
 func (r *Router) Lookup(method, path string) (*Route, Params, bool) {
 	if root := r.trees[method]; root != nil {
-		route, ps, tsr := root.getValue(path, r.getParams)
+		route, ps, tsr := root.getValue(path, r.getParams, r.UseRawPath)
 		if route == nil {
 			return nil, nil, tsr
 		}
@@ -310,7 +313,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 				continue
 			}
 
-			handle, _, _ := r.trees[method].getValue(path, nil)
+			handle, _, _ := r.trees[method].getValue(path, nil, r.UseRawPath)
 			if handle != nil {
 				// Add request method to list of allowed methods
 				allowed = append(allowed, method)
@@ -340,12 +343,15 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
+	if r.UseRawPath && req.URL.RawPath != "" {
+		path = req.URL.RawPath
+	}
 	ctx := r.getContext()
 	ctx.Request = req
 	ctx.Response = w
 
 	if root := r.trees[req.Method]; root != nil {
-		if route, ps, tsr := root.getValue(path, r.getParams); route != nil {
+		if route, ps, tsr := root.getValue(path, r.getParams, r.UseRawPath); route != nil {
 			ctx.Route = route
 			if ps != nil {
 				r.putParams(ps)
@@ -367,11 +373,11 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 			if tsr && r.RedirectTrailingSlash {
 				if len(path) > 1 && path[len(path)-1] == '/' {
-					req.URL.Path = path[:len(path)-1]
+					path = path[:len(path)-1]
 				} else {
-					req.URL.Path = path + "/"
+					path = path + "/"
 				}
-				http.Redirect(w, req, req.URL.String(), code)
+				http.Redirect(w, req, path, code)
 				return
 			}
 
@@ -382,8 +388,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 					r.RedirectTrailingSlash,
 				)
 				if found {
-					req.URL.Path = fixedPath
-					http.Redirect(w, req, req.URL.String(), code)
+					http.Redirect(w, req, fixedPath, code)
 					return
 				}
 			}
