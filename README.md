@@ -258,10 +258,6 @@ func (ctx *clevergo.Context) error {
 - [File an issue](https://github.com/clevergo/clevergo/issues/new) for features or bugs.
 - Fork and make a pull request.
 
-## Credit
-
-- [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
-
 ## Contributors
 
 ### Code Contributors
@@ -280,3 +276,7 @@ Become a financial contributor and help us sustain our community. [[Contribute](
 #### Organizations
 
 Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/clevergo/contribute)]
+
+## Credit
+
+See [CREDIT.md](CREDIT.md).
