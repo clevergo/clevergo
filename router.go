@@ -150,7 +150,7 @@ func (r *Router) Group(path string, opts ...RouteGroupOption) IRouter {
 	return newRouteGroup(r, path, opts...)
 }
 
-// Use attaches a global middleware.
+// Use attaches global middlewares.
 func (r *Router) Use(middlewares ...MiddlewareFunc) {
 	r.middlewares = append(r.middlewares, middlewares...)
 }
