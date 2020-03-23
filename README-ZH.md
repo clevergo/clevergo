@@ -156,6 +156,12 @@ router.ErrorHandler = MyErrorHandler{
 
 中间件是一个 `Handle` 函数。
 
+**内置中间件：**
+
+- [Recovery](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#Recovery)
+
+**例子：**
+
 ```go
 // 全局中间件.
 serverHeader := func(next clevergo.Handle) clevergo.Handle {
@@ -165,6 +171,7 @@ serverHeader := func(next clevergo.Handle) clevergo.Handle {
 	}
 }
 router.Use(
+	clevergo.Recovery(true),
 	serverHeader,
 	// ...
 )
