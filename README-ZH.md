@@ -157,6 +157,16 @@ router.ErrorHandler = MyErrorHandler{
 中间件是一个 `Handle` 函数。
 
 ```go
+// 全局中间件.
+serverHeader := func(ctx *clevergo.Context) error {
+	ctx.Response.Header().Set("Server", "CleverGo")
+	return nil
+}
+router.Use(
+	serverHeader,
+	// ...
+)
+
 authenticator := func(ctx *clevergo.Context) error {
     // authenticate 返回一个 user 和一个布尔值表示提供的凭证是否有效。
     if user, ok := authenticate(ctx); !ok {
@@ -179,7 +189,7 @@ router.Get("/auth", auth, RouteMiddleware(
 	authenticator,
 ))
 
-// 全局路由，以 gorilla compress 中间件为例。
+// 使用第三方中间件，以 gorilla compress 中间件为例。
 http.ListenAndServe(":8080", handlers.CompressHandler(router))
 ```
 

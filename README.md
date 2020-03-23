@@ -155,6 +155,17 @@ router.ErrorHandler = MyErrorHandler{
 Middleware is a `Handle`.
 
 ```go
+// global middlewares.
+serverHeader := func(ctx *clevergo.Context) error {
+	// writes server header.
+	ctx.Response.Header().Set("Server", "CleverGo")
+	return nil
+}
+router.Use(
+	serverHeader,
+	// ...
+)
+
 authenticator := func(ctx *clevergo.Context) error {
     // authenticate returns an user instance and a boolean value indicates whether the provided credential is valid.
     if user, ok := authenticate(ctx); !ok {
@@ -177,7 +188,7 @@ router.Get("/auth", auth, RouteMiddleware(
 	authenticator,
 ))
 
-// global middleware, takes gorilla compress middleware as exmaple.
+// use third-party global middleware, takes gorilla compress middleware as exmaple.
 http.ListenAndServe(":8080", handlers.CompressHandler(router))
 ```
 
