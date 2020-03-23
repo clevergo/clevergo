@@ -50,17 +50,29 @@ func ExampleRouteGroup() {
 	router := NewRouter()
 	api := router.Group("/api", RouteGroupMiddleware(echoMiddleware("api")))
 
-	v1 := api.Group("/v1", RouteGroupMiddleware(echoMiddleware("v1")))
+	v1 := api.Group("/v1", RouteGroupMiddleware(
+		echoMiddleware("v1"),
+		echoMiddleware("authenticate"),
+	))
 	v1.Get("/users/:name", func(ctx *Context) error {
 		ctx.WriteString(fmt.Sprintf("user: %s", ctx.Params.String("name")))
 		return nil
-	})
+	}, RouteMiddleware(
+		echoMiddleware("fizz1"),
+		echoMiddleware("fizz2"),
+	))
 
-	v2 := api.Group("/v2", RouteGroupMiddleware(echoMiddleware("v2")))
+	v2 := api.Group("/v2", RouteGroupMiddleware(
+		echoMiddleware("v2"),
+		echoMiddleware("authenticate"),
+	))
 	v2.Get("/users/:name", func(ctx *Context) error {
 		ctx.WriteString(fmt.Sprintf("user: %s", ctx.Params.String("name")))
 		return nil
-	})
+	}, RouteMiddleware(
+		echoMiddleware("buzz1"),
+		echoMiddleware("buzz2"),
+	))
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)
@@ -73,8 +85,8 @@ func ExampleRouteGroup() {
 	fmt.Println(w.Body.String())
 
 	// Output:
-	// api v1 user: foo
-	// api v2 user: bar
+	// api v1 authenticate fizz1 fizz2 user: foo
+	// api v2 authenticate buzz1 buzz2 user: bar
 }
 
 func TestRouteGroupName(t *testing.T) {

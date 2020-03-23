@@ -62,13 +62,16 @@ func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) IRouter {
 
 // Handle implements IRouter.Handle.
 func (r *RouteGroup) Handle(method, path string, handle Handle, opts ...RouteOption) {
-	handle = Chain(handle, r.middlewares...)
-
 	opts = append(opts, func(route *Route) {
 		if route.name != "" {
 			route.name = r.name + "/" + route.name
 		}
 	})
+	if len(r.middlewares) > 0 {
+		opts = append(opts, func(route *Route) {
+			route.handle = Chain(route.handle, r.middlewares...)
+		})
+	}
 	r.parent.Handle(method, r.subPath(path), handle, opts...)
 }
 
