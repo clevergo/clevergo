@@ -155,7 +155,7 @@ router.ErrorHandler = MyErrorHandler{
 ```go
 // 全局中间件.
 serverHeader := func(next clevergo.Handle) clevergo.Handle {
-	func(ctx *clevergo.Context) error {
+	return func(ctx *clevergo.Context) error {
 		ctx.Response.Header().Set("Server", "CleverGo")
 		return next(ctx)
 	}
