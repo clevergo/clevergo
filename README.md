@@ -42,14 +42,6 @@ CleverGo is a lightweight, feature-rich and trie based high performance HTTP req
 GO111MODULE=on go get github.com/clevergo/clevergo
 ```
 
-or install particular [releases](https://github.com/clevergo/clevergo/releases):
-
-```shell
-GO111MODULE=on go get github.com/clevergo/clevergo@version
-```
-
-> Replace `version` to particular version.
-
 ## Examples
 
 ```go
@@ -161,7 +153,7 @@ Middleware is a function `func(next Handle) Handle`.
 ```go
 // global middlewares.
 serverHeader := func(next clevergo.Handle) clevergo.Handle {
-	func(ctx *clevergo.Context) error {
+	return func(ctx *clevergo.Context) error {
 		// writes server header.
 		ctx.Response.Header().Set("Server", "CleverGo")
 		return next(ctx)

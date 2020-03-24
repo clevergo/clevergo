@@ -44,14 +44,6 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 GO111MODULE=on go get github.com/clevergo/clevergo
 ```
 
-或者安装特定[版本](https://github.com/clevergo/clevergo/releases):
-
-```shell
-GO111MODULE=on go get github.com/clevergo/clevergo@version
-```
-
-> 替换 `version` 为具体版本即可。
-
 ## 举个栗子
 
 ```go
@@ -175,7 +167,7 @@ router.Use(
 )
 
 authenticator := func(next clevergo.Handle) clevergo.Handle {
-	func(ctx *clevergo.Context) error {
+	return func(ctx *clevergo.Context) error {
 		// authenticate 返回一个 user 和一个布尔值表示提供的凭证是否有效。
 		if user, ok := authenticate(ctx); !ok {
 			// 返回一个错误，以终止后续的中间件和 Handle。
