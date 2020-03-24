@@ -209,7 +209,7 @@ apiV1 := api.Group("/v1", clevergo.RouteGroupMiddleware(
     // middlewares for v1's APIs
 ))
 
-apiV2 := api.Group("v2", clevergo.RouteGroupMiddleware(
+apiV2 := api.Group("/v2", clevergo.RouteGroupMiddleware(
     // middlewares for v2's APIs
 ))
 ```
