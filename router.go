@@ -369,7 +369,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) handleRequest(ctx *Context) (err error) {
-
 	path := ctx.Request.URL.Path
 	if r.UseRawPath && ctx.Request.URL.RawPath != "" {
 		path = ctx.Request.URL.RawPath
