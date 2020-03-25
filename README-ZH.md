@@ -144,7 +144,7 @@ router.ErrorHandler = MyErrorHandler{
 
 ### 中间件
 
-中间件是一个 `Handle` 函数。
+中间件是一个 `func(next Handle) Handle` 函数。
 
 **内置中间件：**
 
