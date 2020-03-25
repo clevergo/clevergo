@@ -240,6 +240,7 @@ func (ctx *clevergo.Context) error {
 	//ctx.IsPost()
 	//ctx.IsPut()
 	//ctx.IsOptions()
+	//ctx.IsAJAX()
 	return nil
 }
 ```
