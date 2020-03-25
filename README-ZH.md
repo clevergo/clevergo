@@ -27,7 +27,7 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
 **值越小性能越好**
 
-[![Benchmark](https://razonyang.com/wp-content/uploads/2020/03/benchmark.png)](BENCHMARK.md)
+[![Benchmark](https://i.imgur.com/Eato1pO.png)](BENCHMARK.md)
 
 ## 功能特性
 

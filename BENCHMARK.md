@@ -9,7 +9,7 @@ BENCHMARK
 
 **Lower is better!**
 
-[![Benchmark](https://razonyang.com/wp-content/uploads/2020/03/benchmark.png)](BENCHMARK.md)
+[![Benchmark](https://i.imgur.com/Eato1pO.png)](BENCHMARK.md)
 
 ```shell
 BenchmarkEcho_Param                     14462064                87.1 ns/op             0 B/op          0 allocs/op

@@ -25,7 +25,7 @@ CleverGo is a lightweight, feature-rich and trie based high performance HTTP req
 
 **Lower is better!**
 
-[![Benchmark](https://razonyang.com/wp-content/uploads/2020/03/benchmark.png)](BENCHMARK.md)
+[![Benchmark](https://i.imgur.com/Eato1pO.png)](BENCHMARK.md)
 
 ## Features
 
