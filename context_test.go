@@ -213,3 +213,22 @@ func TestContext_WriteHeader(t *testing.T) {
 		}
 	}
 }
+
+func TestContext_IsAJAX(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected bool
+	}{
+		{"", false},
+		{"XMLHttpRequest", true},
+	}
+
+	for _, test := range tests {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req.Header.Set("X-Requested-With", test.value)
+		ctx := newContext(nil, req)
+		if ctx.IsAJAX() != test.expected {
+			t.Errorf("expected IsAJAX %t, got %t", test.expected, ctx.IsAJAX())
+		}
+	}
+}

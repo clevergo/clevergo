@@ -107,6 +107,11 @@ func (ctx *Context) IsMethod(method string) bool {
 	return ctx.Request.Method == method
 }
 
+// IsAJAX indicates whether it is an AJAX (XMLHttpRequest) request.
+func (ctx *Context) IsAJAX() bool {
+	return ctx.Request.Header.Get("X-Requested-With") == "XMLHttpRequest"
+}
+
 // IsDelete returns a boolean value indicates whether the request method is DELETE.
 func (ctx *Context) IsDelete() bool {
 	return ctx.IsMethod(http.MethodDelete)
