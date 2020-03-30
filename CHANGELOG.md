@@ -3,8 +3,12 @@ Change Log
 
 under development
 -----------------
+
+v1.7.0 March 30, 2020
+---------------------
 - Add `Context.WriteHeader`, an alias of http.ResponseWriter.WriteHeader.
 - Add `Context.IsAJAX` to determine whether it is an AJAX request.
+- Write error to log.
 
 
 v1.6.1 March 24, 2020
