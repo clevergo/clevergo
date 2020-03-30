@@ -6,6 +6,7 @@ package clevergo
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -451,6 +452,8 @@ func (r *Router) HandleError(ctx *Context, err error) {
 		r.ErrorHandler.Handle(ctx, err)
 		return
 	}
+
+	log.Println(err)
 
 	switch e := err.(type) {
 	case StatusError:
