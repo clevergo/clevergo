@@ -6,6 +6,7 @@ package clevergo
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -101,5 +102,29 @@ func TestWrapH(t *testing.T) {
 	m(fakeHandler("foo"))(&Context{})
 	if !handled {
 		t.Error("failed to wrap handler as middleware")
+	}
+}
+
+func TestWrapHH(t *testing.T) {
+	fn := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r = r.WithContext(context.WithValue(r.Context(), "foo", "bar"))
+			h.ServeHTTP(w, r)
+		})
+	}
+	var handled bool
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	ctx := newContext(w, req)
+	WrapHH(fn)(func(ctx *Context) error {
+		handled = true
+		foo, _ := ctx.Value("foo").(string)
+		if foo != "bar" {
+			t.Errorf("expected foo: %s, got %s", "bar", foo)
+		}
+		return nil
+	})(ctx)
+	if !handled {
+		t.Error("WrapHH failed")
 	}
 }
