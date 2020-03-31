@@ -232,3 +232,14 @@ func TestContext_IsAJAX(t *testing.T) {
 		}
 	}
 }
+
+func TestContext_GetHeader(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("foo", "bar")
+	ctx := newContext(nil, req)
+	for _, name := range []string{"foo", "fizz"} {
+		if req.Header.Get(name) != ctx.GetHeader(name) {
+			t.Errorf("expected header %s: %q, got %q", name, req.Header.Get(name), ctx.GetHeader(name))
+		}
+	}
+}

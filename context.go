@@ -141,3 +141,8 @@ func (ctx *Context) IsPost() bool {
 func (ctx *Context) IsPut() bool {
 	return ctx.IsMethod(http.MethodPut)
 }
+
+// GetHeader is a shortcut of http.Request.Header.Get.
+func (ctx *Context) GetHeader(name string) string {
+	return ctx.Request.Header.Get(name)
+}

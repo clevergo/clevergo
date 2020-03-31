@@ -3,6 +3,7 @@ Change Log
 
 under development
 -----------------
+- Addd `Context.GetHeader`, a shortcut of http.Request.Header.Get.
 
 v1.7.0 March 30, 2020
 ---------------------
