@@ -5,6 +5,7 @@ under development
 -----------------
 - Add `Context.GetHeader`, a shortcut of http.Request.Header.Get.
 - Add `WrapH` to wrap a HTTP handler as a middleware.
+- Add `WrapHH` to wrap func(http.Handler) http.Handler as a middleware.
 
 v1.7.0 March 30, 2020
 ---------------------
