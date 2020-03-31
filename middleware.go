@@ -13,6 +13,16 @@ import (
 // MiddlewareFunc is a function that receives a handle and returns a handle.
 type MiddlewareFunc func(Handle) Handle
 
+// WrapHandler wraps a HTTP handler and returns a middleware.
+func WrapHandler(h http.Handler) MiddlewareFunc {
+	return func(handle Handle) Handle {
+		return func(ctx *Context) error {
+			h.ServeHTTP(ctx.Response, ctx.Request)
+			return handle(ctx)
+		}
+	}
+}
+
 // Chain wraps handle with middlewares, middlewares will be invoked in sequence.
 func Chain(handle Handle, middlewares ...MiddlewareFunc) Handle {
 	for i := len(middlewares) - 1; i >= 0; i-- {
