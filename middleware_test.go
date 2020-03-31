@@ -92,12 +92,12 @@ func TestRecovery(t *testing.T) {
 	}
 }
 
-func TestWrapHandler(t *testing.T) {
+func TestWrapH(t *testing.T) {
 	handled := false
 	handler := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		handled = true
 	})
-	m := WrapHandler(handler)
+	m := WrapH(handler)
 	m(fakeHandler("foo"))(&Context{})
 	if !handled {
 		t.Error("failed to wrap handler as middleware")
