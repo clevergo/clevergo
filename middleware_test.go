@@ -106,9 +106,11 @@ func TestWrapH(t *testing.T) {
 }
 
 func TestWrapHH(t *testing.T) {
+	type ctxKey string
+	var foo ctxKey = "foo"
 	fn := func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r = r.WithContext(context.WithValue(r.Context(), "foo", "bar"))
+			r = r.WithContext(context.WithValue(r.Context(), foo, "bar"))
 			h.ServeHTTP(w, r)
 		})
 	}
@@ -118,7 +120,7 @@ func TestWrapHH(t *testing.T) {
 	ctx := newContext(w, req)
 	WrapHH(fn)(func(ctx *Context) error {
 		handled = true
-		foo, _ := ctx.Value("foo").(string)
+		foo, _ := ctx.Value(foo).(string)
 		if foo != "bar" {
 			t.Errorf("expected foo: %s, got %s", "bar", foo)
 		}

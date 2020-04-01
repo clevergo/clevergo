@@ -28,7 +28,7 @@ func WrapHH(fn func(http.Handler) http.Handler) MiddlewareFunc {
 	nextHandler := new(middlewareHandler)
 	handler := fn(nextHandler)
 	return func(handle Handle) Handle {
-		return func(ctx *Context) (err error) {
+		return func(ctx *Context) error {
 			state := &middlewareCtx{ctx: ctx, handle: handle}
 			ctx.WithValue(nextHandler, state)
 			handler.ServeHTTP(ctx.Response, ctx.Request)
