@@ -3,6 +3,9 @@ Change Log
 
 under development
 -----------------
+
+v1.8.0 April 2, 2020
+---------------------
 - Add `Context.GetHeader`, a shortcut of http.Request.Header.Get.
 - Add `WrapH` to wrap a HTTP handler as a middleware.
 - Add `WrapHH` to wrap func(http.Handler) http.Handler as a middleware.
