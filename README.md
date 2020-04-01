@@ -142,7 +142,7 @@ router.ErrorHandler = MyErrorHandler{
 
 ### Middleware
 
-Middleware is a function `func(next Handle) Handle`.
+Middleware is a function `func(next Handle) Handle`. [WrapHH](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#WrapHH) is an adapter that converts `func(http.Handler) http.Handler` as a middleware.
 
 **Built-in middlewares:**
 
@@ -162,6 +162,10 @@ serverHeader := func(next clevergo.Handle) clevergo.Handle {
 router.Use(
 	clevergo.Recovery(true),
 	serverHeader,
+
+	// third-party func(http.Handler) http.Handler middlewares
+	clevergo.WrapHH(gziphandler.GzipHandler) // https://github.com/nytimes/gziphandler
+
 	// ...
 )
 
@@ -190,8 +194,7 @@ router.Get("/auth", auth, RouteMiddleware(
 	authenticator,
 ))
 
-// use third-party global middleware, takes gorilla compress middleware as exmaple.
-http.ListenAndServe(":8080", handlers.CompressHandler(router))
+http.ListenAndServe(":8080", router)
 ```
 
 Middleware also can be used in route group, see [Route Group](#route-group) for details.
@@ -202,7 +205,8 @@ Middleware also can be used in route group, see [Route Group](#route-group) for 
 router := clevergo.NewRouter()
 
 api := router.Group("/api", clevergo.RouteGroupMiddleware(
-    // middlewares for APIs, such as CORS, authenticator, authorization
+	// middlewares for APIs, such as CORS, authenticator, authorization
+	clevergo.WrapHH(cors.Default().Handler), // https://github.com/rs/cors
 ))
 
 apiV1 := api.Group("/v1", clevergo.RouteGroupMiddleware(
