@@ -252,7 +252,7 @@ func (ctx *clevergo.Context) error {
 ## Contribute
 
 - Give it a :star: and spread the package.
-- [File an issue](https://github.com/clevergo/clevergo/issues/new) for features or bugs.
+- [File an issue](https://github.com/clevergo/clevergo/issues/new) to ask questions, request features or report bugs.
 - Fork and make a pull request.
 
 ## Contributors

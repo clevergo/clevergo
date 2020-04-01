@@ -253,5 +253,5 @@ func (ctx *clevergo.Context) error {
 ## 贡献
 
 - 给颗 :star:。
-- [提交问题](https://github.com/clevergo/clevergo/issues/new) 以报告 Bug 或者请求新特性。
+- [提交问题](https://github.com/clevergo/clevergo/issues/new) 以提问、请求新特性或者反馈 Bug。
 - Fork 和提交 PR。
