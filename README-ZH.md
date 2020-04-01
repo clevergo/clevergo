@@ -144,7 +144,7 @@ router.ErrorHandler = MyErrorHandler{
 
 ### 中间件
 
-中间件是一个 `func(next Handle) Handle` 函数。
+中间件是一个 `func(next Handle) Handle` 函数。[WrapHH](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#WrapHH) 是一个将 `func(http.Handler) http.Handler` 转化成中间件的适配器。
 
 **内置中间件：**
 
@@ -163,6 +163,10 @@ serverHeader := func(next clevergo.Handle) clevergo.Handle {
 router.Use(
 	clevergo.Recovery(true),
 	serverHeader,
+
+	// third-party func(http.Handler) http.Handler middlewares
+	clevergo.WrapHH(gziphandler.GzipHandler) // https://github.com/nytimes/gziphandler
+
 	// ...
 )
 
@@ -191,8 +195,7 @@ router.Get("/auth", auth, RouteMiddleware(
 	authenticator,
 ))
 
-// 使用第三方中间件，以 gorilla compress 中间件为例。
-http.ListenAndServe(":8080", handlers.CompressHandler(router))
+http.ListenAndServe(":8080", router)
 ```
 
 中间件也可以在[路由组](#路由组)中使用。
@@ -204,6 +207,7 @@ router := clevergo.NewRouter()
 
 api := router.Group("/api", clevergo.RouteGroupMiddleware(
     // APIs 的中间件，如：CORS、身份验证、授权验证等。
+	clevergo.WrapHH(cors.Default().Handler), // https://github.com/rs/cors
 ))
 
 apiV1 := api.Group("/v1", clevergo.RouteGroupMiddleware(
