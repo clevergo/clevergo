@@ -185,3 +185,12 @@ func (ctx *Context) XML(code int, data interface{}) error {
 	_, err = ctx.Response.Write(bs)
 	return err
 }
+
+// HTML sends HTML response with status code, it also sets
+// Content-Type as "text/html".
+func (ctx *Context) HTML(code int, html string) error {
+	ctx.SetContentTypeHTML()
+	ctx.Response.WriteHeader(code)
+	_, err := ctx.WriteString(html)
+	return err
+}
