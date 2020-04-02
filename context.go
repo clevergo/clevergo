@@ -66,12 +66,12 @@ func (ctx *Context) SetContentTypeText() {
 
 // SetContentTypeJSON sets the content type as JSON.
 func (ctx *Context) SetContentTypeJSON() {
-	ctx.SetContentType("application/json")
+	ctx.SetContentType("application/json; charset=utf-8")
 }
 
 // SetContentTypeXML sets the content type as XML.
 func (ctx *Context) SetContentTypeXML() {
-	ctx.SetContentType("application/xml")
+	ctx.SetContentType("application/xml; charset=utf-8")
 }
 
 // SetCookie is a shortcut of http.SetCookie.
