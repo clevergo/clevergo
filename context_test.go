@@ -261,18 +261,14 @@ func TestContext_JSON(t *testing.T) {
 	}{
 		{
 			200,
-			map[string]interface{}{
-				"foo": "bar",
-			},
-			`{"foo":"bar"}`,
+			testBody{"success", "created", "foobar"},
+			`{"status":"success","message":"created","data":"foobar"}`,
 			false,
 		},
 		{
 			500,
-			map[string]interface{}{
-				"message": "error",
-			},
-			`{"message":"error"}`,
+			testBody{"error", "internal error", nil},
+			`{"status":"error","message":"internal error","data":null}`,
 			false,
 		},
 		{
