@@ -3,10 +3,13 @@ Change Log
 
 under development
 -----------------
+
+v1.8.1 April 2, 2020
+--------------------
 - Fix `WrapHH` doesn't returns the error of final handle.
 
 v1.8.0 April 2, 2020
----------------------
+--------------------
 - Add `Context.GetHeader`, a shortcut of http.Request.Header.Get.
 - Add `WrapH` to wrap a HTTP handler as a middleware.
 - Add `WrapHH` to wrap func(http.Handler) http.Handler as a middleware.
