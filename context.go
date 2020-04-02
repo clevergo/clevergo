@@ -161,3 +161,12 @@ func (ctx *Context) JSON(code int, data interface{}) error {
 	_, err = ctx.Response.Write(bs)
 	return err
 }
+
+// String send string response with status code, it also sets
+// Content-Type as "text/plain; charset=utf-8".
+func (ctx *Context) String(code int, s string) error {
+	ctx.SetContentTypeText()
+	ctx.Response.WriteHeader(code)
+	_, err := ctx.WriteString(s)
+	return err
+}
