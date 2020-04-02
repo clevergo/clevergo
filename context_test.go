@@ -379,3 +379,11 @@ func TestContext_HTML(t *testing.T) {
 		assert.Equal(t, w.Body.String(), test.s, "resposne body does not match")
 	}
 }
+
+func TestContext_FormValue(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/?foo=bar", nil)
+	ctx := newContext(nil, req)
+	for _, key := range []string{"foo", "fizz"} {
+		assert.Equal(t, ctx.FormValue(key), req.FormValue(key))
+	}
+}

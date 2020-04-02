@@ -204,3 +204,8 @@ func (ctx *Context) HTML(code int, html string) error {
 	_, err := ctx.WriteString(html)
 	return err
 }
+
+// FormValue is a shortcut of http.Request.FormValue.
+func (ctx *Context) FormValue(key string) string {
+	return ctx.Request.FormValue(key)
+}
