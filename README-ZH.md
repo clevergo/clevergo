@@ -206,7 +206,7 @@ http.ListenAndServe(":8080", router)
 router := clevergo.NewRouter()
 
 api := router.Group("/api", clevergo.RouteGroupMiddleware(
-    // APIs 的中间件，如：CORS、身份验证、授权验证等。
+	// APIs 的中间件，如：CORS、身份验证、授权验证等。
 	clevergo.WrapHH(cors.Default().Handler), // https://github.com/rs/cors
 ))
 
