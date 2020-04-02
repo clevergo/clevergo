@@ -51,16 +51,12 @@ func TestContext_SetContentTypeText(t *testing.T) {
 func TestContext_SetContentTypeJSON(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
 	ctx.SetContentTypeJSON()
-	if ctx.Response.Header().Get("Content-Type") != "application/json" {
-		t.Errorf("expected content type %q, got %q", "application/json", ctx.Response.Header().Get("Content-Type"))
-	}
+	assert.Equal(t, "application/json; charset=utf-8", ctx.Response.Header().Get("Content-Type"), "content type does not match")
 }
 func TestContext_SetContentTypeXML(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
 	ctx.SetContentTypeXML()
-	if ctx.Response.Header().Get("Content-Type") != "application/xml" {
-		t.Errorf("expected content type %q, got %q", "application/xml", ctx.Response.Header().Get("Content-Type"))
-	}
+	assert.Equal(t, "application/xml; charset=utf-8", ctx.Response.Header().Get("Content-Type"), "content type does not match")
 }
 
 func TestContext_Write(t *testing.T) {
@@ -287,7 +283,7 @@ func TestContext_JSON(t *testing.T) {
 			continue
 		}
 		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/json", "content type does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/json; charset=utf-8", "content type does not match")
 		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
 	}
 }
@@ -345,7 +341,7 @@ func TestContext_XML(t *testing.T) {
 			continue
 		}
 		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/xml", "content type does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/xml; charset=utf-8", "content type does not match")
 		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
 	}
 }
