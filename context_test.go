@@ -387,3 +387,13 @@ func TestContext_FormValue(t *testing.T) {
 		assert.Equal(t, ctx.FormValue(key), req.FormValue(key))
 	}
 }
+
+func TestContext_PostFormValue(t *testing.T) {
+	body := bytes.NewBuffer([]byte("foo=bar"))
+	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
+	ctx := newContext(nil, req)
+	for _, key := range []string{"foo", "fizz"} {
+		assert.Equal(t, ctx.PostFormValue(key), req.PostFormValue(key))
+	}
+}

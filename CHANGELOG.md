@@ -10,6 +10,7 @@ under development
 - Add `Context.HTML` to send HTML response.
 - Add `Context.Cookie` and `Context.Cookies`.
 - Add `Context.FormValue`.
+- Add `Context.PostFormValue`.
 
 v1.8.1 April 2, 2020
 --------------------
