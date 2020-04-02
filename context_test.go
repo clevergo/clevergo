@@ -186,6 +186,22 @@ func TestIsMethod(t *testing.T) {
 	}
 }
 
+func TestContext_Cookie(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "foo", Value: "bar"})
+	ctx := newContext(nil, req)
+	actual, _ := ctx.Cookie("foo")
+	expected, _ := req.Cookie("foo")
+	assert.Equal(t, actual, expected, "cookie does not match")
+}
+
+func TestContext_Cookies(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "foo", Value: "bar"})
+	ctx := newContext(nil, req)
+	assert.Equal(t, ctx.Cookies(), req.Cookies(), "cookies does not match")
+}
+
 func TestContext_SetCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := &Context{Response: w}

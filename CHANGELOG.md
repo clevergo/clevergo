@@ -8,6 +8,7 @@ under development
 - Add `Context.XML` to send XML response.
 - `Content.SetContentTypeJSON` and `Content.SetContentTypeXML` append `charset=utf-8` to content type header.
 - Add `Context.HTML` to send HTML response.
+- Add `Context.Cookie` and `Context.Cookies`.
 
 v1.8.1 April 2, 2020
 --------------------
