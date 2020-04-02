@@ -3,6 +3,7 @@ Change Log
 
 under development
 -----------------
+- Fix `WrapHH` doesn't returns the error of final handle.
 
 v1.8.0 April 2, 2020
 ---------------------

@@ -57,7 +57,7 @@ type middlewareCtx struct {
 	err    error
 }
 
-func (m middlewareCtx) next() {
+func (m *middlewareCtx) next() {
 	m.err = m.handle(m.ctx)
 }
 

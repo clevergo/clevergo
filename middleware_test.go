@@ -7,6 +7,7 @@ package clevergo
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -118,15 +119,19 @@ func TestWrapHH(t *testing.T) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	ctx := newContext(w, req)
-	WrapHH(fn)(func(ctx *Context) error {
+	expectedErr := errors.New("foo")
+	actualErr := WrapHH(fn)(func(ctx *Context) error {
 		handled = true
 		foo, _ := ctx.Value(foo).(string)
 		if foo != "bar" {
 			t.Errorf("expected foo: %s, got %s", "bar", foo)
 		}
-		return nil
+		return expectedErr
 	})(ctx)
 	if !handled {
 		t.Error("WrapHH failed")
+	}
+	if expectedErr != actualErr {
+		t.Errorf("expected error %s, got %s", expectedErr, actualErr)
 	}
 }
