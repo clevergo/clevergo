@@ -3,6 +3,7 @@ Change Log
 
 under development
 -----------------
+- Add `Context.JSON` to sends JSON response.
 
 v1.8.1 April 2, 2020
 --------------------

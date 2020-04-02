@@ -6,6 +6,7 @@ package clevergo
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 )
@@ -145,4 +146,18 @@ func (ctx *Context) IsPut() bool {
 // GetHeader is a shortcut of http.Request.Header.Get.
 func (ctx *Context) GetHeader(name string) string {
 	return ctx.Request.Header.Get(name)
+}
+
+// JSON sends JSON response with status code, it also sets
+// Content-Type as "application/json".
+func (ctx *Context) JSON(code int, data interface{}) error {
+	bs, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	ctx.SetContentTypeJSON()
+	ctx.Response.WriteHeader(code)
+	_, err = ctx.Response.Write(bs)
+	return err
 }
