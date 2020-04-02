@@ -164,7 +164,7 @@ router.Use(
 	serverHeader,
 
 	// third-party func(http.Handler) http.Handler middlewares
-	clevergo.WrapHH(gziphandler.GzipHandler) // https://github.com/nytimes/gziphandler
+	clevergo.WrapHH(gziphandler.GzipHandler), // https://github.com/nytimes/gziphandler
 
 	// ...
 )
