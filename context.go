@@ -209,3 +209,8 @@ func (ctx *Context) HTML(code int, html string) error {
 func (ctx *Context) FormValue(key string) string {
 	return ctx.Request.FormValue(key)
 }
+
+// PostFormValue is a shortcut of http.Request.PostFormValue.
+func (ctx *Context) PostFormValue(key string) string {
+	return ctx.Request.PostFormValue(key)
+}
