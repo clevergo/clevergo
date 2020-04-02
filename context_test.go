@@ -272,7 +272,7 @@ func TestContext_JSON(t *testing.T) {
 		ctx := newContext(w, nil)
 		ctx.JSON(test.code, test.data)
 		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/json", "status code does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/json", "content type does not match")
 		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
 	}
 }
@@ -290,7 +290,7 @@ func TestContext_String(t *testing.T) {
 		ctx := newContext(w, nil)
 		ctx.String(test.code, test.s)
 		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "text/plain; charset=utf-8", "content-type does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "text/plain; charset=utf-8", "content type does not match")
 		assert.Equal(t, w.Body.String(), test.s, "resposne body does not match")
 	}
 }
