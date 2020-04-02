@@ -5,6 +5,7 @@ under development
 -----------------
 - Add `Context.JSON` to sends JSON response.
 - Add `Context.String` to sends string response.
+- Add `Context.XML` to sends XML response.
 
 v1.8.1 April 2, 2020
 --------------------
