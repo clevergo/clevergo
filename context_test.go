@@ -248,9 +248,10 @@ func TestContext_GetHeader(t *testing.T) {
 
 func TestContext_JSON(t *testing.T) {
 	tests := []struct {
-		code int
-		data interface{}
-		body interface{}
+		code      int
+		data      interface{}
+		body      interface{}
+		shouldErr bool
 	}{
 		{
 			200,
@@ -258,6 +259,7 @@ func TestContext_JSON(t *testing.T) {
 				"foo": "bar",
 			},
 			`{"foo":"bar"}`,
+			false,
 		},
 		{
 			500,
@@ -265,12 +267,23 @@ func TestContext_JSON(t *testing.T) {
 				"message": "error",
 			},
 			`{"message":"error"}`,
+			false,
+		},
+		{
+			200,
+			make(chan int),
+			"",
+			true,
 		},
 	}
 	for _, test := range tests {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
-		ctx.JSON(test.code, test.data)
+		err := ctx.JSON(test.code, test.data)
+		if test.shouldErr {
+			assert.NotNil(t, err)
+			continue
+		}
 		assert.Equal(t, test.code, w.Code, "status code does not match")
 		assert.Equal(t, w.Header().Get("Content-Type"), "application/json", "content type does not match")
 		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
