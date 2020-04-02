@@ -276,3 +276,21 @@ func TestContext_JSON(t *testing.T) {
 		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
 	}
 }
+
+func TestContext_String(t *testing.T) {
+	tests := []struct {
+		code int
+		s    string
+	}{
+		{200, "foobar"},
+		{500, "error"},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.String(test.code, test.s)
+		assert.Equal(t, test.code, w.Code, "status code does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "text/plain; charset=utf-8", "content-type does not match")
+		assert.Equal(t, w.Body.String(), test.s, "resposne body does not match")
+	}
+}
