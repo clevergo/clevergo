@@ -74,6 +74,16 @@ func (ctx *Context) SetContentTypeXML() {
 	ctx.SetContentType("application/xml; charset=utf-8")
 }
 
+// Cookie is a shortcut of http.Request.Cookie.
+func (ctx *Context) Cookie(name string) (*http.Cookie, error) {
+	return ctx.Request.Cookie(name)
+}
+
+// Cookies is a shortcut of http.Request.Cookies.
+func (ctx *Context) Cookies() []*http.Cookie {
+	return ctx.Request.Cookies()
+}
+
 // SetCookie is a shortcut of http.SetCookie.
 func (ctx *Context) SetCookie(cookie *http.Cookie) {
 	http.SetCookie(ctx.Response, cookie)
