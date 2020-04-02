@@ -11,6 +11,8 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestContext_SetContentType(t *testing.T) {
@@ -241,5 +243,36 @@ func TestContext_GetHeader(t *testing.T) {
 		if req.Header.Get(name) != ctx.GetHeader(name) {
 			t.Errorf("expected header %s: %q, got %q", name, req.Header.Get(name), ctx.GetHeader(name))
 		}
+	}
+}
+
+func TestContext_JSON(t *testing.T) {
+	tests := []struct {
+		code int
+		data interface{}
+		body interface{}
+	}{
+		{
+			200,
+			map[string]interface{}{
+				"foo": "bar",
+			},
+			`{"foo":"bar"}`,
+		},
+		{
+			500,
+			map[string]interface{}{
+				"message": "error",
+			},
+			`{"message":"error"}`,
+		},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.JSON(test.code, test.data)
+		assert.Equal(t, test.code, w.Code, "status code does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/json", "status code does not match")
+		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
 	}
 }
