@@ -7,6 +7,7 @@ package clevergo
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"io"
 	"net/http"
 )
@@ -168,5 +169,19 @@ func (ctx *Context) String(code int, s string) error {
 	ctx.SetContentTypeText()
 	ctx.Response.WriteHeader(code)
 	_, err := ctx.WriteString(s)
+	return err
+}
+
+// XML sends XML response with status code, it also sets
+// Content-Type as "application/xml".
+func (ctx *Context) XML(code int, data interface{}) error {
+	bs, err := xml.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	ctx.SetContentTypeXML()
+	ctx.Response.WriteHeader(code)
+	_, err = ctx.Response.Write(bs)
 	return err
 }

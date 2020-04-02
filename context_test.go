@@ -246,6 +246,12 @@ func TestContext_GetHeader(t *testing.T) {
 	}
 }
 
+type testBody struct {
+	Status  string      `json:"status" xml:"status"`
+	Message string      `json:"message" xml:"message"`
+	Data    interface{} `json:"data" xml:"data"`
+}
+
 func TestContext_JSON(t *testing.T) {
 	tests := []struct {
 		code      int
@@ -305,5 +311,45 @@ func TestContext_String(t *testing.T) {
 		assert.Equal(t, test.code, w.Code, "status code does not match")
 		assert.Equal(t, w.Header().Get("Content-Type"), "text/plain; charset=utf-8", "content type does not match")
 		assert.Equal(t, w.Body.String(), test.s, "resposne body does not match")
+	}
+}
+
+func TestContext_XML(t *testing.T) {
+	tests := []struct {
+		code      int
+		data      interface{}
+		body      interface{}
+		shouldErr bool
+	}{
+		{
+			200,
+			testBody{"success", "created", "foobar"},
+			`<testBody><status>success</status><message>created</message><data>foobar</data></testBody>`,
+			false,
+		},
+		{
+			500,
+			testBody{"error", "internal error", nil},
+			`<testBody><status>error</status><message>internal error</message></testBody>`,
+			false,
+		},
+		{
+			200,
+			make(chan int),
+			"",
+			true,
+		},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		err := ctx.XML(test.code, test.data)
+		if test.shouldErr {
+			assert.NotNil(t, err)
+			continue
+		}
+		assert.Equal(t, test.code, w.Code, "status code does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/xml", "content type does not match")
+		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
 	}
 }
