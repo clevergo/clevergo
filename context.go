@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -34,6 +35,7 @@ func (ctx *Context) reset() {
 	ctx.Route = nil
 	ctx.Response = nil
 	ctx.Request = nil
+	ctx.query = nil
 }
 
 // Error is a shortcut of http.Error.
@@ -172,6 +174,31 @@ func (ctx *Context) JSON(code int, data interface{}) error {
 	ctx.SetContentTypeJSON()
 	ctx.Response.WriteHeader(code)
 	_, err = ctx.Response.Write(bs)
+	return err
+}
+
+// JSONP is a shortcut of JSONPCallback with specified callback param name.
+func (ctx *Context) JSONP(code int, data interface{}) error {
+	return ctx.JSONPCallback(code, "callback", data)
+}
+
+// JSONPCallback sends JSONP response with status code, it also sets
+// Content-Type as "application/javascript".
+// If the callback is not present, returns JSON response instead.
+func (ctx *Context) JSONPCallback(code int, callback string, data interface{}) error {
+	fn := ctx.QueryParam(callback)
+	if fn == "" {
+		return ctx.JSON(code, data)
+	}
+
+	bs, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	ctx.SetContentType("application/javascript; charset=utf-8")
+	ctx.Response.WriteHeader(code)
+	_, err = ctx.WriteString(fmt.Sprintf("%s(%s)", fn, bs))
 	return err
 }
 

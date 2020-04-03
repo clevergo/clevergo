@@ -13,6 +13,7 @@ under development
 - Add `Context.PostFormValue`.
 - Add `Context.QueryString`.
 - Add `Context.QueryParams` and `Context.QueryParam`.
+- Add `Context.JSONP` and `Context.JSONPCallback`.
 
 v1.8.1 April 2, 2020
 --------------------

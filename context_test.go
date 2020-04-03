@@ -304,6 +304,63 @@ func TestContext_JSON(t *testing.T) {
 	}
 }
 
+func TestContext_JSONP(t *testing.T) {
+	tests := []struct {
+		query       string
+		contentType string
+		code        int
+		data        interface{}
+		body        interface{}
+		shouldErr   bool
+	}{
+		{
+			"",
+			"application/json; charset=utf-8",
+			200,
+			testBody{"success", "created", "foobar"},
+			`{"status":"success","message":"created","data":"foobar"}`,
+			false,
+		},
+		{
+			"?mycallback=foobar",
+			"application/json; charset=utf-8",
+			200,
+			testBody{"success", "created", "foobar"},
+			`{"status":"success","message":"created","data":"foobar"}`,
+			false,
+		},
+		{
+			"?callback=foobar",
+			"application/javascript; charset=utf-8",
+			500,
+			testBody{"error", "internal error", nil},
+			`foobar({"status":"error","message":"internal error","data":null})`,
+			false,
+		},
+		{
+			"?callback=foobar",
+			"",
+			200,
+			make(chan int),
+			"",
+			true,
+		},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/"+test.query, nil)
+		ctx := newContext(w, req)
+		err := ctx.JSONP(test.code, test.data)
+		if test.shouldErr {
+			assert.NotNil(t, err)
+			continue
+		}
+		assert.Equal(t, test.code, w.Code, "status code does not match")
+		assert.Equal(t, w.Header().Get("Content-Type"), test.contentType, "content type does not match")
+		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
+	}
+}
+
 func TestContext_String(t *testing.T) {
 	tests := []struct {
 		code int
