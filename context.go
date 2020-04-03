@@ -16,14 +16,10 @@ import (
 	"sync"
 )
 
-var bufPool sync.Pool
-
-func init() {
-	bufPool = sync.Pool{
-		New: func() interface{} {
-			return new(bytes.Buffer)
-		},
-	}
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
 }
 
 func getBuffer() (buf *bytes.Buffer) {
