@@ -53,12 +53,12 @@ func TestContext_SetContentTypeText(t *testing.T) {
 func TestContext_SetContentTypeJSON(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
 	ctx.SetContentTypeJSON()
-	assert.Equal(t, "application/json; charset=utf-8", ctx.Response.Header().Get("Content-Type"), "content type does not match")
+	assert.Equal(t, "application/json; charset=utf-8", ctx.Response.Header().Get("Content-Type"))
 }
 func TestContext_SetContentTypeXML(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
 	ctx.SetContentTypeXML()
-	assert.Equal(t, "application/xml; charset=utf-8", ctx.Response.Header().Get("Content-Type"), "content type does not match")
+	assert.Equal(t, "application/xml; charset=utf-8", ctx.Response.Header().Get("Content-Type"))
 }
 
 func TestContext_Write(t *testing.T) {
@@ -194,14 +194,14 @@ func TestContext_Cookie(t *testing.T) {
 	ctx := newContext(nil, req)
 	actual, _ := ctx.Cookie("foo")
 	expected, _ := req.Cookie("foo")
-	assert.Equal(t, actual, expected, "cookie does not match")
+	assert.Equal(t, expected, actual)
 }
 
 func TestContext_Cookies(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: "foo", Value: "bar"})
 	ctx := newContext(nil, req)
-	assert.Equal(t, ctx.Cookies(), req.Cookies(), "cookies does not match")
+	assert.Equal(t, req.Cookies(), ctx.Cookies())
 }
 
 func TestContext_SetCookie(t *testing.T) {
@@ -300,9 +300,9 @@ func TestContext_JSON(t *testing.T) {
 			assert.NotNil(t, err)
 			continue
 		}
-		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/json; charset=utf-8", "content type does not match")
-		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.body, w.Body.String())
 	}
 }
 
@@ -325,8 +325,8 @@ func TestContext_JSONBlob(t *testing.T) {
 		ctx := newContext(w, nil)
 		ctx.JSONBlob(test.code, []byte(test.data))
 		assert.Equal(t, test.code, w.Code)
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/json; charset=utf-8")
-		assert.Equal(t, w.Body.String(), test.data)
+		assert.Equal(t, "application/json; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.data, w.Body.String())
 	}
 }
 
@@ -381,9 +381,9 @@ func TestContext_JSONP(t *testing.T) {
 			assert.NotNil(t, err)
 			continue
 		}
-		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), test.contentType, "content type does not match")
-		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, test.contentType, w.Header().Get("Content-Type"))
+		assert.Equal(t, test.body, w.Body.String())
 	}
 }
 
@@ -399,9 +399,9 @@ func TestContext_String(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		ctx.String(test.code, test.s)
-		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "text/plain; charset=utf-8", "content type does not match")
-		assert.Equal(t, w.Body.String(), test.s, "resposne body does not match")
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.s, w.Body.String())
 	}
 }
 
@@ -439,36 +439,33 @@ func TestContext_XML(t *testing.T) {
 			assert.NotNil(t, err)
 			continue
 		}
-		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/xml; charset=utf-8", "content type does not match")
-		assert.Equal(t, w.Body.String(), test.body, "resposne body does not match")
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, "application/xml; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.body, w.Body.String())
 	}
 }
 
 func TestContext_XMLBlob(t *testing.T) {
 	tests := []struct {
 		code int
-		data []byte
-		body interface{}
+		data string
 	}{
 		{
 			200,
-			[]byte(`<testBody><status>success</status><message>created</message><data>foobar</data></testBody>`),
 			`<testBody><status>success</status><message>created</message><data>foobar</data></testBody>`,
 		},
 		{
 			500,
-			[]byte(`<testBody><status>error</status><message>internal error</message></testBody>`),
 			`<testBody><status>error</status><message>internal error</message></testBody>`,
 		},
 	}
 	for _, test := range tests {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
-		ctx.XMLBlob(test.code, test.data)
+		ctx.XMLBlob(test.code, []byte(test.data))
 		assert.Equal(t, test.code, w.Code)
-		assert.Equal(t, w.Header().Get("Content-Type"), "application/xml; charset=utf-8")
-		assert.Equal(t, w.Body.String(), test.body)
+		assert.Equal(t, "application/xml; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.data, w.Body.String())
 	}
 }
 
@@ -484,9 +481,9 @@ func TestContext_HTML(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		ctx.HTML(test.code, test.s)
-		assert.Equal(t, test.code, w.Code, "status code does not match")
-		assert.Equal(t, w.Header().Get("Content-Type"), "text/html; charset=utf-8", "content type does not match")
-		assert.Equal(t, w.Body.String(), test.s, "resposne body does not match")
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.s, w.Body.String())
 	}
 }
 
@@ -503,8 +500,8 @@ func TestContext_HTMLBlob(t *testing.T) {
 		ctx := newContext(w, nil)
 		ctx.HTMLBlob(test.code, test.bs)
 		assert.Equal(t, test.code, w.Code)
-		assert.Equal(t, w.Header().Get("Content-Type"), "text/html; charset=utf-8")
-		assert.Equal(t, w.Body.Bytes(), test.bs)
+		assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.bs, w.Body.Bytes())
 	}
 }
 
@@ -512,7 +509,7 @@ func TestContext_FormValue(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/?foo=bar", nil)
 	ctx := newContext(nil, req)
 	for _, key := range []string{"foo", "fizz"} {
-		assert.Equal(t, ctx.FormValue(key), req.FormValue(key))
+		assert.Equal(t, req.FormValue(key), ctx.FormValue(key))
 	}
 }
 
@@ -522,7 +519,7 @@ func TestContext_PostFormValue(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
 	ctx := newContext(nil, req)
 	for _, key := range []string{"foo", "fizz"} {
-		assert.Equal(t, ctx.PostFormValue(key), req.PostFormValue(key))
+		assert.Equal(t, req.PostFormValue(key), ctx.PostFormValue(key))
 	}
 }
 
@@ -532,7 +529,7 @@ func TestContext_QueryParams(t *testing.T) {
 	assert.Equal(t, ctx.QueryParams(), req.URL.Query())
 	assert.Equal(t, ctx.query, req.URL.Query())
 	for _, key := range []string{"foo", "fizz", "go"} {
-		assert.Equal(t, ctx.QueryParam(key), req.URL.Query().Get(key))
+		assert.Equal(t, req.URL.Query().Get(key), ctx.QueryParam(key))
 	}
 }
 
@@ -540,7 +537,7 @@ func TestContext_QueryString(t *testing.T) {
 	for _, query := range []string{"/", "/?foo=bar", "/hello?fizz=buzz"} {
 		req := httptest.NewRequest(http.MethodPost, query, nil)
 		ctx := newContext(nil, req)
-		assert.Equal(t, ctx.QueryString(), req.URL.RawQuery)
+		assert.Equal(t, req.URL.RawQuery, ctx.QueryString())
 	}
 }
 
@@ -562,7 +559,7 @@ func TestContext_Render(t *testing.T) {
 	ctx.router = router
 
 	err := ctx.Render(http.StatusOK, "foo", nil)
-	assert.Equal(t, err, ErrRendererNotRegister)
+	assert.Equal(t, ErrRendererNotRegister, err)
 
 	router.Renderer = new(fakeRenderer)
 
@@ -571,8 +568,8 @@ func TestContext_Render(t *testing.T) {
 
 	ctx.Render(http.StatusForbidden, "foo", nil)
 	assert.Equal(t, http.StatusForbidden, w.Code)
-	assert.Equal(t, w.Header().Get("Content-Type"), "text/html; charset=utf-8")
-	assert.Equal(t, w.Body.String(), "foo")
+	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
+	assert.Equal(t, "foo", w.Body.String())
 }
 
 func TestContext_RouteURL(t *testing.T) {
