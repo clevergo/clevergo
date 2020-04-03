@@ -107,6 +107,17 @@ func xml(ctx *clevergo.Context) error {
 	}
 	return ctx.XML(http.StatusOk, data)
 }
+
+// 渲染一个模板，需要注册 Render。
+// router.Renderer = render
+func render(ctx *clevergo.Context) error {
+	// any type of data.
+	data := map[string]interface{}{
+		"message": "hello world",
+	}
+	view := "index.tmpl"
+	return ctx.Render(http.StatusOk, view, data)
+}
 ```
 
 ### 参数
@@ -147,6 +158,10 @@ router.NotFound = http.FileServer(http.Dir("public"))
 queryPost := func (ctx *clevergo.Context) error {
 	// 通过匹配路由生成 URL
 	url, _ := ctx.Route.URL("year", "2020", "month", "02", "slug", "hello world")
+
+	// 通过命名路由生成 URL
+	// url, _ := ctx.RouteURL("post", "year", "2020", "month", "02", "slug", "hello world")
+	
 	return nil
 }
 

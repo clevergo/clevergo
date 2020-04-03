@@ -105,6 +105,17 @@ func xml(ctx *clevergo.Context) error {
 	}
 	return ctx.XML(http.StatusOk, data)
 }
+
+// Renders a template, you should register renderer first.
+// router.Renderer = render
+func render(ctx *clevergo.Context) error {
+	// any type of data.
+	data := map[string]interface{}{
+		"message": "hello world",
+	}
+	view := "index.tmpl"
+	return ctx.Render(http.StatusOk, view, data)
+}
 ```
 
 ### Params
@@ -145,12 +156,16 @@ router.NotFound = http.FileServer(http.Dir("public"))
 queryPost := func (ctx *clevergo.Context) error {
 	// generates URL by matched route.
 	url, _ := ctx.Route.URL("year", "2020", "month", "02", "slug", "hello world")
+
+	// generates URL by naming route.
+	// url, _ := ctx.RouteURL("post", "year", "2020", "month", "02", "slug", "hello world")
+	
 	return nil
 }
 
 router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
 
-// generates URL by named route.
+// generates URL by naming route.
 url, _ := router.URL("post", "year", "2020", "month", "02", "slug", "hello world")
 ```
 
