@@ -12,6 +12,7 @@ under development
 - Add `Context.FormValue`.
 - Add `Context.PostFormValue`.
 - Add `Context.QueryString`.
+- Add `Context.QueryParams` and `Context.QueryParam`.
 
 v1.8.1 April 2, 2020
 --------------------
