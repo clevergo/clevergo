@@ -5,12 +5,19 @@
 package clevergo
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+)
+
+// errors
+var (
+	ErrRendererNotRegister = errors.New("renderer not registered")
 )
 
 // Handle is a function which handle incoming request and manage outgoing response.
@@ -30,6 +37,11 @@ func HandleHandlerFunc(f http.HandlerFunc) Handle {
 		f(ctx.Response, ctx.Request)
 		return nil
 	}
+}
+
+// Renderer is an interface for template engine.
+type Renderer interface {
+	Render(w io.Writer, name string, data interface{}, ctx *Context) error
 }
 
 // Router is a http.Handler which can be used to dispatch requests to different
@@ -103,6 +115,8 @@ type Router struct {
 
 	middlewares []MiddlewareFunc
 	handle      Handle
+
+	Renderer Renderer
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -354,6 +368,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := r.getContext()
+	ctx.router = r
 	ctx.Request = req
 	ctx.Response = w
 	defer r.putContext(ctx)

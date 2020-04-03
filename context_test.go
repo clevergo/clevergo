@@ -6,7 +6,9 @@ package clevergo
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -471,4 +473,35 @@ func TestContext_QueryString(t *testing.T) {
 		ctx := newContext(nil, req)
 		assert.Equal(t, ctx.QueryString(), req.URL.RawQuery)
 	}
+}
+
+type fakeRenderer struct {
+}
+
+func (r *fakeRenderer) Render(w io.Writer, name string, data interface{}, ctx *Context) error {
+	if name == "" {
+		return errors.New("empty template name")
+	}
+	w.Write([]byte(name))
+	return nil
+}
+
+func TestContext_Render(t *testing.T) {
+	w := httptest.NewRecorder()
+	router := NewRouter()
+	ctx := newContext(w, nil)
+	ctx.router = router
+
+	err := ctx.Render(http.StatusOK, "foo", nil)
+	assert.Equal(t, err, ErrRendererNotRegister)
+
+	router.Renderer = new(fakeRenderer)
+
+	err = ctx.Render(http.StatusOK, "", nil)
+	assert.EqualError(t, err, "empty template name")
+
+	ctx.Render(http.StatusForbidden, "foo", nil)
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Equal(t, w.Header().Get("Content-Type"), "text/html; charset=utf-8")
+	assert.Equal(t, w.Body.String(), "foo")
 }
