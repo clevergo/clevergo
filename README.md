@@ -55,13 +55,11 @@ import (
 )
 
 func home(ctx *clevergo.Context) error {
-	ctx.WriteString("hello world")
-	return nil
+	return ctx.String(http.StatusOK, "hello world")
 }
 
 func hello(ctx *clevergo.Context) error {
-	ctx.WriteString(fmt.Sprintf("hello %s", ctx.Params.String("name")))
-	return nil
+	return ctx.HTML(http.StatusOk, fmt.Sprintf("hello %s", ctx.Params.String("name")))
 }
 
 func main() {
@@ -69,6 +67,43 @@ func main() {
 	router.Get("/", home)
 	router.Get("/hello/:name", hello)
 	http.ListenAndServe(":8080", router)
+}
+```
+
+### Response
+
+```go
+func text(ctx *clevergo.Context) error {
+	return ctx.String(http.StatusOk, "hello world")
+}
+
+func html(ctx *clevergo.Context) error {
+	return ctx.HTML(http.StatusOk, "<html><body>hello world</body></html>")
+}
+
+func json(ctx *clevergo.Context) error {
+	// any type of data.
+	data := map[string]interface{}{
+		"message": "hello world",
+	}
+	return ctx.JSON(http.StatusOk, data)
+}
+
+func jsonp(ctx *clevergo.Context) error {
+	// any type of data.
+	data := map[string]interface{}{
+		"message": "hello world",
+	}
+	// equals to ctx.JSONPCallback(http.StatusOk, "callback", data)
+	return ctx.JSONP(http.StatusOk, data)
+}
+
+func xml(ctx *clevergo.Context) error {
+	// any type of data.
+	data := map[string]interface{}{
+		"message": "hello world",
+	}
+	return ctx.XML(http.StatusOk, data)
 }
 ```
 
