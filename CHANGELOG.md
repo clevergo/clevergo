@@ -19,6 +19,7 @@ under development
 - Add `Context.Emit` and `Context.Blob`.
 - Add `Context.HtmlBlob`.
 - Add `Context.XMLBlob`.
+- Add `Context.JSONBlob`.
 
 v1.8.1 April 2, 2020
 --------------------
