@@ -222,7 +222,7 @@ func (ctx *Context) JSONPCallback(code int, callback string, data interface{}) e
 
 	ctx.SetContentType("application/javascript; charset=utf-8")
 	ctx.Response.WriteHeader(code)
-	_, err = ctx.WriteString(fmt.Sprintf("%s(%s)", fn, bs))
+	_, err = fmt.Fprintf(ctx.Response, "%s(%s)", fn, bs)
 	return err
 }
 
