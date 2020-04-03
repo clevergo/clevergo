@@ -10,6 +10,7 @@ import (
 	"encoding/xml"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 // Context contains incoming request, route, params and manages outgoing response.
@@ -18,6 +19,7 @@ type Context struct {
 	Route    *Route
 	Request  *http.Request
 	Response http.ResponseWriter
+	query    url.Values
 }
 
 func newContext(w http.ResponseWriter, r *http.Request) *Context {
@@ -218,4 +220,17 @@ func (ctx *Context) PostFormValue(key string) string {
 // QueryString returns the raw query of request URL.
 func (ctx *Context) QueryString() string {
 	return ctx.Request.URL.RawQuery
+}
+
+// QueryParam returns the param for the given key.
+func (ctx *Context) QueryParam(key string) string {
+	return ctx.QueryParams().Get(key)
+}
+
+// QueryParams returns request URL values.
+func (ctx *Context) QueryParams() url.Values {
+	if ctx.query == nil {
+		ctx.query = ctx.Request.URL.Query()
+	}
+	return ctx.query
 }

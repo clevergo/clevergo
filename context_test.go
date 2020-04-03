@@ -398,6 +398,16 @@ func TestContext_PostFormValue(t *testing.T) {
 	}
 }
 
+func TestContext_QueryParams(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/?foo=bar&fizz=buzz", nil)
+	ctx := newContext(nil, req)
+	assert.Equal(t, ctx.QueryParams(), req.URL.Query())
+	assert.Equal(t, ctx.query, req.URL.Query())
+	for _, key := range []string{"foo", "fizz", "go"} {
+		assert.Equal(t, ctx.QueryParam(key), req.URL.Query().Get(key))
+	}
+}
+
 func TestContext_QueryString(t *testing.T) {
 	for _, query := range []string{"/", "/?foo=bar", "/hello?fizz=buzz"} {
 		req := httptest.NewRequest(http.MethodPost, query, nil)
