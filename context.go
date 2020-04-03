@@ -243,6 +243,12 @@ func (ctx *Context) XML(code int, data interface{}) error {
 	return ctx.Blob(code, headerContentTypeXML, bs)
 }
 
+// XMLBlob sends blob XML response with status code, it also sets
+// Content-Type as "application/xml".
+func (ctx *Context) XMLBlob(code int, bs []byte) error {
+	return ctx.Blob(code, headerContentTypeXML, bs)
+}
+
 // HTML sends HTML response with status code, it also sets
 // Content-Type as "text/html".
 func (ctx *Context) HTML(code int, html string) error {
