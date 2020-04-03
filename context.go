@@ -280,3 +280,8 @@ func (ctx *Context) QueryParams() url.Values {
 	}
 	return ctx.query
 }
+
+// RouteURL returns the URL of the naming route.
+func (ctx *Context) RouteURL(name string, args ...string) (*url.URL, error) {
+	return ctx.router.URL(name, args...)
+}
