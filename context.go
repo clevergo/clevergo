@@ -199,11 +199,7 @@ func (ctx *Context) JSON(code int, data interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	ctx.SetContentTypeJSON()
-	ctx.Response.WriteHeader(code)
-	_, err = ctx.Response.Write(bs)
-	return err
+	return ctx.Blob(code, headerContentTypeJSON, bs)
 }
 
 // JSONP is a shortcut of JSONPCallback with specified callback param name.
@@ -234,10 +230,7 @@ func (ctx *Context) JSONPCallback(code int, callback string, data interface{}) e
 // String send string response with status code, it also sets
 // Content-Type as "text/plain; charset=utf-8".
 func (ctx *Context) String(code int, s string) error {
-	ctx.SetContentTypeText()
-	ctx.Response.WriteHeader(code)
-	_, err := ctx.WriteString(s)
-	return err
+	return ctx.Emit(code, headerContentTypeText, s)
 }
 
 // XML sends XML response with status code, it also sets
@@ -247,20 +240,13 @@ func (ctx *Context) XML(code int, data interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	ctx.SetContentTypeXML()
-	ctx.Response.WriteHeader(code)
-	_, err = ctx.Response.Write(bs)
-	return err
+	return ctx.Blob(code, headerContentTypeXML, bs)
 }
 
 // HTML sends HTML response with status code, it also sets
 // Content-Type as "text/html".
 func (ctx *Context) HTML(code int, html string) error {
-	ctx.SetContentTypeHTML()
-	ctx.Response.WriteHeader(code)
-	_, err := ctx.WriteString(html)
-	return err
+	return ctx.Emit(code, headerContentTypeHTML, html)
 }
 
 // Render renders a template with data, and sends HTML response with status code.
@@ -276,9 +262,22 @@ func (ctx *Context) Render(code int, name string, data interface{}) (err error) 
 	if err = ctx.router.Renderer.Render(buf, name, data, ctx); err != nil {
 		return err
 	}
-	ctx.SetContentTypeHTML()
+	return ctx.Blob(code, headerContentTypeHTML, buf.Bytes())
+}
+
+// Emit sends a response with the given status code, content type and string body.
+func (ctx *Context) Emit(code int, contentType string, body string) (err error) {
+	ctx.SetContentType(contentType)
 	ctx.Response.WriteHeader(code)
-	_, err = buf.WriteTo(ctx.Response)
+	_, err = io.WriteString(ctx.Response, body)
+	return
+}
+
+// Blob sends a response with the given status code, content type and blob data.
+func (ctx *Context) Blob(code int, contentType string, bs []byte) (err error) {
+	ctx.SetContentType(contentType)
+	ctx.Response.WriteHeader(code)
+	_, err = ctx.Response.Write(bs)
 	return
 }
 
