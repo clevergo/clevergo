@@ -249,6 +249,12 @@ func (ctx *Context) HTML(code int, html string) error {
 	return ctx.Emit(code, headerContentTypeHTML, html)
 }
 
+// HTMLBlob sends blob HTML response with status code, it also sets
+// Content-Type as "text/html".
+func (ctx *Context) HTMLBlob(code int, bs []byte) error {
+	return ctx.Blob(code, headerContentTypeHTML, bs)
+}
+
 // Render renders a template with data, and sends HTML response with status code.
 func (ctx *Context) Render(code int, name string, data interface{}) (err error) {
 	if ctx.router.Renderer == nil {
