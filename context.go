@@ -214,3 +214,8 @@ func (ctx *Context) FormValue(key string) string {
 func (ctx *Context) PostFormValue(key string) string {
 	return ctx.Request.PostFormValue(key)
 }
+
+// QueryString returns the raw query of request URL.
+func (ctx *Context) QueryString() string {
+	return ctx.Request.URL.RawQuery
+}

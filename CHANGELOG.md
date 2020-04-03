@@ -11,6 +11,7 @@ under development
 - Add `Context.Cookie` and `Context.Cookies`.
 - Add `Context.FormValue`.
 - Add `Context.PostFormValue`.
+- Add `Context.QueryString`.
 
 v1.8.1 April 2, 2020
 --------------------

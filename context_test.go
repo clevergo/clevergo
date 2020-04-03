@@ -397,3 +397,11 @@ func TestContext_PostFormValue(t *testing.T) {
 		assert.Equal(t, ctx.PostFormValue(key), req.PostFormValue(key))
 	}
 }
+
+func TestContext_QueryString(t *testing.T) {
+	for _, query := range []string{"/", "/?foo=bar", "/hello?fizz=buzz"} {
+		req := httptest.NewRequest(http.MethodPost, query, nil)
+		ctx := newContext(nil, req)
+		assert.Equal(t, ctx.QueryString(), req.URL.RawQuery)
+	}
+}
