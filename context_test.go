@@ -387,6 +387,47 @@ func TestContext_JSONP(t *testing.T) {
 	}
 }
 
+func TestContext_JSONPBlob(t *testing.T) {
+	tests := []struct {
+		query       string
+		contentType string
+		code        int
+		data        string
+		body        string
+	}{
+		{
+			"",
+			"application/json; charset=utf-8",
+			200,
+			`{"status":"success","message":"created","data":"foobar"}`,
+			`{"status":"success","message":"created","data":"foobar"}`,
+		},
+		{
+			"?mycallback=foobar",
+			"application/json; charset=utf-8",
+			200,
+			`{"status":"success","message":"created","data":"foobar"}`,
+			`{"status":"success","message":"created","data":"foobar"}`,
+		},
+		{
+			"?callback=foobar",
+			"application/javascript; charset=utf-8",
+			500,
+			`{"status":"error","message":"internal error","data":null}`,
+			`foobar({"status":"error","message":"internal error","data":null})`,
+		},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/"+test.query, nil)
+		ctx := newContext(w, req)
+		ctx.JSONPBlob(test.code, []byte(test.data))
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, test.contentType, w.Header().Get("Content-Type"))
+		assert.Equal(t, test.body, w.Body.String())
+	}
+}
+
 func TestContext_String(t *testing.T) {
 	tests := []struct {
 		code int
