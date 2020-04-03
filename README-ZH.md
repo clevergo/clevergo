@@ -109,7 +109,7 @@ func xml(ctx *clevergo.Context) error {
 }
 
 // 渲染一个模板，需要注册 Render。
-// router.Renderer = render
+// router.Renderer = renderer
 func render(ctx *clevergo.Context) error {
 	// any type of data.
 	data := map[string]interface{}{
