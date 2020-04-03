@@ -5,6 +5,7 @@
 package clevergo
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"encoding/xml"
@@ -16,6 +17,7 @@ import (
 
 // Context contains incoming request, route, params and manages outgoing response.
 type Context struct {
+	router   *Router
 	Params   Params
 	Route    *Route
 	Request  *http.Request
@@ -31,6 +33,7 @@ func newContext(w http.ResponseWriter, r *http.Request) *Context {
 }
 
 func (ctx *Context) reset() {
+	ctx.router = nil
 	ctx.Params = nil
 	ctx.Route = nil
 	ctx.Response = nil
@@ -232,6 +235,22 @@ func (ctx *Context) HTML(code int, html string) error {
 	ctx.Response.WriteHeader(code)
 	_, err := ctx.WriteString(html)
 	return err
+}
+
+// Render renders a template with data, and sends HTML response with status code.
+func (ctx *Context) Render(code int, name string, data interface{}) (err error) {
+	if ctx.router.Renderer == nil {
+		return ErrRendererNotRegister
+	}
+
+	buf := new(bytes.Buffer)
+	if err = ctx.router.Renderer.Render(buf, name, data, ctx); err != nil {
+		return err
+	}
+	ctx.SetContentTypeHTML()
+	ctx.Response.WriteHeader(code)
+	_, err = buf.WriteTo(ctx.Response)
+	return
 }
 
 // FormValue is a shortcut of http.Request.FormValue.
