@@ -20,6 +20,7 @@ under development
 - Add `Context.HtmlBlob`.
 - Add `Context.XMLBlob`.
 - Add `Context.JSONBlob`.
+- Add `Context.JSONPBlob` and `Context.JSONPCallbackBlob`.
 
 v1.8.1 April 2, 2020
 --------------------

@@ -233,6 +233,26 @@ func (ctx *Context) JSONPCallback(code int, callback string, data interface{}) e
 	return err
 }
 
+// JSONPBlob is a shortcut of JSONPCallbackBlob with specified callback param name.
+func (ctx *Context) JSONPBlob(code int, bs []byte) error {
+	return ctx.JSONPCallbackBlob(code, "callback", bs)
+}
+
+// JSONPCallbackBlob sends blob JSONP response with status code, it also sets
+// Content-Type as "application/javascript".
+// If the callback is not present, returns JSON response instead.
+func (ctx *Context) JSONPCallbackBlob(code int, callback string, bs []byte) (err error) {
+	fn := ctx.QueryParam(callback)
+	if fn == "" {
+		return ctx.JSONBlob(code, bs)
+	}
+
+	ctx.SetContentType(headerContentTypeJavaScript)
+	ctx.Response.WriteHeader(code)
+	_, err = fmt.Fprintf(ctx.Response, "%s(%s)", fn, bs)
+	return
+}
+
 // String send string response with status code, it also sets
 // Content-Type as "text/plain; charset=utf-8".
 func (ctx *Context) String(code int, s string) error {
