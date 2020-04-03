@@ -107,7 +107,7 @@ func xml(ctx *clevergo.Context) error {
 }
 
 // Renders a template, you should register renderer first.
-// router.Renderer = render
+// router.Renderer = renderer
 func render(ctx *clevergo.Context) error {
 	// any type of data.
 	data := map[string]interface{}{
@@ -159,7 +159,7 @@ queryPost := func (ctx *clevergo.Context) error {
 
 	// generates URL by naming route.
 	// url, _ := ctx.RouteURL("post", "year", "2020", "month", "02", "slug", "hello world")
-	
+
 	return nil
 }
 
@@ -192,7 +192,7 @@ router.ErrorHandler = MyErrorHandler{
 
 ### Middleware
 
-Middleware is a function `func(next Handle) Handle`. [WrapHH](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#WrapHH) is an adapter that converts `func(http.Handler) http.Handler` as a middleware.
+Middleware is a function `func(next Handle) Handle`. [WrapHH](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#WrapHH) is an adapter that converts `func(http.Handler) http.Handler` to a middleware.
 
 **Built-in middlewares:**
 
