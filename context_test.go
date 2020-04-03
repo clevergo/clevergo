@@ -505,3 +505,18 @@ func TestContext_Render(t *testing.T) {
 	assert.Equal(t, w.Header().Get("Content-Type"), "text/html; charset=utf-8")
 	assert.Equal(t, w.Body.String(), "foo")
 }
+
+func TestContext_RouteURL(t *testing.T) {
+	router := NewRouter()
+	router.Get("/", echoHandler("foo"), RouteName("foo"))
+	ctx := newContext(nil, nil)
+	ctx.router = router
+
+	actual, _ := ctx.RouteURL("foo")
+	expected, _ := router.URL("foo")
+	assert.Equal(t, expected, actual)
+
+	_, actualErr := ctx.RouteURL("foo")
+	_, expectedErr := router.URL("foo")
+	assert.Equal(t, expectedErr, actualErr)
+}
