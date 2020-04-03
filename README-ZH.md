@@ -76,47 +76,30 @@ func main() {
 
 ```go
 func text(ctx *clevergo.Context) error {
-	return ctx.String(http.StatusOk, "hello world")
+	return ctx.String(http.StatusOK, "hello world")
 }
 
 func html(ctx *clevergo.Context) error {
-	return ctx.HTML(http.StatusOk, "<html><body>hello world</body></html>")
+	return ctx.HTML(http.StatusOK, "<html><body>hello world</body></html>")
 }
 
 func json(ctx *clevergo.Context) error {
-	// any type of data.
-	data := map[string]interface{}{
-		"message": "hello world",
-	}
-	return ctx.JSON(http.StatusOk, data)
+	return ctx.JSON(http.StatusOK, data)
 }
 
 func jsonp(ctx *clevergo.Context) error {
-	// any type of data.
-	data := map[string]interface{}{
-		"message": "hello world",
-	}
-	// equals to ctx.JSONPCallback(http.StatusOk, "callback", data)
-	return ctx.JSONP(http.StatusOk, data)
+	// equals to ctx.JSONPCallback(http.StatusOK, "callback", data)
+	return ctx.JSONP(http.StatusOK, data)
 }
 
 func xml(ctx *clevergo.Context) error {
-	// any type of data.
-	data := map[string]interface{}{
-		"message": "hello world",
-	}
-	return ctx.XML(http.StatusOk, data)
+	return ctx.XML(http.StatusOK, data)
 }
 
 // 渲染一个模板，需要注册 Render。
 // router.Renderer = renderer
 func render(ctx *clevergo.Context) error {
-	// any type of data.
-	data := map[string]interface{}{
-		"message": "hello world",
-	}
-	view := "index.tmpl"
-	return ctx.Render(http.StatusOk, view, data)
+	return ctx.Render(http.StatusOK, view, data)
 }
 ```
 
