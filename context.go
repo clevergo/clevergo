@@ -16,6 +16,15 @@ import (
 	"sync"
 )
 
+const (
+	headerContentType           = "Content-Type"
+	headerContentTypeHTML       = "text/html; charset=utf-8"
+	headerContentTypeJavaScript = "application/javascript; charset=utf-8"
+	headerContentTypeJSON       = "application/json; charset=utf-8"
+	headerContentTypeText       = "text/plain; charset=utf-8"
+	headerContentTypeXML        = "application/xml; charset=utf-8"
+)
+
 var bufPool = sync.Pool{
 	New: func() interface{} {
 		return new(bytes.Buffer)
@@ -80,22 +89,22 @@ func (ctx *Context) SetContentType(v string) {
 
 // SetContentTypeHTML sets the content type as HTML.
 func (ctx *Context) SetContentTypeHTML() {
-	ctx.SetContentType("text/html; charset=utf-8")
+	ctx.SetContentType(headerContentTypeHTML)
 }
 
 // SetContentTypeText sets the content type as text.
 func (ctx *Context) SetContentTypeText() {
-	ctx.SetContentType("text/plain; charset=utf-8")
+	ctx.SetContentType(headerContentTypeText)
 }
 
 // SetContentTypeJSON sets the content type as JSON.
 func (ctx *Context) SetContentTypeJSON() {
-	ctx.SetContentType("application/json; charset=utf-8")
+	ctx.SetContentType(headerContentTypeJSON)
 }
 
 // SetContentTypeXML sets the content type as XML.
 func (ctx *Context) SetContentTypeXML() {
-	ctx.SetContentType("application/xml; charset=utf-8")
+	ctx.SetContentType(headerContentTypeXML)
 }
 
 // Cookie is a shortcut of http.Request.Cookie.
@@ -216,7 +225,7 @@ func (ctx *Context) JSONPCallback(code int, callback string, data interface{}) e
 		return err
 	}
 
-	ctx.SetContentType("application/javascript; charset=utf-8")
+	ctx.SetContentType(headerContentTypeJavaScript)
 	ctx.Response.WriteHeader(code)
 	_, err = fmt.Fprintf(ctx.Response, "%s(%s)", fn, bs)
 	return err
