@@ -13,7 +13,28 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 )
+
+var bufPool sync.Pool
+
+func init() {
+	bufPool = sync.Pool{
+		New: func() interface{} {
+			return new(bytes.Buffer)
+		},
+	}
+}
+
+func getBuffer() (buf *bytes.Buffer) {
+	buf, _ = bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	return
+}
+
+func putBuffer(buf *bytes.Buffer) {
+	bufPool.Put(buf)
+}
 
 // Context contains incoming request, route, params and manages outgoing response.
 type Context struct {
@@ -243,7 +264,10 @@ func (ctx *Context) Render(code int, name string, data interface{}) (err error) 
 		return ErrRendererNotRegister
 	}
 
-	buf := new(bytes.Buffer)
+	buf := getBuffer()
+	defer func() {
+		putBuffer(buf)
+	}()
 	if err = ctx.router.Renderer.Render(buf, name, data, ctx); err != nil {
 		return err
 	}
