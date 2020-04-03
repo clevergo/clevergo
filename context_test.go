@@ -306,6 +306,30 @@ func TestContext_JSON(t *testing.T) {
 	}
 }
 
+func TestContext_JSONBlob(t *testing.T) {
+	tests := []struct {
+		code int
+		data string
+	}{
+		{
+			200,
+			`{"status":"success","message":"created","data":"foobar"}`,
+		},
+		{
+			500,
+			`{"status":"error","message":"internal error","data":null}`,
+		},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.JSONBlob(test.code, []byte(test.data))
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/json; charset=utf-8")
+		assert.Equal(t, w.Body.String(), test.data)
+	}
+}
+
 func TestContext_JSONP(t *testing.T) {
 	tests := []struct {
 		query       string
@@ -423,9 +447,9 @@ func TestContext_XML(t *testing.T) {
 
 func TestContext_XMLBlob(t *testing.T) {
 	tests := []struct {
-		code      int
-		data      []byte
-		body      interface{}
+		code int
+		data []byte
+		body interface{}
 	}{
 		{
 			200,

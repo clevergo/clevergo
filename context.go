@@ -202,6 +202,12 @@ func (ctx *Context) JSON(code int, data interface{}) error {
 	return ctx.Blob(code, headerContentTypeJSON, bs)
 }
 
+// JSONBlob sends blob JSON response with status code, it also sets
+// Content-Type as "application/json".
+func (ctx *Context) JSONBlob(code int, bs []byte) error {
+	return ctx.Blob(code, headerContentTypeJSON, bs)
+}
+
 // JSONP is a shortcut of JSONPCallback with specified callback param name.
 func (ctx *Context) JSONP(code int, data interface{}) error {
 	return ctx.JSONPCallback(code, "callback", data)
