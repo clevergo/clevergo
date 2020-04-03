@@ -439,6 +439,24 @@ func TestContext_HTML(t *testing.T) {
 	}
 }
 
+func TestContext_HTMLBlob(t *testing.T) {
+	tests := []struct {
+		code int
+		bs   []byte
+	}{
+		{200, []byte("<html><body>foobar</body></html>")},
+		{500, []byte("<html><body>error</body></html>")},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.HTMLBlob(test.code, test.bs)
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, w.Header().Get("Content-Type"), "text/html; charset=utf-8")
+		assert.Equal(t, w.Body.Bytes(), test.bs)
+	}
+}
+
 func TestContext_FormValue(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/?foo=bar", nil)
 	ctx := newContext(nil, req)
