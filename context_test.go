@@ -421,6 +421,33 @@ func TestContext_XML(t *testing.T) {
 	}
 }
 
+func TestContext_XMLBlob(t *testing.T) {
+	tests := []struct {
+		code      int
+		data      []byte
+		body      interface{}
+	}{
+		{
+			200,
+			[]byte(`<testBody><status>success</status><message>created</message><data>foobar</data></testBody>`),
+			`<testBody><status>success</status><message>created</message><data>foobar</data></testBody>`,
+		},
+		{
+			500,
+			[]byte(`<testBody><status>error</status><message>internal error</message></testBody>`),
+			`<testBody><status>error</status><message>internal error</message></testBody>`,
+		},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.XMLBlob(test.code, test.data)
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, w.Header().Get("Content-Type"), "application/xml; charset=utf-8")
+		assert.Equal(t, w.Body.String(), test.body)
+	}
+}
+
 func TestContext_HTML(t *testing.T) {
 	tests := []struct {
 		code int
