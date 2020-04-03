@@ -16,6 +16,7 @@ under development
 - Add `Context.JSONP` and `Context.JSONPCallback`.
 - Add `Context.Render` to render a template.
 - Add `Context.RouteURL` to generate URL of the naming route.
+- Add `Context.Emit` and `Context.Blob`.
 - Add `Context.HtmlBlob`.
 
 v1.8.1 April 2, 2020
