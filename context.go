@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -227,10 +226,7 @@ func (ctx *Context) JSONPCallback(code int, callback string, data interface{}) e
 		return err
 	}
 
-	ctx.SetContentType(headerContentTypeJavaScript)
-	ctx.Response.WriteHeader(code)
-	_, err = fmt.Fprintf(ctx.Response, "%s(%s)", fn, bs)
-	return err
+	return ctx.Emit(code, headerContentTypeJavaScript, formatJSONP(fn, bs))
 }
 
 // JSONPBlob is a shortcut of JSONPCallbackBlob with specified callback param name.
@@ -247,10 +243,11 @@ func (ctx *Context) JSONPCallbackBlob(code int, callback string, bs []byte) (err
 		return ctx.JSONBlob(code, bs)
 	}
 
-	ctx.SetContentType(headerContentTypeJavaScript)
-	ctx.Response.WriteHeader(code)
-	_, err = fmt.Fprintf(ctx.Response, "%s(%s)", fn, bs)
-	return
+	return ctx.Emit(code, headerContentTypeJavaScript, formatJSONP(fn, bs))
+}
+
+func formatJSONP(callback string, bs []byte) string {
+	return callback + "(" + string(bs) + ")"
 }
 
 // String send string response with status code, it also sets
