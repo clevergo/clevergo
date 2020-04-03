@@ -516,7 +516,7 @@ func TestContext_RouteURL(t *testing.T) {
 	expected, _ := router.URL("foo")
 	assert.Equal(t, expected, actual)
 
-	_, actualErr := ctx.RouteURL("foo")
-	_, expectedErr := router.URL("foo")
+	_, actualErr := ctx.RouteURL("bar")
+	_, expectedErr := router.URL("bar")
 	assert.Equal(t, expectedErr, actualErr)
 }
