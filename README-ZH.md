@@ -97,7 +97,8 @@ func xml(ctx *clevergo.Context) error {
 }
 
 // 渲染一个模板，需要注册 Render。
-// router.Renderer = renderer
+// https://github.com/clevergo/jetrenderer
+// router.Renderer = jetrenderer.New(jet.NewHTMLSet("./views"))
 func render(ctx *clevergo.Context) error {
 	return ctx.Render(http.StatusOK, view, data)
 }
