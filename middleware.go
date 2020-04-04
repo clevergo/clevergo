@@ -71,28 +71,45 @@ func Chain(handle Handle, middlewares ...MiddlewareFunc) Handle {
 }
 
 type recovery struct {
-	debug bool
+	debug  bool
+	logger *log.Logger
 }
 
 func (r *recovery) handle(ctx *Context, err interface{}) {
 	ctx.Response.WriteHeader(http.StatusInternalServerError)
-	log.Println(err)
+	r.logf(err)
 	if r.debug {
-		debug.PrintStack()
+		r.logf(debug.Stack())
+	}
+}
+
+func (r *recovery) logf(v interface{}) {
+	if r.logger != nil {
+		r.logger.Printf("%s\n", v)
+		return
+	}
+
+	log.Printf("%s\n", v)
+}
+
+func (r *recovery) middleware(next Handle) Handle {
+	return func(ctx *Context) error {
+		defer func() {
+			if err := recover(); err != nil {
+				r.handle(ctx, err)
+			}
+		}()
+		return next(ctx)
 	}
 }
 
 // Recovery returns a recovery middleware.
 func Recovery(debug bool) MiddlewareFunc {
-	m := &recovery{debug: debug}
-	return func(next Handle) Handle {
-		return func(ctx *Context) error {
-			defer func() {
-				if err := recover(); err != nil {
-					m.handle(ctx, err)
-				}
-			}()
-			return next(ctx)
-		}
-	}
+	return RecoveryLogger(debug, nil)
+}
+
+// RecoveryLogger returns a recovery middleware with the given logger.
+func RecoveryLogger(debug bool, logger *log.Logger) MiddlewareFunc {
+	r := &recovery{debug: debug, logger: logger}
+	return r.middleware
 }

@@ -89,6 +89,21 @@ func TestRecovery(t *testing.T) {
 	assert.Contains(t, out.String(), "foobar")
 }
 
+func TestRecoveryLogger(t *testing.T) {
+	out := &bytes.Buffer{}
+	logger := log.New(out, "recovery", 0)
+	r := RecoveryLogger(true, logger)
+	router := NewRouter()
+	router.Use(r)
+	router.Get("/", func(_ *Context) error {
+		panic("foobar")
+	})
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, out.String(), "foobar")
+}
+
 func TestWrapH(t *testing.T) {
 	handled := false
 	handler := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {

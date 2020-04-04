@@ -21,6 +21,7 @@ under development
 - Add `Context.XMLBlob`.
 - Add `Context.JSONBlob`.
 - Add `Context.JSONPBlob` and `Context.JSONPCallbackBlob`.
+- Add `RecoveryLogger`.
 
 v1.8.1 April 2, 2020
 --------------------
