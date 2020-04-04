@@ -95,7 +95,8 @@ func xml(ctx *clevergo.Context) error {
 }
 
 // Renders a template, you should register renderer first.
-// router.Renderer = renderer
+// https://github.com/clevergo/jetrenderer
+// router.Renderer = jetrenderer.New(jet.NewHTMLSet("./views"))
 func render(ctx *clevergo.Context) error {
 	return ctx.Render(http.StatusOK, view, data)
 }
