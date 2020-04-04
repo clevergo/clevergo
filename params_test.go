@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func ExampleParams() {
@@ -42,13 +44,9 @@ func TestParams(t *testing.T) {
 		Param{"param3", "value3"},
 	}
 	for i := range ps {
-		if val := ps.String(ps[i].Key); val != ps[i].Value {
-			t.Errorf("Wrong value for %s: Got %s; Want %s", ps[i].Key, val, ps[i].Value)
-		}
+		assert.Equal(t, ps[i].Value, ps.String(ps[i].Key))
 	}
-	if val := ps.String("noKey"); val != "" {
-		t.Errorf("Expected empty string for not found key; got %q", val)
-	}
+	assert.Equal(t, "", ps.String("noKey"))
 }
 
 func TestParams_Int(t *testing.T) {

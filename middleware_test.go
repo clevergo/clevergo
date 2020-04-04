@@ -12,8 +12,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func echoHandler(s string) Handle {
@@ -58,9 +59,7 @@ func TestChain(t *testing.T) {
 		w := httptest.NewRecorder()
 		handle := Chain(test.handle, test.middlewares...)
 		handle(&Context{Response: w})
-		if test.body != w.Body.String() {
-			t.Errorf("expected body %q, got %q", test.body, w.Body.String())
-		}
+		assert.Equal(t, test.body, w.Body.String())
 	}
 }
 
@@ -86,12 +85,8 @@ func TestRecovery(t *testing.T) {
 	})
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/", nil))
-	if w.Code != http.StatusInternalServerError {
-		t.Errorf("expected status code %d, got %d", http.StatusInternalServerError, w.Code)
-	}
-	if !strings.Contains(out.String(), "foobar") {
-		t.Errorf("expected output contains %s, got %s", "foobar", out.String())
-	}
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, out.String(), "foobar")
 }
 
 func TestWrapH(t *testing.T) {
@@ -101,9 +96,7 @@ func TestWrapH(t *testing.T) {
 	})
 	m := WrapH(handler)
 	m(fakeHandler("foo"))(&Context{})
-	if !handled {
-		t.Error("failed to wrap handler as middleware")
-	}
+	assert.True(t, handled, "failed to wrap handler as middleware")
 }
 
 func TestWrapHH(t *testing.T) {
@@ -123,15 +116,9 @@ func TestWrapHH(t *testing.T) {
 	actualErr := WrapHH(fn)(func(ctx *Context) error {
 		handled = true
 		foo, _ := ctx.Value(foo).(string)
-		if foo != "bar" {
-			t.Errorf("expected foo: %s, got %s", "bar", foo)
-		}
+		assert.Equal(t, "bar", foo)
 		return expectedErr
 	})(ctx)
-	if !handled {
-		t.Error("WrapHH failed")
-	}
-	if expectedErr != actualErr {
-		t.Errorf("expected error %s, got %s", expectedErr, actualErr)
-	}
+	assert.True(t, handled, "WrapHH failed")
+	assert.Equal(t, expectedErr, actualErr)
 }
