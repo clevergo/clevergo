@@ -3,6 +3,8 @@ Change Log
 
 under development
 -----------------
+- Move contextPool out from router.
+- Add middlewareStatePool.
 
 v1.9.0 April 4, 2020
 --------------------

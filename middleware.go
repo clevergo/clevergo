@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"sync"
 )
 
 // MiddlewareFunc is a function that receives a handle and returns a handle.
@@ -29,7 +30,12 @@ func WrapHH(fn func(http.Handler) http.Handler) MiddlewareFunc {
 	handler := fn(nextHandler)
 	return func(handle Handle) Handle {
 		return func(ctx *Context) error {
-			state := &middlewareCtx{ctx: ctx, handle: handle}
+			state := getMiddlewareState()
+			defer func() {
+				putMiddlewareState(state)
+			}()
+			state.ctx = ctx
+			state.next = handle
 			ctx.WithValue(nextHandler, state)
 			handler.ServeHTTP(ctx.Response, ctx.Request)
 			return state.err
@@ -41,24 +47,42 @@ type middlewareHandler struct {
 }
 
 func (h *middlewareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	state := r.Context().Value(h).(*middlewareCtx)
+	state := r.Context().Value(h).(*middlewareState)
 	defer func(w http.ResponseWriter, r *http.Request) {
 		state.ctx.Response = w
 		state.ctx.Request = r
 	}(state.ctx.Response, state.ctx.Request)
 	state.ctx.Response = w
 	state.ctx.Request = r
-	state.next()
+	state.err = state.next(state.ctx)
 }
 
-type middlewareCtx struct {
-	ctx    *Context
-	handle Handle
-	err    error
+var middlewareStatePool = sync.Pool{
+	New: func() interface{} {
+		return new(middlewareState)
+	},
 }
 
-func (m *middlewareCtx) next() {
-	m.err = m.handle(m.ctx)
+func getMiddlewareState() *middlewareState {
+	ctx := middlewareStatePool.Get().(*middlewareState)
+	ctx.reset()
+	return ctx
+}
+
+func putMiddlewareState(ctx *middlewareState) {
+	middlewareStatePool.Put(ctx)
+}
+
+type middlewareState struct {
+	ctx  *Context
+	next Handle
+	err  error
+}
+
+func (s *middlewareState) reset() {
+	s.ctx = nil
+	s.next = nil
+	s.err = nil
 }
 
 // Chain wraps handle with middlewares, middlewares will be invoked in sequence.
