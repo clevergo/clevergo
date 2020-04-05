@@ -17,15 +17,7 @@ CleverGo is a lightweight, feature-rich and trie based high performance HTTP req
 
 ## Benchmark
 
-- Date: 2020/03/13
-- CPU: 4 Core
-- RAM: 8G 
-- Go: 1.14
-- [Detail](BENCHMARK.md)
-
-**Lower is better!**
-
-[![Benchmark](https://i.imgur.com/Eato1pO.png)](BENCHMARK.md)
+[![Benchmark]([Imgur](https://i.imgur.com/Icw49qs.png))](https://docs.clevergo.tech/benchmark)
 
 ## Features
 

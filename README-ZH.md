@@ -17,17 +17,7 @@ CleverGo 是一个轻量级、功能丰富和高性能的 HTTP 路由。
 
 ## 基准测试
 
-日期: 2020/02/11
-
-- Date: 2020/03/13
-- CPU: 4 Core
-- RAM: 8G 
-- Go: 1.14
-- [详情](BENCHMARK.md)
-
-**值越小性能越好**
-
-[![Benchmark](https://i.imgur.com/Eato1pO.png)](BENCHMARK.md)
+[![Benchmark]([Imgur](https://i.imgur.com/Icw49qs.png))](https://docs.clevergo.tech/v/zh/benchmark)
 
 ## 功能特性
 
