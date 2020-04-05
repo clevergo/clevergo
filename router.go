@@ -52,8 +52,6 @@ type Router struct {
 	// Named routes.
 	routes map[string]*Route
 
-	contextPool sync.Pool
-
 	paramsPool sync.Pool
 	maxParams  uint16
 
@@ -131,15 +129,6 @@ func NewRouter() *Router {
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
 	}
-}
-func (r *Router) getContext() *Context {
-	ctx := r.contextPool.Get().(*Context)
-	ctx.reset()
-	return ctx
-}
-
-func (r *Router) putContext(ctx *Context) {
-	r.contextPool.Put(ctx)
 }
 
 func (r *Router) getParams() *Params {
@@ -255,11 +244,6 @@ func (r *Router) Handle(method, path string, handle Handle, opts ...RouteOption)
 			return &ps
 		}
 	}
-	if r.contextPool.New == nil {
-		r.contextPool.New = func() interface{} {
-			return &Context{}
-		}
-	}
 }
 
 // Handler implements IRouter.Handler.
@@ -367,11 +351,11 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	ctx := r.getContext()
+	ctx := getContext()
 	ctx.router = r
 	ctx.Request = req
 	ctx.Response = w
-	defer r.putContext(ctx)
+	defer putContext(ctx)
 
 	var err error
 	if r.handle != nil {

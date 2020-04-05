@@ -40,6 +40,22 @@ func putBuffer(buf *bytes.Buffer) {
 	bufPool.Put(buf)
 }
 
+var contextPool = sync.Pool{
+	New: func() interface{} {
+		return &Context{}
+	},
+}
+
+func getContext() *Context {
+	ctx := contextPool.Get().(*Context)
+	ctx.reset()
+	return ctx
+}
+
+func putContext(ctx *Context) {
+	contextPool.Put(ctx)
+}
+
 // Context contains incoming request, route, params and manages outgoing response.
 type Context struct {
 	router   *Router
