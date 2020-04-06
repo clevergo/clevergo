@@ -574,6 +574,26 @@ func TestContext_QueryParams(t *testing.T) {
 	}
 }
 
+func TestContext_DefaultQuery(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/?foo=bar&empty=", nil)
+	ctx := newContext(nil, req)
+	tests := []struct {
+		key          string
+		defaultValue string
+		value        string
+	}{
+		{"foo", "", "bar"},
+		{"foo", "abc", "bar"},
+		{"empty", "", ""},
+		{"empty", "abc", ""},
+		{"fizz", "", ""},
+		{"fizz", "buzz", "buzz"},
+	}
+	for _, test := range tests {
+		assert.Equal(t, test.value, ctx.DefaultQuery(test.key, test.defaultValue))
+	}
+}
+
 func TestContext_QueryString(t *testing.T) {
 	for _, query := range []string{"/", "/?foo=bar", "/hello?fizz=buzz"} {
 		req := httptest.NewRequest(http.MethodPost, query, nil)

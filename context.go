@@ -360,6 +360,16 @@ func (ctx *Context) QueryParams() url.Values {
 	return ctx.query
 }
 
+// DefaultQuery returns the param for the given key, returns the default value
+// if the param is not present.
+func (ctx *Context) DefaultQuery(key, defaultVlue string) string {
+	if vs, ok := ctx.QueryParams()[key]; ok && len(vs) != 0 {
+		return vs[0]
+	}
+
+	return defaultVlue
+}
+
 // RouteURL returns the URL of the naming route.
 func (ctx *Context) RouteURL(name string, args ...string) (*url.URL, error) {
 	return ctx.router.URL(name, args...)
