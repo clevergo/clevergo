@@ -20,7 +20,7 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 - **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
 - **[Error Handler](https://clevergo.tech/docs/error-handling):** record error and format error response.
 
-[![Benchmark]([Imgur](https://clevergo.tech/img/benchmark.png))](https://docs.clevergo.tech/benchmark)
+[![Benchmark](https://clevergo.tech/img/benchmark.png)](https://clevergo.tech/docs/benchmark)
 
 ## Contribute
 
