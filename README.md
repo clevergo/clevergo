@@ -1,304 +1,40 @@
-# CleverGo [简体中文](README-ZH.md)
+# CleverGo
 [![Build Status](https://travis-ci.org/clevergo/clevergo.svg?branch=master)](https://travis-ci.org/clevergo/clevergo)
-[![Financial Contributors on Open Collective](https://opencollective.com/clevergo/all/badge.svg?label=financial+contributors)](https://opencollective.com/clevergo) [![Coverage Status](https://coveralls.io/repos/github/clevergo/clevergo/badge.svg?branch=master)](https://coveralls.io/github/clevergo/clevergo?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
 
-CleverGo is a lightweight, feature-rich and trie based high performance HTTP request router.
+CleverGo is a lightweight, feature rich and trie based high performance HTTP request router.
 
-## Contents
+## Documentation
 
-- [Benchmark](#benchmark)
-- [Features](#features)
-- [Installation](#installation)
-- [Examples](#examples)
-- [Contribute](#contribute)
-
-## Benchmark
-
-[![Benchmark]([Imgur](https://i.imgur.com/Icw49qs.png))](https://docs.clevergo.tech/benchmark)
+- [English](https://clevergo.tech/docs/)
+- [简体中文](https://clevergo.tech/zh/docs/)
 
 ## Features
 
-- **High Performance:** see [Benchmark](#benchmark) shown above.
-- **[Reverse Route Generation](#reverse-route-generation):** there are two ways to generate URL by a route: named route and matched route.
-- **Route Group:** as known as subrouter, see [route group](#route-group).
-- **Friendly to APIs:** it is easy to design [RESTful APIs](#restful-apis) and versioning your APIs by [route group](#route-group).
-- **Middleware:** allow to plug middleware in route group or particular route, supports global middleware as well, see [middleware](#middleware) exmaple.
-- **[Error Handler](#error-handler)** allow to custom error response, for example, display an error page.
+- **High Performance:** extremely fast, see [Benchmark](https://clevergo.tech/docs/benchmark).
+- **[Reverse Route Generation](https://clevergo.tech/docs/routing/url-generation):** allow to generate URL by named route or matched route.
+- **[Route Group](https://clevergo.tech/docs/routing/route-group):** as known as subrouter.
+- **Friendly to APIs:** it is easy to design RESTful APIs and versioning your APIs by route group.
+- **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
+- **[Error Handler](https://clevergo.tech/docs/error-handling):** record error and format error response.
 
-## Installation
-
-```shell
-GO111MODULE=on go get github.com/clevergo/clevergo
-```
-
-## Examples
-
-```go
-package main
-
-import (
-	"fmt"
-	"net/http"
-
-	"github.com/clevergo/clevergo"
-)
-
-func home(ctx *clevergo.Context) error {
-	return ctx.String(http.StatusOK, "hello world")
-}
-
-func hello(ctx *clevergo.Context) error {
-	return ctx.HTML(http.StatusOk, fmt.Sprintf("hello %s", ctx.Params.String("name")))
-}
-
-func main() {
-	router := clevergo.NewRouter()
-	router.Get("/", home)
-	router.Get("/hello/:name", hello)
-	http.ListenAndServe(":8080", router)
-}
-```
-
-### Response
-
-```go
-func text(ctx *clevergo.Context) error {
-	return ctx.String(http.StatusOK, "hello world")
-}
-
-func html(ctx *clevergo.Context) error {
-	return ctx.HTML(http.StatusOK, "<html><body>hello world</body></html>")
-}
-
-func json(ctx *clevergo.Context) error {
-	return ctx.JSON(http.StatusOK, data)
-}
-
-func jsonp(ctx *clevergo.Context) error {
-	// equals to ctx.JSONPCallback(http.StatusOK, "callback", data)
-	return ctx.JSONP(http.StatusOK, data)
-}
-
-func xml(ctx *clevergo.Context) error {
-	return ctx.XML(http.StatusOK, data)
-}
-
-// Renders a template, you should register renderer first.
-// https://github.com/clevergo/jetrenderer
-// router.Renderer = jetrenderer.New(jet.NewHTMLSet("./views"))
-func render(ctx *clevergo.Context) error {
-	return ctx.Render(http.StatusOK, view, data)
-}
-```
-
-### Params
-
-There are some useful functions to retrieve the parameter value.
-
-```go
-func (ctx *clevergo.Context) error {
-	name := ctx.Params.String("name")
-	page, err := ctx.Params.Int("page")
-	num, err := ctx.Params.Int64("num")
-	amount, err := ctx.Params.Uint64("amount")
-	enable, err := ctx.Params.Bool("enable")
-	price, err := ctx.Params.Float64("price")
-	return err
-}
-```
-
-`Router.UseRawPath` allows to match parameter that contains escaped slash `%2f`:
-
-```go
-router.UseRawPath = true
-```
-
-### Static Files
-
-```go
-router.ServeFiles("/static/*filepath", http.Dir("/path/to/static"))
-
-// sometimes, it is useful to treat http.FileServer as NotFoundHandler,
-// such as "/favicon.ico".
-router.NotFound = http.FileServer(http.Dir("public"))
-```
-
-### Reverse Route Generation
-
-```go
-queryPost := func (ctx *clevergo.Context) error {
-	// generates URL by matched route.
-	url, _ := ctx.Route.URL("year", "2020", "month", "02", "slug", "hello world")
-
-	// generates URL by naming route.
-	// url, _ := ctx.RouteURL("post", "year", "2020", "month", "02", "slug", "hello world")
-
-	return nil
-}
-
-router.Get("/posts/:year/:month/:slug", queryPost, router.RouteName("post"))
-
-// generates URL by naming route.
-url, _ := router.URL("post", "year", "2020", "month", "02", "slug", "hello world")
-```
-
-### Error Handler
-
-Error handler allow to custom error response.
-
-```go
-type MyErrorHandler struct {
-	Tmpl *template.Template
-}
-
-func (meh MyErrorHandler) Handle(ctx *clevergo.Context, err error) {
-	// display an error page.
-	if err := meh.Tmpl.Execute(ctx.Response, err); err != nil {
-		ctx.Error(err.Error(), http.StatusInternalServerError)
-	}
-}
-
-router.ErrorHandler = MyErrorHandler{
-	Tmpl: template.Must(template.New("error").Parse(`<html><body><h1>{{ .Error }}</h1></body></html>`)),
-}
-```
-
-### Middleware
-
-Middleware is a function `func(next Handle) Handle`. [WrapHH](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#WrapHH) is an adapter that converts `func(http.Handler) http.Handler` to a middleware.
-
-**Built-in middlewares:**
-
-- [Recovery](https://pkg.go.dev/github.com/clevergo/clevergo?tab=doc#Recovery)
-
-**Example:**
-
-```go
-// global middlewares.
-serverHeader := func(next clevergo.Handle) clevergo.Handle {
-	return func(ctx *clevergo.Context) error {
-		// writes server header.
-		ctx.Response.Header().Set("Server", "CleverGo")
-		return next(ctx)
-	}
-}
-router.Use(
-	clevergo.Recovery(true),
-	serverHeader,
-
-	// third-party func(http.Handler) http.Handler middlewares
-	clevergo.WrapHH(gziphandler.GzipHandler), // https://github.com/nytimes/gziphandler
-
-	// ...
-)
-
-authenticator := func(next clevergo.Handle) clevergo.Handle {
-	return func(ctx *clevergo.Context) error {
-		// authenticate returns an user instance and a boolean value indicates whether the provided credential is valid.
-		if user, ok := authenticate(ctx); !ok {
-			// returns an error if failed, in order to stop subsequent middlewares and handle.
-			// you can also write response here, and return nil.
-			return clevergo.NewError(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-		}
-
-		// share data between middlewares and handle.
-		ctx.WithValue("user", user)
-		return next(ctx)
-	}
-}
-
-auth := func(ctx *clevergo.Context) error {
-	ctx.WriteString(fmt.Sprintf("hello %v", ctx.Value("user")))
-	return nil
-}
-
-router.Get("/auth", auth, RouteMiddleware(
-	// middleware for current route.
-	authenticator,
-))
-
-http.ListenAndServe(":8080", router)
-```
-
-Middleware also can be used in route group, see [Route Group](#route-group) for details.
-
-### Route Group
-
-```go
-router := clevergo.NewRouter()
-
-api := router.Group("/api", clevergo.RouteGroupMiddleware(
-	// middlewares for APIs, such as CORS, authenticator, authorization
-	clevergo.WrapHH(cors.Default().Handler), // https://github.com/rs/cors
-))
-
-apiV1 := api.Group("/v1", clevergo.RouteGroupMiddleware(
-    // middlewares for v1's APIs
-))
-
-apiV2 := api.Group("/v2", clevergo.RouteGroupMiddleware(
-    // middlewares for v2's APIs
-))
-```
-
-### RESTful APIs
-
-```go
-router.Get("/users", queryUsers)
-router.Post("/users", createUser)
-router.Get("/users/:id", queryUser)
-router.Put("/users/:id", updateUser)
-router.Delete("/users/:id", deleteUser)
-```
-
-See [Route Group](#route-group) for versioning your APIs.
-
-### Determine Request Method
-
-```go
-func (ctx *clevergo.Context) error {
-	// equals to ctx.IsMethod(http.MethodGet).
-	if ctx.IsGet() {
-
-	}
-	// other shortcuts:
-	//ctx.IsDelete()
-	//ctx.IsPatch()
-	//ctx.IsPost()
-	//ctx.IsPut()
-	//ctx.IsOptions()
-	//ctx.IsAJAX()
-	return nil
-}
-```
+[![Benchmark]([Imgur](https://clevergo.tech/img/benchmark.png))](https://docs.clevergo.tech/benchmark)
 
 ## Contribute
+
+Contributions are welcome.
 
 - Give it a :star: and spread the package.
 - [File an issue](https://github.com/clevergo/clevergo/issues/new) to ask questions, request features or report bugs.
 - Fork and make a pull request.
+- Improve documentations.
 
-## Contributors
+### Contributors
 
-### Code Contributors
-
-This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+This project exists thanks to all the people who contribute.
 <a href="https://github.com/clevergo/clevergo/graphs/contributors"><img src="https://opencollective.com/clevergo/contributors.svg?width=890&button=false" /></a>
-
-### Financial Contributors
-
-Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/clevergo/contribute)]
-
-#### Individuals
-
-<a href="https://opencollective.com/clevergo"><img src="https://opencollective.com/clevergo/individuals.svg?width=890"></a>
-
-#### Organizations
-
-Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/clevergo/contribute)]
 
 ## Credit
 
