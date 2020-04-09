@@ -6,6 +6,7 @@ under development
 - Move contextPool out from router.
 - Add middlewareStatePool.
 - Add Context.DefaultQuery.
+- Router.ServeFiles accepts route options.
 
 v1.9.0 April 4, 2020
 --------------------

@@ -266,7 +266,7 @@ func (r *Router) HandlerFunc(method, path string, f http.HandlerFunc, opts ...Ro
 // To use the operating system's file system implementation,
 // use http.Dir:
 //     router.ServeFiles("/src/*filepath", http.Dir("/var/www"))
-func (r *Router) ServeFiles(path string, root http.FileSystem) {
+func (r *Router) ServeFiles(path string, root http.FileSystem, opts ...RouteOption) {
 	if len(path) < 10 || path[len(path)-10:] != "/*filepath" {
 		panic("path must end with /*filepath in path '" + path + "'")
 	}
@@ -277,7 +277,7 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 		ctx.Request.URL.Path = ctx.Params.String("filepath")
 		fileServer.ServeHTTP(ctx.Response, ctx.Request)
 		return nil
-	})
+	}, opts...)
 }
 
 // Lookup allows the manual lookup of a method + path combo.
