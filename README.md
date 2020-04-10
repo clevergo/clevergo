@@ -10,6 +10,7 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 
 - [English](https://clevergo.tech/docs/)
 - [简体中文](https://clevergo.tech/zh/docs/)
+- [繁體中文](https://clevergo.tech/zh-hant/docs/)
 
 ## Features
 
