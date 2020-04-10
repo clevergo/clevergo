@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -646,4 +647,24 @@ func TestContext_RouteURL(t *testing.T) {
 	_, actualErr := ctx.RouteURL("bar")
 	_, expectedErr := router.URL("bar")
 	assert.Equal(t, expectedErr, actualErr)
+}
+
+func TestContext_ServeFile(t *testing.T) {
+	w1 := httptest.NewRecorder()
+	w2 := httptest.NewRecorder()
+	ctx := newContext(w2, httptest.NewRequest(http.MethodGet, "/", nil))
+	ctx.ServeFile("foo")
+	http.ServeFile(w1, httptest.NewRequest(http.MethodGet, "/", nil), "foo")
+	assert.Equal(t, w1, w2)
+}
+
+func TestContext_ServeContent(t *testing.T) {
+	w1 := httptest.NewRecorder()
+	w2 := httptest.NewRecorder()
+	ctx := newContext(w2, httptest.NewRequest(http.MethodGet, "/", nil))
+	now := time.Now()
+	buf := bytes.NewReader([]byte("bar"))
+	ctx.ServeContent("foo", now, buf)
+	http.ServeContent(w1, httptest.NewRequest(http.MethodGet, "/", nil), "foo", now, buf)
+	assert.Equal(t, w1, w2)
 }

@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 )
 
 const (
@@ -95,6 +96,16 @@ func (ctx *Context) NotFound() {
 // Redirect is a shortcut of http.Redirect.
 func (ctx *Context) Redirect(url string, code int) {
 	http.Redirect(ctx.Response, ctx.Request, url, code)
+}
+
+// ServeFile is a shortcut of http.ServeFile.
+func (ctx *Context) ServeFile(name string) {
+	http.ServeFile(ctx.Response, ctx.Request, name)
+}
+
+// ServeContent is a shortcut of http.ServeContent.
+func (ctx *Context) ServeContent(name string, modtime time.Time, content io.ReadSeeker) {
+	http.ServeContent(ctx.Response, ctx.Request, name, modtime, content)
 }
 
 // SetContentType sets the content type header.

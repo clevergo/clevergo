@@ -7,6 +7,8 @@ under development
 - Add middlewareStatePool.
 - Add Context.DefaultQuery.
 - Router.ServeFiles accepts route options.
+- Add Context.ServeFile: a shortcut of http.ServeFile.
+- Add Context.ServeContent: a shortcut of http.ServeContent.
 
 v1.9.0 April 4, 2020
 --------------------
