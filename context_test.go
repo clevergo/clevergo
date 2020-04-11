@@ -683,6 +683,5 @@ func TestContext_BasicAuth(t *testing.T) {
 		assert.Equal(t, user1, user2)
 		assert.Equal(t, pass1, pass2)
 		assert.Equal(t, ok1, ok2)
-
 	}
 }
