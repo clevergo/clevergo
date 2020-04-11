@@ -3,6 +3,9 @@ Change Log
 
 under development
 -----------------
+
+v1.10.0 April 11, 2020
+----------------------
 - Move contextPool out from router.
 - Add middlewareStatePool.
 - Add Context.DefaultQuery.
