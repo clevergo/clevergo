@@ -15,7 +15,7 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 ## Features
 
 - **High Performance:** extremely fast, see [Benchmark](https://clevergo.tech/docs/benchmark).
-- **[Reverse Route Generation](https://clevergo.tech/docs/routing/url-generation):** allow to generate URL by named route or matched route.
+- **[Reverse Route Generation](https://clevergo.tech/docs/routing/url-generation):** allow generating URLs by named route or matched route.
 - **[Route Group](https://clevergo.tech/docs/routing/route-group):** as known as subrouter.
 - **Friendly to APIs:** it is easy to design RESTful APIs and versioning your APIs by route group.
 - **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
