@@ -385,3 +385,8 @@ func (ctx *Context) DefaultQuery(key, defaultVlue string) string {
 func (ctx *Context) RouteURL(name string, args ...string) (*url.URL, error) {
 	return ctx.router.URL(name, args...)
 }
+
+// BasicAuth is a shortcut of http.Request.BasicAuth.
+func (ctx *Context) BasicAuth() (username, password string, ok bool) {
+	return ctx.Request.BasicAuth()
+}

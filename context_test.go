@@ -668,3 +668,21 @@ func TestContext_ServeContent(t *testing.T) {
 	http.ServeContent(w1, httptest.NewRequest(http.MethodGet, "/", nil), "foo", now, buf)
 	assert.Equal(t, w1, w2)
 }
+
+func TestContext_BasicAuth(t *testing.T) {
+	requests := []*http.Request{
+		httptest.NewRequest(http.MethodGet, "/", nil),
+	}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.SetBasicAuth("foo", "bar")
+	requests = append(requests, req)
+	for _, req := range requests {
+		ctx := newContext(nil, req)
+		user1, pass1, ok1 := req.BasicAuth()
+		user2, pass2, ok2 := ctx.BasicAuth()
+		assert.Equal(t, user1, user2)
+		assert.Equal(t, pass1, pass2)
+		assert.Equal(t, ok1, ok2)
+
+	}
+}

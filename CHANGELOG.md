@@ -9,6 +9,7 @@ under development
 - Router.ServeFiles accepts route options.
 - Add Context.ServeFile: a shortcut of http.ServeFile.
 - Add Context.ServeContent: a shortcut of http.ServeContent.
+- Add Context.BasicAuth: a shortcut of http.Request.BasicAuth.
 
 v1.9.0 April 4, 2020
 --------------------
