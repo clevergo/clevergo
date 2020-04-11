@@ -685,3 +685,12 @@ func TestContext_BasicAuth(t *testing.T) {
 		assert.Equal(t, ok1, ok2)
 	}
 }
+
+func TestContext_SendFile(t *testing.T) {
+	w := httptest.NewRecorder()
+	ctx := newContext(w, nil)
+	buf := bytes.NewReader([]byte("bar"))
+	ctx.SendFile("foo.txt", buf)
+	assert.Equal(t, "bar", w.Body.String())
+	assert.Equal(t, w.Header().Get("Content-Disposition"), `attachment; filename="foo.txt"`)
+}

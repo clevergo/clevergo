@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -389,4 +390,11 @@ func (ctx *Context) RouteURL(name string, args ...string) (*url.URL, error) {
 // BasicAuth is a shortcut of http.Request.BasicAuth.
 func (ctx *Context) BasicAuth() (username, password string, ok bool) {
 	return ctx.Request.BasicAuth()
+}
+
+// SendFile sends a file to browser.
+func (ctx *Context) SendFile(filename string, r io.Reader) (err error) {
+	ctx.Response.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	_, err = io.Copy(ctx.Response, r)
+	return
 }

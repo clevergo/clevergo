@@ -10,6 +10,7 @@ under development
 - Add Context.ServeFile: a shortcut of http.ServeFile.
 - Add Context.ServeContent: a shortcut of http.ServeContent.
 - Add Context.BasicAuth: a shortcut of http.Request.BasicAuth.
+- Add Context.SendFile: sends a file to browser.
 
 v1.9.0 April 4, 2020
 --------------------
