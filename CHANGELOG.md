@@ -3,6 +3,7 @@ Change Log
 
 under development
 -----------------
+- Add `Decoder`, `Validator` and `Context.Decode` for decoding and validating request's input.
 
 v1.10.0 April 11, 2020
 ----------------------

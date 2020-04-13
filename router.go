@@ -17,7 +17,9 @@ import (
 
 // errors
 var (
-	ErrRendererNotRegister = errors.New("renderer not registered")
+	ErrRendererNotRegister  = errors.New("renderer not registered")
+	ErrDecoderNotRegister   = errors.New("decoder not registered")
+	ErrValidatorNotRegister = errors.New("validator not registered")
 )
 
 // Handle is a function which handle incoming request and manage outgoing response.
@@ -42,6 +44,18 @@ func HandleHandlerFunc(f http.HandlerFunc) Handle {
 // Renderer is an interface for template engine.
 type Renderer interface {
 	Render(w io.Writer, name string, data interface{}, ctx *Context) error
+}
+
+// Decoder is an interface that decodes request's input.
+type Decoder interface {
+	// Decode decodes request's input and stores it in the value pointed to by v.
+	Decode(req *http.Request, v interface{}) error
+}
+
+// Validator is an interface that validates whether the value is valid.
+type Validator interface {
+	// Validate validates whether the value pointed to by v is valid.
+	Validate(v interface{}) error
 }
 
 // Router is a http.Handler which can be used to dispatch requests to different
@@ -114,7 +128,9 @@ type Router struct {
 	middlewares []MiddlewareFunc
 	handle      Handle
 
-	Renderer Renderer
+	Renderer  Renderer
+	Decoder   Decoder
+	Validator Validator
 }
 
 // Make sure the Router conforms with the http.Handler interface
