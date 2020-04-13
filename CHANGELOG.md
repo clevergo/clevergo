@@ -3,6 +3,7 @@ Change Log
 
 under development
 -----------------
+- Add `Map`: an alias of map[string]interface{}.
 
 v1.10.0 April 11, 2020
 ----------------------
