@@ -399,19 +399,12 @@ func (ctx *Context) SendFile(filename string, r io.Reader) (err error) {
 	return
 }
 
-// Decode decodes request's input, stores it in the value pointed to by v,
-// and validates whether the value is valid.
+// Decode decodes request's input, stores it in the value pointed to by v.
 func (ctx *Context) Decode(v interface{}) (err error) {
 	if ctx.router.Decoder == nil {
 		return ErrDecoderNotRegister
 	}
-	if ctx.router.Validator == nil {
-		return ErrValidatorNotRegister
-	}
 	if err = ctx.router.Decoder.Decode(ctx.Request, v); err != nil {
-		return
-	}
-	if err = ctx.router.Validator.Validate(v); err != nil {
 		return
 	}
 	return

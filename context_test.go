@@ -703,14 +703,6 @@ func (d *fakeDecoder) Decode(req *http.Request, v interface{}) error {
 	return d.err
 }
 
-type fakeValidator struct {
-	err error
-}
-
-func (v *fakeValidator) Validate(val interface{}) error {
-	return v.err
-}
-
 func TestContext_Decode(t *testing.T) {
 	ctx := newContext(nil, httptest.NewRequest(http.MethodPost, "/", nil))
 	ctx.router = NewRouter()
@@ -719,18 +711,10 @@ func TestContext_Decode(t *testing.T) {
 	}{}
 	assert.Equal(t, ErrDecoderNotRegister, ctx.Decode(v))
 
-	ctx.router.Decoder = &fakeDecoder{}
-	assert.Equal(t, ErrValidatorNotRegister, ctx.Decode(v))
-
-	ctx.router.Validator = &fakeValidator{}
-	assert.Nil(t, ctx.Decode(v))
-
 	decodeErr := errors.New("decoder error")
 	ctx.router.Decoder = &fakeDecoder{err: decodeErr}
 	assert.Equal(t, decodeErr, ctx.Decode(v))
 
-	validateErr := errors.New("validate error")
 	ctx.router.Decoder = &fakeDecoder{}
-	ctx.router.Validator = &fakeValidator{err: validateErr}
-	assert.Equal(t, validateErr, ctx.Decode(v))
+	assert.Nil(t, ctx.Decode(v))
 }
