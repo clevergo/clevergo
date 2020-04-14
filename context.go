@@ -284,6 +284,12 @@ func (ctx *Context) String(code int, s string) error {
 	return ctx.Emit(code, headerContentTypeText, s)
 }
 
+// Stringf formats according to a format specifier and sends the resulting string
+// with the status code, it also sets Content-Type as "text/plain; charset=utf-8".
+func (ctx *Context) Stringf(code int, format string, a ...interface{}) error {
+	return ctx.String(code, fmt.Sprintf(format, a...))
+}
+
 // XML sends XML response with status code, it also sets
 // Content-Type as "application/xml".
 func (ctx *Context) XML(code int, data interface{}) error {

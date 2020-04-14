@@ -447,6 +447,27 @@ func TestContext_String(t *testing.T) {
 	}
 }
 
+func TestContext_Stringf(t *testing.T) {
+	tests := []struct {
+		code     int
+		format   string
+		a        []interface{}
+		expected string
+	}{
+		{200, "hello world", nil, "hello world"},
+		{500, "hello %s", []interface{}{"foobar"}, "hello foobar"},
+		{500, "%d+%d=%d", []interface{}{1, 2, 1 + 2}, "1+2=3"},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.Stringf(test.code, test.format, test.a...)
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.expected, w.Body.String())
+	}
+}
+
 func TestContext_XML(t *testing.T) {
 	tests := []struct {
 		code      int
