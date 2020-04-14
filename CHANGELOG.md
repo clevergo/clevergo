@@ -4,6 +4,7 @@ Change Log
 under development
 -----------------
 - Add `Map`: an alias of map[string]interface{}.
+- Add `Decoder`, `Router.Decoder` and `Context.Decode` for decoding request's input.
 
 v1.10.0 April 11, 2020
 ----------------------

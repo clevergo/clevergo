@@ -694,3 +694,27 @@ func TestContext_SendFile(t *testing.T) {
 	assert.Equal(t, "bar", w.Body.String())
 	assert.Equal(t, w.Header().Get("Content-Disposition"), `attachment; filename="foo.txt"`)
 }
+
+type fakeDecoder struct {
+	err error
+}
+
+func (d *fakeDecoder) Decode(req *http.Request, v interface{}) error {
+	return d.err
+}
+
+func TestContext_Decode(t *testing.T) {
+	ctx := newContext(nil, httptest.NewRequest(http.MethodPost, "/", nil))
+	ctx.router = NewRouter()
+	v := &struct {
+		Name string `json:"name"`
+	}{}
+	assert.Equal(t, ErrDecoderNotRegister, ctx.Decode(v))
+
+	decodeErr := errors.New("decoder error")
+	ctx.router.Decoder = &fakeDecoder{err: decodeErr}
+	assert.Equal(t, decodeErr, ctx.Decode(v))
+
+	ctx.router.Decoder = &fakeDecoder{}
+	assert.Nil(t, ctx.Decode(v))
+}

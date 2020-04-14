@@ -398,3 +398,14 @@ func (ctx *Context) SendFile(filename string, r io.Reader) (err error) {
 	_, err = io.Copy(ctx.Response, r)
 	return
 }
+
+// Decode decodes request's input, stores it in the value pointed to by v.
+func (ctx *Context) Decode(v interface{}) (err error) {
+	if ctx.router.Decoder == nil {
+		return ErrDecoderNotRegister
+	}
+	if err = ctx.router.Decoder.Decode(ctx.Request, v); err != nil {
+		return
+	}
+	return
+}

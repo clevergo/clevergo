@@ -18,6 +18,7 @@ import (
 // errors
 var (
 	ErrRendererNotRegister = errors.New("renderer not registered")
+	ErrDecoderNotRegister  = errors.New("decoder not registered")
 )
 
 // Handle is a function which handle incoming request and manage outgoing response.
@@ -37,6 +38,12 @@ func HandleHandlerFunc(f http.HandlerFunc) Handle {
 		f(ctx.Response, ctx.Request)
 		return nil
 	}
+}
+
+// Decoder is an interface that decodes request's input.
+type Decoder interface {
+	// Decode decodes request's input and stores it in the value pointed to by v.
+	Decode(req *http.Request, v interface{}) error
 }
 
 // Renderer is an interface for template engine.
@@ -115,6 +122,8 @@ type Router struct {
 	handle      Handle
 
 	Renderer Renderer
+
+	Decoder Decoder
 }
 
 // Make sure the Router conforms with the http.Handler interface
