@@ -4,3 +4,6 @@
 
 // Package clevergo is a trie based high performance HTTP request router.
 package clevergo
+
+// Map is an alias of map[string]interface{}.
+type Map map[string]interface{}
