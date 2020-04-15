@@ -137,3 +137,6 @@ func RecoveryLogger(debug bool, logger *log.Logger) MiddlewareFunc {
 	r := &recovery{debug: debug, logger: logger}
 	return r.middleware
 }
+
+// Skipper is a function that indicates whether current request is skippable.
+type Skipper func(ctx *Context) bool
