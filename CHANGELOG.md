@@ -4,6 +4,7 @@ Change Log
 under development
 -----------------
 - Add `Skipper`.
+- Add `PathSkipper`.
 
 v1.11.0 April 15, 2020
 ----------------------
