@@ -142,7 +142,7 @@ func RecoveryLogger(debug bool, logger *log.Logger) MiddlewareFunc {
 // Skipper is a function that indicates whether current request is skippable.
 type Skipper func(ctx *Context) bool
 
-// PathSkipper returns skipper with the given patterns.
+// PathSkipper returns a skipper with the given patterns.
 // Pattern has two forms, one is that contains a certain path, another contains a wildcard,
 // both of them are case-insensitive.
 //   Pattern     Path            Skippable
