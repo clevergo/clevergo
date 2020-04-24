@@ -724,18 +724,29 @@ func (d *fakeDecoder) Decode(req *http.Request, v interface{}) error {
 	return d.err
 }
 
+type fakeForm struct {
+	valid bool
+	Name  string `json:"name"`
+}
+
+func (f *fakeForm) Validate() error {
+	f.valid = true
+	return nil
+}
+
 func TestContext_Decode(t *testing.T) {
 	ctx := newContext(nil, httptest.NewRequest(http.MethodPost, "/", nil))
 	ctx.router = NewRouter()
-	v := &struct {
-		Name string `json:"name"`
-	}{}
+	v := new(fakeForm)
 	assert.Equal(t, ErrDecoderNotRegister, ctx.Decode(v))
+	assert.False(t, v.valid)
 
 	decodeErr := errors.New("decoder error")
 	ctx.router.Decoder = &fakeDecoder{err: decodeErr}
 	assert.Equal(t, decodeErr, ctx.Decode(v))
+	assert.False(t, v.valid)
 
 	ctx.router.Decoder = &fakeDecoder{}
 	assert.Nil(t, ctx.Decode(v))
+	assert.True(t, v.valid)
 }

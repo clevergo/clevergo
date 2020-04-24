@@ -7,3 +7,8 @@ package clevergo
 
 // Map is an alias of map[string]interface{}.
 type Map map[string]interface{}
+
+// Validatable indicates whether a value can be validated.
+type Validatable interface {
+	Validate() error
+}

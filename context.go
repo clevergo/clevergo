@@ -406,12 +406,16 @@ func (ctx *Context) SendFile(filename string, r io.Reader) (err error) {
 }
 
 // Decode decodes request's input, stores it in the value pointed to by v.
+// If v is validatable, the value will be validated after decoding.
 func (ctx *Context) Decode(v interface{}) (err error) {
 	if ctx.router.Decoder == nil {
 		return ErrDecoderNotRegister
 	}
 	if err = ctx.router.Decoder.Decode(ctx.Request, v); err != nil {
 		return
+	}
+	if vv, ok := v.(Validatable); ok {
+		err = vv.Validate()
 	}
 	return
 }
