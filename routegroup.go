@@ -60,19 +60,30 @@ func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) IRouter {
 	return router
 }
 
-// Handle implements IRouter.Handle.
-func (r *RouteGroup) Handle(method, path string, handle Handle, opts ...RouteOption) {
-	opts = append(opts, func(route *Route) {
+func (r *RouteGroup) nameOption() RouteOption {
+	return func(route *Route) {
 		if route.name != "" {
 			route.name = r.name + "/" + route.name
 		}
-	})
-	if len(r.middlewares) > 0 {
-		opts = append(opts, func(route *Route) {
-			route.handle = Chain(route.handle, r.middlewares...)
-		})
 	}
-	r.parent.Handle(method, r.subPath(path), handle, opts...)
+}
+
+func (r RouteGroup) middlewareOption() RouteOption {
+	return func(route *Route) {
+		if len(r.middlewares) > 0 {
+			route.handle = Chain(route.handle, r.middlewares...)
+		}
+	}
+}
+
+func (r *RouteGroup) combineOptions(opts []RouteOption) []RouteOption {
+	opts = append(opts, r.nameOption(), r.middlewareOption())
+	return opts
+}
+
+// Handle implements IRouter.Handle.
+func (r *RouteGroup) Handle(method, path string, handle Handle, opts ...RouteOption) {
+	r.parent.Handle(method, r.subPath(path), handle, r.combineOptions(opts)...)
 }
 
 // Handler implements IRouter.Handler.
@@ -118,6 +129,11 @@ func (r *RouteGroup) Patch(path string, handle Handle, opts ...RouteOption) {
 // Delete implements IRouter.Delete.
 func (r *RouteGroup) Delete(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodDelete, path, handle, opts...)
+}
+
+// Any implements IRouter.Any.
+func (r *RouteGroup) Any(path string, handle Handle, opts ...RouteOption) {
+	r.parent.Any(r.subPath(path), handle, r.combineOptions(opts)...)
 }
 
 func (r *RouteGroup) subPath(path string) string {

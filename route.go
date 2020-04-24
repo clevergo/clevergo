@@ -39,6 +39,10 @@ type IRouter interface {
 	// Delete registers a new DELETE request handler function with the given path and optional route options.
 	Delete(path string, handle Handle, opts ...RouteOption)
 
+	// Any registers a new request handler function that matches any HTTP methods with the given path and
+	// optional route options. GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH.
+	Any(path string, handle Handle, opts ...RouteOption)
+
 	// HandleFunc registers a new request handler function with the given path, method and optional route options.
 	//
 	// For Get, Head, Options, Post, Put, Patch and Delete requests the respective shortcut
@@ -142,6 +146,12 @@ func RouteName(name string) RouteOption {
 	return func(r *Route) {
 		r.name = name
 	}
+}
+
+func isRouteNameOption(opt RouteOption) bool {
+	r := &Route{}
+	opt(r)
+	return r.name != ""
 }
 
 // RouteMiddleware is a route option for chainging middlewares to a route.
