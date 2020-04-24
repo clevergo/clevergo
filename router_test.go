@@ -11,6 +11,8 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type mockResponseWriter struct{}
@@ -154,6 +156,29 @@ func TestRouterAPI(t *testing.T) {
 	if !handlerFunc {
 		t.Error("routing HandlerFunc failed")
 	}
+}
+
+func TestRouterAny(t *testing.T) {
+	router := NewRouter()
+	handle := func(ctx *Context) error {
+		ctx.WriteString(ctx.Request.Method)
+		return nil
+	}
+	nameOpt := RouteName("ping")
+	router.Any("/ping", handle, nameOpt)
+	group := router.Group("/foo")
+	group.Any("/ping", handle, nameOpt)
+	paths := []string{"/ping", "/foo/ping"}
+	for _, method := range requestMethods {
+		for _, path := range paths {
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, httptest.NewRequest(method, path, nil))
+			assert.Equal(t, method, w.Body.String())
+		}
+	}
+	url, err := router.URL("ping")
+	assert.Nil(t, err)
+	assert.Equal(t, "/ping", url.String())
 }
 
 func TestRouterInvalidInput(t *testing.T) {

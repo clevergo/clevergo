@@ -21,6 +21,18 @@ var (
 	ErrDecoderNotRegister  = errors.New("decoder not registered")
 )
 
+var requestMethods = []string{
+	http.MethodGet,
+	http.MethodPost,
+	http.MethodPut,
+	http.MethodPatch,
+	http.MethodOptions,
+	http.MethodDelete,
+	http.MethodHead,
+	http.MethodConnect,
+	http.MethodTrace,
+}
+
 // Handle is a function which handle incoming request and manage outgoing response.
 type Handle func(ctx *Context) error
 
@@ -204,6 +216,20 @@ func (r *Router) Patch(path string, handle Handle, opts ...RouteOption) {
 // Delete implements IRouter.Delete.
 func (r *Router) Delete(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodDelete, path, handle, opts...)
+}
+
+// Any implements IRouter.Any.
+func (r *Router) Any(path string, handle Handle, opts ...RouteOption) {
+	r.Handle(requestMethods[0], path, handle, opts...)
+	// Removes route name option before registering handler by the rest of methods.
+	for i, opt := range opts {
+		if isRouteNameOption(opt) {
+			opts = append(opts[:i], opts[i+1:]...)
+		}
+	}
+	for i := 1; i < len(requestMethods); i++ {
+		r.Handle(requestMethods[i], path, handle, opts...)
+	}
 }
 
 // Handle implements IRouter.Handle.

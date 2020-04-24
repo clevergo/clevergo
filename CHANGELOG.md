@@ -5,6 +5,7 @@ under development
 -----------------
 - Add `Skipper`.
 - Add `PathSkipper`.
+- Add `IRouter.Any`: registers a new request handler function that matches any HTTP methods.
 
 v1.11.0 April 15, 2020
 ----------------------
