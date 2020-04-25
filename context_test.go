@@ -750,3 +750,16 @@ func TestContext_Decode(t *testing.T) {
 	assert.Nil(t, ctx.Decode(v))
 	assert.True(t, v.valid)
 }
+
+func TestContextSetHeader(t *testing.T) {
+	cases := map[string]string{
+		"X-Foo":  "Bar",
+		"X-Fizz": "Buzz",
+	}
+	for k, v := range cases {
+		w := httptest.NewRecorder()
+		ctx := newContext(w, nil)
+		ctx.SetHeader(k, v)
+		assert.Equal(t, v, w.Header().Get(k))
+	}
+}

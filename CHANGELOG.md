@@ -7,6 +7,7 @@ under development
 - Add `PathSkipper`.
 - Add `IRouter.Any`: registers a new request handler function that matches any HTTP methods.
 - Add `Validatable`: if a value is validatable, `Context.Decode` will validate the value.
+- Add `Context.SetHeader`: a shortcut of `http.ResponseWriter.Header().Set`.
 
 v1.11.0 April 15, 2020
 ----------------------

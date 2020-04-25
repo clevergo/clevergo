@@ -419,3 +419,8 @@ func (ctx *Context) Decode(v interface{}) (err error) {
 	}
 	return
 }
+
+// SetHeader is a shortcut of http.ResponseWriter.Header().Set.
+func (ctx *Context) SetHeader(key, value string) {
+	ctx.Response.Header().Set(key, value)
+}
