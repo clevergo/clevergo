@@ -3,6 +3,9 @@ Change Log
 
 under development
 -----------------
+
+v1.12.0 May 4, 2020
+-------------------
 - Add `Skipper`.
 - Add `PathSkipper`.
 - Add `IRouter.Any`: registers a new request handler function that matches any HTTP methods.
