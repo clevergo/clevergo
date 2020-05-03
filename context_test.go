@@ -725,13 +725,7 @@ func (d *fakeDecoder) Decode(req *http.Request, v interface{}) error {
 }
 
 type fakeForm struct {
-	valid bool
-	Name  string `json:"name"`
-}
-
-func (f *fakeForm) Validate() error {
-	f.valid = true
-	return nil
+	Name string `json:"name"`
 }
 
 func TestContext_Decode(t *testing.T) {
@@ -739,16 +733,13 @@ func TestContext_Decode(t *testing.T) {
 	ctx.router = NewRouter()
 	v := new(fakeForm)
 	assert.Equal(t, ErrDecoderNotRegister, ctx.Decode(v))
-	assert.False(t, v.valid)
 
 	decodeErr := errors.New("decoder error")
 	ctx.router.Decoder = &fakeDecoder{err: decodeErr}
 	assert.Equal(t, decodeErr, ctx.Decode(v))
-	assert.False(t, v.valid)
 
 	ctx.router.Decoder = &fakeDecoder{}
 	assert.Nil(t, ctx.Decode(v))
-	assert.True(t, v.valid)
 }
 
 func TestContextSetHeader(t *testing.T) {
