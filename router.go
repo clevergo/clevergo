@@ -304,12 +304,6 @@ func (r *Router) Lookup(method, path string) (*Route, Params, bool) {
 	ps := make(Params, 0, r.maxParams)
 	if root := r.trees[method]; root != nil {
 		route, tsr := root.getValue(path, &ps, r.UseRawPath)
-		if route == nil {
-			return nil, nil, tsr
-		}
-		if ps == nil {
-			return route, nil, tsr
-		}
 		return route, ps, tsr
 	}
 	return nil, nil, false
