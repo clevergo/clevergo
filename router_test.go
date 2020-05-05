@@ -37,10 +37,8 @@ func TestRouter(t *testing.T) {
 	routed := false
 	router.Handle(http.MethodGet, "/user/:name", func(ctx *Context) error {
 		routed = true
-		want := Params{Param{"name", "gopher"}}
-		if !reflect.DeepEqual(ctx.Params, want) {
-			t.Fatalf("wrong wildcard values: want %v, got %v", want, ctx.Params)
-		}
+		expected := Params{Param{"name", "gopher"}}
+		assert.Equal(t, expected, ctx.Params)
 		return nil
 	})
 
@@ -48,10 +46,7 @@ func TestRouter(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, "/user/gopher", nil)
 	router.ServeHTTP(w, req)
-
-	if !routed {
-		t.Fatal("routing failed")
-	}
+	assert.True(t, routed)
 }
 
 type handlerStruct struct {
@@ -547,9 +542,7 @@ func TestRouterLookup(t *testing.T) {
 			t.Fatal("Routing failed!")
 		}
 	}
-	if params != nil {
-		t.Fatalf("Wrong parameter values: want %v, got %v", nil, params)
-	}
+	assert.Len(t, params, 0)
 
 	route, _, tsr = router.Lookup(http.MethodGet, "/user/gopher/")
 	if route != nil {
@@ -581,12 +574,8 @@ func TestRouterParamsFromContext(t *testing.T) {
 		return nil
 	}
 
-	var nilParams Params
 	handlerFuncNil := func(ctx *Context) error {
-		if !reflect.DeepEqual(ctx.Params, nilParams) {
-			t.Fatalf("Wrong parameter values: want %v, got %v", nilParams, ctx.Params)
-		}
-
+		assert.Len(t, ctx.Params, 0)
 		routed = true
 		return nil
 	}

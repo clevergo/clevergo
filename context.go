@@ -48,9 +48,15 @@ var contextPool = sync.Pool{
 	},
 }
 
-func getContext() *Context {
+func getContext(router *Router, w http.ResponseWriter, r *http.Request) *Context {
 	ctx := contextPool.Get().(*Context)
 	ctx.reset()
+	ctx.router = router
+	ctx.Response = w
+	ctx.Request = r
+	if cap(ctx.Params) < int(router.maxParams) {
+		ctx.Params = make(Params, 0, router.maxParams)
+	}
 	return ctx
 }
 
@@ -76,11 +82,8 @@ func newContext(w http.ResponseWriter, r *http.Request) *Context {
 }
 
 func (ctx *Context) reset() {
-	ctx.router = nil
-	ctx.Params = nil
+	ctx.Params = ctx.Params[0:0]
 	ctx.Route = nil
-	ctx.Response = nil
-	ctx.Request = nil
 	ctx.query = nil
 }
 
