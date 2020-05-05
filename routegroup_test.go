@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewRouteGroup(t *testing.T) {
@@ -30,19 +32,13 @@ func TestNewRouteGroup(t *testing.T) {
 			recv := catchPanic(func() {
 				newRouteGroup(router, test.path)
 			})
-			if recv == nil {
-				t.Error("expected a panic")
-			}
+			assert.NotNil(t, recv)
 			continue
 		}
 
 		route := newRouteGroup(router, test.path)
-		if test.expectedPath != route.path {
-			t.Errorf("expected path %q, got %q", test.expectedPath, route.path)
-		}
-		if test.expectedPath != route.name {
-			t.Errorf("expected name %q, got %q", test.expectedPath, route.name)
-		}
+		assert.Equal(t, test.expectedPath, route.path)
+		assert.Equal(t, test.expectedPath, route.name)
 	}
 }
 
@@ -93,8 +89,6 @@ func TestRouteGroupName(t *testing.T) {
 	for _, name := range []string{"foo", "bar"} {
 		g := &RouteGroup{}
 		RouteGroupName(name)(g)
-		if g.name != name {
-			t.Errorf("expected name %s, got %s", name, g.name)
-		}
+		assert.Equal(t, name, g.name)
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -100,57 +99,39 @@ func TestRouterAPI(t *testing.T) {
 
 	r, _ := http.NewRequest(http.MethodGet, "/GET", nil)
 	router.ServeHTTP(w, r)
-	if !get {
-		t.Error("routing GET failed")
-	}
+	assert.True(t, get, "routing GET failed")
 
 	r, _ = http.NewRequest(http.MethodHead, "/GET", nil)
 	router.ServeHTTP(w, r)
-	if !head {
-		t.Error("routing HEAD failed")
-	}
+	assert.True(t, head, "routing HEAD failed")
 
 	r, _ = http.NewRequest(http.MethodOptions, "/GET", nil)
 	router.ServeHTTP(w, r)
-	if !options {
-		t.Error("routing OPTIONS failed")
-	}
+	assert.True(t, options, "routing OPTIONS failed")
 
 	r, _ = http.NewRequest(http.MethodPost, "/POST", nil)
 	router.ServeHTTP(w, r)
-	if !post {
-		t.Error("routing POST failed")
-	}
+	assert.True(t, post, "routing POST failed")
 
 	r, _ = http.NewRequest(http.MethodPut, "/PUT", nil)
 	router.ServeHTTP(w, r)
-	if !put {
-		t.Error("routing PUT failed")
-	}
+	assert.True(t, put, "routing PUT failed")
 
 	r, _ = http.NewRequest(http.MethodPatch, "/PATCH", nil)
 	router.ServeHTTP(w, r)
-	if !patch {
-		t.Error("routing PATCH failed")
-	}
+	assert.True(t, patch, "routing PATCH failed")
 
 	r, _ = http.NewRequest(http.MethodDelete, "/DELETE", nil)
 	router.ServeHTTP(w, r)
-	if !delete {
-		t.Error("routing DELETE failed")
-	}
+	assert.True(t, delete, "routing DELETE failed")
 
 	r, _ = http.NewRequest(http.MethodGet, "/Handler", nil)
 	router.ServeHTTP(w, r)
-	if !handler {
-		t.Error("routing Handler failed")
-	}
+	assert.True(t, handler, "routing Handler failed")
 
 	r, _ = http.NewRequest(http.MethodGet, "/HandlerFunc", nil)
 	router.ServeHTTP(w, r)
-	if !handlerFunc {
-		t.Error("routing HandlerFunc failed")
-	}
+	assert.True(t, handlerFunc, "routing HandlerFunc failed")
 }
 
 func TestRouterAny(t *testing.T) {
@@ -186,30 +167,22 @@ func TestRouterInvalidInput(t *testing.T) {
 	recv := catchPanic(func() {
 		router.Handle("", "/", handle)
 	})
-	if recv == nil {
-		t.Fatal("registering empty method did not panic")
-	}
+	assert.NotNil(t, recv, "registering empty method did not panic")
 
 	recv = catchPanic(func() {
 		router.Get("", handle)
 	})
-	if recv == nil {
-		t.Fatal("registering empty path did not panic")
-	}
+	assert.NotNil(t, recv, "registering empty path did not panic")
 
 	recv = catchPanic(func() {
 		router.Get("noSlashRoot", handle)
 	})
-	if recv == nil {
-		t.Fatal("registering path not beginning with '/' did not panic")
-	}
+	assert.NotNil(t, recv, "registering path not beginning with '/' did not panic")
 
 	recv = catchPanic(func() {
 		router.Get("/", nil)
 	})
-	if recv == nil {
-		t.Fatal("registering nil handler did not panic")
-	}
+	assert.NotNil(t, recv, "registering nil handler did not panic")
 }
 
 func TestRouterChaining(t *testing.T) {
@@ -234,26 +207,19 @@ func TestRouterChaining(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPost, "/foo", nil)
 	w := httptest.NewRecorder()
 	router1.ServeHTTP(w, r)
-	if !(w.Code == http.StatusOK && fooHit) {
-		t.Errorf("Regular routing failed with router chaining.")
-		t.FailNow()
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, fooHit)
 
 	r, _ = http.NewRequest(http.MethodPost, "/bar", nil)
 	w = httptest.NewRecorder()
 	router1.ServeHTTP(w, r)
-	if !(w.Code == http.StatusOK && barHit) {
-		t.Errorf("Chained routing failed with router chaining.")
-		t.FailNow()
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, barHit)
 
 	r, _ = http.NewRequest(http.MethodPost, "/qax", nil)
 	w = httptest.NewRecorder()
 	router1.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNotFound) {
-		t.Errorf("NotFound behavior failed with router chaining.")
-		t.FailNow()
-	}
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func BenchmarkAllowed(b *testing.B) {
@@ -292,28 +258,20 @@ func TestRouterOPTIONS(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodOptions, "*", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusOK) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "OPTIONS, POST", w.Header().Get("Allow"))
 
 	// path
 	r, _ = http.NewRequest(http.MethodOptions, "/path", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusOK) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "OPTIONS, POST", w.Header().Get("Allow"))
 
 	r, _ = http.NewRequest(http.MethodOptions, "/doesnotexist", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNotFound) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	}
+	assert.Equal(t, http.StatusNotFound, w.Code)
 
 	// add another method
 	router.Get("/path", handlerFunc)
@@ -329,21 +287,15 @@ func TestRouterOPTIONS(t *testing.T) {
 	r, _ = http.NewRequest(http.MethodOptions, "*", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNoContent) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "GET, OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, "GET, OPTIONS, POST", w.Header().Get("Allow"))
 
 	// path
 	r, _ = http.NewRequest(http.MethodOptions, "/path", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNoContent) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "GET, OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, "GET, OPTIONS, POST", w.Header().Get("Allow"))
 
 	// custom handler
 	var custom bool
@@ -357,25 +309,16 @@ func TestRouterOPTIONS(t *testing.T) {
 	r, _ = http.NewRequest(http.MethodOptions, "*", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNoContent) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "GET, OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
-	if custom {
-		t.Error("custom handler called on *")
-	}
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, "GET, OPTIONS, POST", w.Header().Get("Allow"))
+	assert.False(t, custom, "custom handler called on *")
 
 	// path
 	r, _ = http.NewRequest(http.MethodOptions, "/path", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusOK) {
-		t.Errorf("OPTIONS handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	}
-	if !custom {
-		t.Error("custom handler not called")
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.True(t, custom, "custom handler not called*")
 }
 
 func TestRouterNotAllowed(t *testing.T) {
@@ -390,11 +333,8 @@ func TestRouterNotAllowed(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, "/path", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusMethodNotAllowed) {
-		t.Errorf("NotAllowed handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+	assert.Equal(t, "OPTIONS, POST", w.Header().Get("Allow"))
 
 	// add another method
 	router.Delete("/path", handlerFunc)
@@ -404,11 +344,8 @@ func TestRouterNotAllowed(t *testing.T) {
 	r, _ = http.NewRequest(http.MethodGet, "/path", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusMethodNotAllowed) {
-		t.Errorf("NotAllowed handling failed: Code=%d, Header=%v", w.Code, w.Header())
-	} else if allow := w.Header().Get("Allow"); allow != "DELETE, OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+	assert.Equal(t, "DELETE, OPTIONS, POST", w.Header().Get("Allow"))
 
 	// test custom handler
 	w = httptest.NewRecorder()
@@ -418,15 +355,9 @@ func TestRouterNotAllowed(t *testing.T) {
 		w.Write([]byte(responseText))
 	})
 	router.ServeHTTP(w, r)
-	if got := w.Body.String(); !(got == responseText) {
-		t.Errorf("unexpected response got %q want %q", got, responseText)
-	}
-	if w.Code != http.StatusTeapot {
-		t.Errorf("unexpected response code %d want %d", w.Code, http.StatusTeapot)
-	}
-	if allow := w.Header().Get("Allow"); allow != "DELETE, OPTIONS, POST" {
-		t.Error("unexpected Allow header value: " + allow)
-	}
+	assert.Equal(t, responseText, w.Body.String())
+	assert.Equal(t, http.StatusTeapot, w.Code)
+	assert.Equal(t, "DELETE, OPTIONS, POST", w.Header().Get("Allow"))
 }
 
 func TestRouterNotFound(t *testing.T) {
@@ -458,8 +389,9 @@ func TestRouterNotFound(t *testing.T) {
 		r, _ := http.NewRequest(http.MethodGet, tr.route, nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, r)
-		if !(w.Code == tr.code && (w.Code == http.StatusNotFound || fmt.Sprint(w.Header().Get("Location")) == tr.location)) {
-			t.Errorf("NotFound handling route %s failed: Code=%d, Header=%v", tr.route, w.Code, w.Header().Get("Location"))
+		assert.Equal(t, tr.code, w.Code)
+		if w.Code != http.StatusNotFound {
+			assert.Equal(t, tr.location, fmt.Sprint(w.Header().Get("Location")))
 		}
 	}
 
@@ -472,18 +404,16 @@ func TestRouterNotFound(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, "/nope", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNotFound && notFound == true) {
-		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", w.Code, w.Header())
-	}
+	assert.True(t, notFound)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 
 	// Test other method than GET (want 308 instead of 301)
 	router.Patch("/path", handlerFunc)
 	r, _ = http.NewRequest(http.MethodPatch, "/path/", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusPermanentRedirect && fmt.Sprint(w.Header()) == "map[Location:[/path]]") {
-		t.Errorf("Custom NotFound handler failed: Code=%d, Header=%v", w.Code, w.Header())
-	}
+	assert.Equal(t, http.StatusPermanentRedirect, w.Code)
+	assert.Equal(t, "map[Location:[/path]]", fmt.Sprint(w.Header()))
 
 	// Test special case where no node for the prefix "/" exists
 	router = NewRouter()
@@ -491,9 +421,7 @@ func TestRouterNotFound(t *testing.T) {
 	r, _ = http.NewRequest(http.MethodGet, "/", nil)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	if !(w.Code == http.StatusNotFound) {
-		t.Errorf("NotFound handling route / failed: Code=%d", w.Code)
-	}
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestRouterLookup(t *testing.T) {
@@ -508,57 +436,34 @@ func TestRouterLookup(t *testing.T) {
 
 	// try empty router first
 	route, _, tsr := router.Lookup(http.MethodGet, "/nope")
-	if route != nil {
-		t.Fatalf("Got route for unregistered pattern: %v", route)
-	}
-	if tsr {
-		t.Error("Got wrong TSR recommendation!")
-	}
+	assert.Nil(t, route, "Got route for unregistered pattern: %v", route)
+	assert.False(t, tsr, "Got wrong TSR recommendation!")
 
 	// insert route and try again
 	router.Get("/user/:name", wantHandle)
 	route, params, _ := router.Lookup(http.MethodGet, "/user/gopher")
-	if route == nil {
-		t.Fatal("Got no route!")
-	} else {
-		route.handle(newContext(nil, nil))
-		if !routed {
-			t.Fatal("Routing failed!")
-		}
-	}
-	if !reflect.DeepEqual(params, wantParams) {
-		t.Fatalf("Wrong parameter values: want %v, got %v", wantParams, params)
-	}
+	assert.NotNil(t, route, "Got no route!")
+	route.handle(newContext(nil, nil))
+	assert.True(t, routed)
+	assert.Equal(t, wantParams, params)
+
 	routed = false
 
 	// route without param
 	router.Get("/user", wantHandle)
 	route, params, _ = router.Lookup(http.MethodGet, "/user")
-	if route == nil {
-		t.Fatal("Got no route!")
-	} else {
-		route.handle(newContext(nil, nil))
-		if !routed {
-			t.Fatal("Routing failed!")
-		}
-	}
+	assert.NotNil(t, route, "Got no route!")
+	route.handle(newContext(nil, nil))
+	assert.True(t, routed)
 	assert.Len(t, params, 0)
 
 	route, _, tsr = router.Lookup(http.MethodGet, "/user/gopher/")
-	if route != nil {
-		t.Fatalf("Got route for unregistered pattern: %v", route)
-	}
-	if !tsr {
-		t.Error("Got no TSR recommendation!")
-	}
+	assert.Nil(t, route, "Got route for unregistered pattern: %v", route)
+	assert.True(t, tsr, "Got no TSR recommendation!")
 
 	route, _, tsr = router.Lookup(http.MethodGet, "/nope")
-	if route != nil {
-		t.Fatalf("Got route for unregistered pattern: %v", route)
-	}
-	if tsr {
-		t.Error("Got wrong TSR recommendation!")
-	}
+	assert.Nilf(t, route, "Got route for unregistered pattern: %v", route)
+	assert.False(t, tsr, "Got wrong TSR recommendation!")
 }
 
 func TestRouterParamsFromContext(t *testing.T) {
@@ -566,10 +471,7 @@ func TestRouterParamsFromContext(t *testing.T) {
 
 	wantParams := Params{Param{"name", "gopher"}}
 	handlerFunc := func(ctx *Context) error {
-		if !reflect.DeepEqual(ctx.Params, wantParams) {
-			t.Fatalf("Wrong parameter values: want %v, got %v", wantParams, ctx.Params)
-		}
-
+		assert.Equal(t, wantParams, ctx.Params)
 		routed = true
 		return nil
 	}
@@ -586,25 +488,19 @@ func TestRouterParamsFromContext(t *testing.T) {
 	w := new(mockResponseWriter)
 	r, _ := http.NewRequest(http.MethodGet, "/user/gopher", nil)
 	router.ServeHTTP(w, r)
-	if !routed {
-		t.Fatal("Routing failed!")
-	}
+	assert.True(t, routed)
 
 	routed = false
 	r, _ = http.NewRequest(http.MethodGet, "/user", nil)
 	router.ServeHTTP(w, r)
-	if !routed {
-		t.Fatal("Routing failed!")
-	}
+	assert.True(t, routed)
 }
 
 func TestRouterMatchedRoutePath(t *testing.T) {
 	route1 := "/user/:name"
 	routed1 := false
 	handle1 := func(ctx *Context) error {
-		if ctx.Route.path != route1 {
-			t.Fatalf("Wrong matched route: want %s, got %s", route1, ctx.Route.path)
-		}
+		assert.Equal(t, route1, ctx.Route.path)
 		routed1 = true
 		return nil
 	}
@@ -612,9 +508,7 @@ func TestRouterMatchedRoutePath(t *testing.T) {
 	route2 := "/user/:name/details"
 	routed2 := false
 	handle2 := func(ctx *Context) error {
-		if ctx.Route.path != route2 {
-			t.Fatalf("Wrong matched route: want %s, got %s", route2, ctx.Route.path)
-		}
+		assert.Equal(t, route2, ctx.Route.path)
 		routed2 = true
 		return nil
 	}
@@ -622,9 +516,7 @@ func TestRouterMatchedRoutePath(t *testing.T) {
 	route3 := "/"
 	routed3 := false
 	handle3 := func(ctx *Context) error {
-		if ctx.Route.path != route3 {
-			t.Fatalf("Wrong matched route: want %s, got %s", route3, ctx.Route.path)
-		}
+		assert.Equal(t, route3, ctx.Route.path)
 		routed3 = true
 		return nil
 	}
@@ -637,23 +529,17 @@ func TestRouterMatchedRoutePath(t *testing.T) {
 	w := new(mockResponseWriter)
 	r, _ := http.NewRequest(http.MethodGet, "/user/gopher", nil)
 	router.ServeHTTP(w, r)
-	if !routed1 || routed2 || routed3 {
-		t.Fatal("Routing failed!")
-	}
+	assert.True(t, routed1)
 
 	w = new(mockResponseWriter)
 	r, _ = http.NewRequest(http.MethodGet, "/user/gopher/details", nil)
 	router.ServeHTTP(w, r)
-	if !routed2 || routed3 {
-		t.Fatal("Routing failed!")
-	}
+	assert.True(t, routed2)
 
 	w = new(mockResponseWriter)
 	r, _ = http.NewRequest(http.MethodGet, "/", nil)
 	router.ServeHTTP(w, r)
-	if !routed3 {
-		t.Fatal("Routing failed!")
-	}
+	assert.True(t, routed3)
 }
 
 type mockFileSystem struct {
@@ -672,17 +558,13 @@ func TestRouterServeFiles(t *testing.T) {
 	recv := catchPanic(func() {
 		router.ServeFiles("/noFilepath", mfs)
 	})
-	if recv == nil {
-		t.Fatal("registering path not ending with '*filepath' did not panic")
-	}
+	assert.NotNil(t, recv, "registering path not ending with '*filepath' did not panic")
 
 	router.ServeFiles("/*filepath", mfs)
 	w := new(mockResponseWriter)
 	r, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
 	router.ServeHTTP(w, r)
-	if !mfs.opened {
-		t.Error("serving file failed")
-	}
+	assert.True(t, mfs.opened, "serving file failed")
 }
 
 func TestRouterNamedRoute(t *testing.T) {
@@ -702,19 +584,13 @@ func TestRouterNamedRoute(t *testing.T) {
 			return nil
 		}, RouteName(test.name))
 		url, err := router.URL(test.name, test.args...)
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if url.String() != test.expectedURL {
-			t.Errorf("expected url: %q, got %q", test.expectedURL, url)
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, test.expectedURL, url.String())
 	}
 
 	// unregistered name.
 	_, err := router.URL("unregistered")
-	if err == nil {
-		t.Error("expected an error, got nil")
-	}
+	assert.NotNil(t, err)
 
 	// registers same route name.
 	recv := catchPanic(func() {
@@ -722,9 +598,7 @@ func TestRouterNamedRoute(t *testing.T) {
 			return nil
 		}, RouteName("home"))
 	})
-	if recv == nil {
-		t.Error("expected a panic, got nil")
-	}
+	assert.NotNil(t, recv)
 }
 
 func ExampleRouter_URL() {
@@ -803,12 +677,8 @@ func TestRouter_ErrorHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/error/"+msg, nil)
 		router.ServeHTTP(w, req)
-		if w.Body.String() != fmt.Sprintln(msg) {
-			t.Errorf("expected error body %q, got %q", fmt.Sprintln(msg), w.Body)
-		}
-		if w.Code != http.StatusInternalServerError {
-			t.Errorf("expected error status code %d, got %d", http.StatusInternalServerError, w.Code)
-		}
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Equal(t, fmt.Sprintln(msg), w.Body.String())
 	}
 }
 
@@ -827,12 +697,8 @@ func TestRouter_HandleError(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		router.HandleError(ctx, test.err)
-		if w.Body.String() != fmt.Sprintln(test.body) {
-			t.Errorf("expected error body %q, got %q", test.body, w.Body)
-		}
-		if w.Code != test.code {
-			t.Errorf("expected error status code %d, got %d", test.code, w.Code)
-		}
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, fmt.Sprintln(test.body), w.Body.String())
 	}
 }
 
@@ -842,18 +708,14 @@ func TestRouterUseRawPath(t *testing.T) {
 	handled := false
 	handle := func(ctx *Context) error {
 		expected := Params{Param{"name", "foo/bar"}}
-		if !reflect.DeepEqual(expected, ctx.Params) {
-			t.Errorf("expected params %v, got %v", expected, ctx.Params)
-		}
+		assert.Equal(t, expected, ctx.Params)
 		handled = true
 		return nil
 	}
 	router.Get("/hello/:name", handle)
 	req := httptest.NewRequest(http.MethodGet, "/hello/foo%2fbar", nil)
 	router.ServeHTTP(nil, req)
-	if !handled {
-		t.Error("raw path routing failed")
-	}
+	assert.True(t, handled, "raw path routing failed")
 }
 
 func TestRouterUseRawPathMixed(t *testing.T) {
@@ -862,18 +724,14 @@ func TestRouterUseRawPathMixed(t *testing.T) {
 	handled := false
 	handle := func(ctx *Context) error {
 		expected := Params{Param{"date", "2020/03/23"}, Param{"slug", "hello world"}}
-		if !reflect.DeepEqual(expected, ctx.Params) {
-			t.Errorf("expected params %v, got %v", expected, ctx.Params)
-		}
+		assert.Equal(t, expected, ctx.Params)
 		handled = true
 		return nil
 	}
 	router.Get("/post/:date/:slug", handle)
 	req := httptest.NewRequest(http.MethodGet, "/post/2020%2f03%2f23/hello%20world", nil)
 	router.ServeHTTP(nil, req)
-	if !handled {
-		t.Error("raw path routing failed")
-	}
+	assert.True(t, handled, "raw path routing failed")
 }
 
 func TestRouterUseRawPathCatchAll(t *testing.T) {
@@ -882,18 +740,14 @@ func TestRouterUseRawPathCatchAll(t *testing.T) {
 	handled := false
 	handle := func(ctx *Context) error {
 		expected := Params{Param{"slug", "/2020/03/23-hello world"}}
-		if !reflect.DeepEqual(expected, ctx.Params) {
-			t.Errorf("expected params %v, got %v", expected, ctx.Params)
-		}
+		assert.Equal(t, expected, ctx.Params)
 		handled = true
 		return nil
 	}
 	router.Get("/post/*slug", handle)
 	req := httptest.NewRequest(http.MethodGet, "/post/2020%2f03%2f23-hello%20world", nil)
 	router.ServeHTTP(nil, req)
-	if !handled {
-		t.Error("raw path routing failed")
-	}
+	assert.True(t, handled, "raw path routing failed")
 }
 
 func TestRouterUse(t *testing.T) {
@@ -906,15 +760,11 @@ func TestRouterUse(t *testing.T) {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "m1 m2 foobar" {
-		t.Errorf("expeceted body %s, got %s", "m1 m2 foobar", w.Body.String())
-	}
+	assert.Equal(t, "m1 m2 foobar", w.Body.String())
 
 	router.Use(terminatedMiddleware())
 	w = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "m1 m2 terminated" {
-		t.Errorf("expected body %q, got %q", "m1 m2 terminated", w.Body.String())
-	}
+	assert.Equal(t, "m1 m2 terminated", w.Body.String())
 }

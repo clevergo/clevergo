@@ -8,6 +8,8 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewError(t *testing.T) {
@@ -21,11 +23,7 @@ func TestNewError(t *testing.T) {
 
 	for _, test := range tests {
 		err := NewError(test.code, errors.New(test.msg))
-		if err.Code != test.code {
-			t.Errorf("expected error code %d, got %d", test.code, err.Code)
-		}
-		if err.Error() != test.msg {
-			t.Errorf("expected error message %s, got %s", test.msg, err.Error())
-		}
+		assert.Equal(t, test.code, err.Code)
+		assert.Equal(t, test.msg, err.Error())
 	}
 }
