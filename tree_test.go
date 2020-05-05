@@ -6,10 +6,11 @@ package clevergo
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func printChildren(n *node, prefix string) {
@@ -39,14 +40,10 @@ type testRequests []struct {
 	ps         Params
 }
 
-func getParams() *Params {
-	ps := make(Params, 0, 20)
-	return &ps
-}
-
 func checkRequests(t *testing.T, tree *node, requests testRequests) {
 	for _, request := range requests {
-		handler, psp, _ := tree.getValue(request.path, getParams, false)
+		ps := make(Params, 0, 20)
+		handler, _ := tree.getValue(request.path, &ps, false)
 
 		if handler == nil {
 			if !request.nilHandler {
@@ -61,13 +58,10 @@ func checkRequests(t *testing.T, tree *node, requests testRequests) {
 			}
 		}
 
-		var ps Params
-		if psp != nil {
-			ps = *psp
-		}
-
-		if !reflect.DeepEqual(ps, request.ps) {
-			t.Errorf("Params mismatch for route '%s'", request.path)
+		if request.ps == nil {
+			assert.Len(t, ps, 0)
+		} else {
+			assert.Equal(t, request.ps, ps)
 		}
 	}
 }
@@ -434,7 +428,7 @@ func TestTreeTrailingSlashRedirect(t *testing.T) {
 		"/doc/",
 	}
 	for _, route := range tsrRoutes {
-		handler, _, tsr := tree.getValue(route, nil, false)
+		handler, tsr := tree.getValue(route, nil, false)
 		if handler != nil {
 			t.Fatalf("non-nil handler for TSR route '%s", route)
 		} else if !tsr {
@@ -451,7 +445,7 @@ func TestTreeTrailingSlashRedirect(t *testing.T) {
 		"/api/world/abc",
 	}
 	for _, route := range noTsrRoutes {
-		handler, _, tsr := tree.getValue(route, nil, false)
+		handler, tsr := tree.getValue(route, nil, false)
 		if handler != nil {
 			t.Fatalf("non-nil handler for No-TSR route '%s", route)
 		} else if tsr {
@@ -470,7 +464,7 @@ func TestTreeRootTrailingSlashRedirect(t *testing.T) {
 		t.Fatalf("panic inserting test route: %v", recv)
 	}
 
-	handler, _, tsr := tree.getValue("/", nil, false)
+	handler, tsr := tree.getValue("/", nil, false)
 	if handler != nil {
 		t.Fatalf("non-nil handler")
 	} else if tsr {

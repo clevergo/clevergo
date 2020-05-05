@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 )
 
 // errors
@@ -71,8 +70,7 @@ type Router struct {
 	// Named routes.
 	routes map[string]*Route
 
-	paramsPool sync.Pool
-	maxParams  uint16
+	maxParams uint16
 
 	// Enables automatic redirection if the current route can't be matched but a
 	// handler for the path with (without) the trailing slash exists.
@@ -150,16 +148,6 @@ func NewRouter() *Router {
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
 	}
-}
-
-func (r *Router) getParams() *Params {
-	ps := r.paramsPool.Get().(*Params)
-	*ps = (*ps)[0:0] // reset slice
-	return ps
-}
-
-func (r *Router) putParams(ps *Params) {
-	r.paramsPool.Put(ps)
 }
 
 // URL creates an url with the given route name and arguments.
@@ -271,14 +259,6 @@ func (r *Router) Handle(method, path string, handle Handle, opts ...RouteOption)
 	if pc := countParams(path); pc > r.maxParams {
 		r.maxParams = pc
 	}
-
-	// Lazy-init paramsPool alloc func
-	if r.paramsPool.New == nil && r.maxParams > 0 {
-		r.paramsPool.New = func() interface{} {
-			ps := make(Params, 0, r.maxParams)
-			return &ps
-		}
-	}
 }
 
 // Handler implements IRouter.Handler.
@@ -321,15 +301,16 @@ func (r *Router) ServeFiles(path string, root http.FileSystem, opts ...RouteOpti
 // values. Otherwise the third return value indicates whether a redirection to
 // the same path with an extra / without the trailing slash should be performed.
 func (r *Router) Lookup(method, path string) (*Route, Params, bool) {
+	ps := make(Params, 0, r.maxParams)
 	if root := r.trees[method]; root != nil {
-		route, ps, tsr := root.getValue(path, r.getParams, r.UseRawPath)
+		route, tsr := root.getValue(path, &ps, r.UseRawPath)
 		if route == nil {
 			return nil, nil, tsr
 		}
 		if ps == nil {
 			return route, nil, tsr
 		}
-		return route, *ps, tsr
+		return route, ps, tsr
 	}
 	return nil, nil, false
 }
@@ -357,7 +338,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 				continue
 			}
 
-			handle, _, _ := r.trees[method].getValue(path, nil, r.UseRawPath)
+			handle, _ := r.trees[method].getValue(path, nil, r.UseRawPath)
 			if handle != nil {
 				// Add request method to list of allowed methods
 				allowed = append(allowed, method)
@@ -386,10 +367,7 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	ctx := getContext()
-	ctx.router = r
-	ctx.Request = req
-	ctx.Response = w
+	ctx := getContext(r, w, req)
 	defer putContext(ctx)
 
 	var err error
@@ -410,13 +388,8 @@ func (r *Router) handleRequest(ctx *Context) (err error) {
 	}
 
 	if root := r.trees[ctx.Request.Method]; root != nil {
-		if route, ps, tsr := root.getValue(path, r.getParams, r.UseRawPath); route != nil {
+		if route, tsr := root.getValue(path, &ctx.Params, r.UseRawPath); route != nil {
 			ctx.Route = route
-			if ps != nil {
-				r.putParams(ps)
-				ctx.Params = *ps
-			}
-
 			err = route.handle(ctx)
 			return
 		} else if ctx.Request.Method != http.MethodConnect && path != "/" {
