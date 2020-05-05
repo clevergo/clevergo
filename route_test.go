@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRouteGroupURL(t *testing.T) {
@@ -50,18 +52,11 @@ func TestRouteGroupURL(t *testing.T) {
 	for _, test := range tests {
 		url, err := router.URL(test.name, test.args...)
 		if test.shouldError {
-			if err == nil {
-				t.Error("expected an error, got nil")
-			}
+			assert.NotNil(t, err)
 			continue
 		}
-
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-		if url.String() != test.exepctedURL {
-			t.Errorf("expected url %q, got %q", test.exepctedURL, url)
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, test.exepctedURL, url.String())
 	}
 
 }
@@ -110,57 +105,39 @@ func TestRouteGroupAPI(t *testing.T) {
 
 	r, _ := http.NewRequest(http.MethodGet, "/api/GET", nil)
 	router.ServeHTTP(w, r)
-	if !get {
-		t.Error("routing GET failed")
-	}
+	assert.True(t, get, "routing GET failed")
 
 	r, _ = http.NewRequest(http.MethodHead, "/api/GET", nil)
 	router.ServeHTTP(w, r)
-	if !head {
-		t.Error("routing HEAD failed")
-	}
+	assert.True(t, head, "routing HEAD failed")
 
 	r, _ = http.NewRequest(http.MethodOptions, "/api/GET", nil)
 	router.ServeHTTP(w, r)
-	if !options {
-		t.Error("routing OPTIONS failed")
-	}
+	assert.True(t, options, "routing GEOPTIONST failed")
 
 	r, _ = http.NewRequest(http.MethodPost, "/api/POST", nil)
 	router.ServeHTTP(w, r)
-	if !post {
-		t.Error("routing POST failed")
-	}
+	assert.True(t, post, "routing POST failed")
 
 	r, _ = http.NewRequest(http.MethodPut, "/api/PUT", nil)
 	router.ServeHTTP(w, r)
-	if !put {
-		t.Error("routing PUT failed")
-	}
+	assert.True(t, put, "routing PUT failed")
 
 	r, _ = http.NewRequest(http.MethodPatch, "/api/PATCH", nil)
 	router.ServeHTTP(w, r)
-	if !patch {
-		t.Error("routing PATCH failed")
-	}
+	assert.True(t, patch, "routing PATCH failed")
 
 	r, _ = http.NewRequest(http.MethodDelete, "/api/DELETE", nil)
 	router.ServeHTTP(w, r)
-	if !delete {
-		t.Error("routing DELETE failed")
-	}
+	assert.True(t, delete, "routing DELETE failed")
 
 	r, _ = http.NewRequest(http.MethodGet, "/api/Handler", nil)
 	router.ServeHTTP(w, r)
-	if !handler {
-		t.Error("routing Handler failed")
-	}
+	assert.True(t, handler, "routing Handler failed")
 
 	r, _ = http.NewRequest(http.MethodGet, "/api/HandlerFunc", nil)
 	router.ServeHTTP(w, r)
-	if !handlerFunc {
-		t.Error("routing HandlerFunc failed")
-	}
+	assert.True(t, handlerFunc, "routing HandlerFunc failed")
 }
 
 func TestRouteMiddleware(t *testing.T) {
@@ -175,16 +152,12 @@ func TestRouteMiddleware(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "hello" {
-		t.Errorf("expected body %q, got %q", "hello", w.Body)
-	}
+	assert.Equal(t, "hello", w.Body.String())
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest(http.MethodGet, "/middleware", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "m1 m2 hello" {
-		t.Errorf("expected body %q, got %q", "m1 m2 hello", w.Body)
-	}
+	assert.Equal(t, "m1 m2 hello", w.Body.String())
 }
 
 func TestNestedRouteGroup(t *testing.T) {
@@ -201,34 +174,22 @@ func TestNestedRouteGroup(t *testing.T) {
 	v2.Handle(http.MethodGet, "/", handler, RouteName("home"))
 
 	url, err := router.URL("/api/v1/home")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if url.String() != "/api/v1/" {
-		t.Errorf("expected url %q got %q", "/api/v1/", url)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, "/api/v1/", url.String())
 
 	url, err = router.URL("/api/v2/home")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if url.String() != "/api/v2/" {
-		t.Errorf("expected url %q got %q", "/api/v2/", url)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, "/api/v2/", url.String())
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "m1 hello" {
-		t.Errorf("expected body %q, got %q", "m1 hello", w.Body)
-	}
+	assert.Equal(t, "m1 hello", w.Body.String())
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v2/", nil)
 	router.ServeHTTP(w, req)
-	if w.Body.String() != "m2 hello" {
-		t.Errorf("expected body %q, got %q", "m2 hello", w.Body)
-	}
+	assert.Equal(t, "m2 hello", w.Body.String())
 }
 
 func ExampleRoute() {

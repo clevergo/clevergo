@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
 
@@ -31,25 +30,19 @@ func TestContext_SetContentType(t *testing.T) {
 	for _, test := range tests {
 		ctx := newContext(httptest.NewRecorder(), nil)
 		ctx.SetContentType(test)
-		if ctx.Response.Header().Get("Content-Type") != test {
-			t.Errorf("expected content type %q, got %q", test, ctx.Response.Header().Get("Content-Type"))
-		}
+		assert.Equal(t, test, ctx.Response.Header().Get("Content-Type"))
 	}
 }
 
 func TestContext_SetContentTypeHTML(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
 	ctx.SetContentTypeHTML()
-	if ctx.Response.Header().Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Errorf("expected content type %q, got %q", "text/html; charset=utf-8", ctx.Response.Header().Get("Content-Type"))
-	}
+	assert.Equal(t, "text/html; charset=utf-8", ctx.Response.Header().Get("Content-Type"))
 }
 func TestContext_SetContentTypeText(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
 	ctx.SetContentTypeText()
-	if ctx.Response.Header().Get("Content-Type") != "text/plain; charset=utf-8" {
-		t.Errorf("expected content type %q, got %q", "text/plain; charset=utf-8", ctx.Response.Header().Get("Content-Type"))
-	}
+	assert.Equal(t, "text/plain; charset=utf-8", ctx.Response.Header().Get("Content-Type"))
 }
 func TestContext_SetContentTypeJSON(t *testing.T) {
 	ctx := newContext(httptest.NewRecorder(), nil)
@@ -72,9 +65,7 @@ func TestContext_Write(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		ctx.Write(test)
-		if !bytes.Equal(w.Body.Bytes(), test) {
-			t.Errorf("expected body %q, got %q", test, w.Body.Bytes())
-		}
+		assert.Equal(t, string(test), w.Body.String())
 	}
 }
 func TestContext_WriteString(t *testing.T) {
@@ -87,9 +78,7 @@ func TestContext_WriteString(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		ctx.WriteString(test)
-		if w.Body.String() != test {
-			t.Errorf("expected body %q, got %q", test, w.Body.String())
-		}
+		assert.Equal(t, test, w.Body.String())
 	}
 }
 
@@ -97,18 +86,14 @@ func TestContext_NotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := newContext(w, nil)
 	ctx.NotFound()
-	if w.Code != http.StatusNotFound {
-		t.Errorf("expected status code %d, got %d", http.StatusNotFound, w.Code)
-	}
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestContext_Redirect(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
 	ctx.Redirect("/redirect", http.StatusPermanentRedirect)
-	if w.Code != http.StatusPermanentRedirect {
-		t.Errorf("expected status code %d, got %d", http.StatusPermanentRedirect, w.Code)
-	}
+	assert.Equal(t, http.StatusPermanentRedirect, w.Code)
 }
 func TestContext_Error(t *testing.T) {
 	tests := []struct {
@@ -123,12 +108,8 @@ func TestContext_Error(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		ctx.Error(test.msg, test.code)
-		if w.Body.String() != fmt.Sprintln(test.msg) {
-			t.Errorf("expected body %q, got %q", fmt.Sprintln(test.msg), w.Body.String())
-		}
-		if w.Code != test.code {
-			t.Errorf("expected status code %d, got %d", test.code, w.Code)
-		}
+		assert.Equal(t, fmt.Sprintln(test.msg), w.Body.String())
+		assert.Equal(t, test.code, w.Code)
 	}
 }
 
@@ -148,9 +129,7 @@ func TestContext_WithValue(t *testing.T) {
 	}
 
 	for key, val := range values {
-		if !reflect.DeepEqual(val, ctx.Value(key)) {
-			t.Errorf("expected the value of %v: %v, got %v", key, val, ctx.Value(key))
-		}
+		assert.Equal(t, val, ctx.Value(key))
 	}
 }
 
@@ -183,9 +162,7 @@ func TestIsMethod(t *testing.T) {
 	}
 	for _, test := range tests {
 		ctx := newContext(nil, httptest.NewRequest(test.method, "/", nil))
-		if !test.f(ctx, test.method) {
-			t.Errorf("failed to determine request method")
-		}
+		assert.True(t, test.f(ctx, test.method), "failed to determine request method")
 	}
 }
 
@@ -211,12 +188,8 @@ func TestContext_SetCookie(t *testing.T) {
 	cookie := &http.Cookie{Name: "foo", Value: "bar"}
 	ctx.SetCookie(cookie)
 	actual := w.Result().Cookies()[0]
-	if cookie.Name != actual.Name {
-		t.Errorf("expected cookie name %s, got %s", cookie.Name, actual.Name)
-	}
-	if cookie.Value != actual.Value {
-		t.Errorf("expected cookie value %s, got %s", cookie.Value, actual.Value)
-	}
+	assert.Equal(t, cookie.Name, actual.Name)
+	assert.Equal(t, cookie.Value, actual.Value)
 }
 
 func TestContext_WriteHeader(t *testing.T) {
@@ -225,9 +198,7 @@ func TestContext_WriteHeader(t *testing.T) {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
 		ctx.WriteHeader(code)
-		if w.Code != code {
-			t.Errorf("expected status code %d, got %d", code, w.Code)
-		}
+		assert.Equal(t, code, w.Code)
 	}
 }
 
@@ -244,9 +215,7 @@ func TestContext_IsAJAX(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
 		req.Header.Set("X-Requested-With", test.value)
 		ctx := newContext(nil, req)
-		if ctx.IsAJAX() != test.expected {
-			t.Errorf("expected IsAJAX %t, got %t", test.expected, ctx.IsAJAX())
-		}
+		assert.Equal(t, test.expected, ctx.IsAJAX())
 	}
 }
 
@@ -255,9 +224,7 @@ func TestContext_GetHeader(t *testing.T) {
 	req.Header.Set("foo", "bar")
 	ctx := newContext(nil, req)
 	for _, name := range []string{"foo", "fizz"} {
-		if req.Header.Get(name) != ctx.GetHeader(name) {
-			t.Errorf("expected header %s: %q, got %q", name, req.Header.Get(name), ctx.GetHeader(name))
-		}
+		assert.Equal(t, req.Header.Get(name), ctx.GetHeader(name))
 	}
 }
 

@@ -7,6 +7,8 @@ package clevergo
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type cleanPathTest struct {
@@ -67,12 +69,8 @@ var cleanTests = []cleanPathTest{
 
 func TestPathClean(t *testing.T) {
 	for _, test := range cleanTests {
-		if s := CleanPath(test.path); s != test.result {
-			t.Errorf("CleanPath(%q) = %q, want %q", test.path, s, test.result)
-		}
-		if s := CleanPath(test.result); s != test.result {
-			t.Errorf("CleanPath(%q) = %q, want %q", test.result, s, test.result)
-		}
+		assert.Equal(t, test.result, CleanPath(test.path))
+		assert.Equal(t, test.result, CleanPath(test.result))
 	}
 }
 
@@ -83,9 +81,7 @@ func TestPathCleanMallocs(t *testing.T) {
 
 	for _, test := range cleanTests {
 		allocs := testing.AllocsPerRun(100, func() { CleanPath(test.result) })
-		if allocs > 0 {
-			t.Errorf("CleanPath(%q): %v allocs, want zero", test.result, allocs)
-		}
+		assert.Equal(t, float64(0), allocs)
 	}
 }
 
@@ -125,12 +121,8 @@ func TestPathCleanLong(t *testing.T) {
 	cleanTests := genLongPaths()
 
 	for _, test := range cleanTests {
-		if s := CleanPath(test.path); s != test.result {
-			t.Errorf("CleanPath(%q) = %q, want %q", test.path, s, test.result)
-		}
-		if s := CleanPath(test.result); s != test.result {
-			t.Errorf("CleanPath(%q) = %q, want %q", test.result, s, test.result)
-		}
+		assert.Equal(t, test.result, CleanPath(test.path))
+		assert.Equal(t, test.result, CleanPath(test.result))
 	}
 }
 

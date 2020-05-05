@@ -61,13 +61,12 @@ func TestParams_Int(t *testing.T) {
 		"param3": 1,
 	}
 	for name, value := range tests {
-		if val, err := ps.Int(name); err != nil || val != value {
-			t.Errorf("Wrong value for %s: Got %d; Want %d", name, val, value)
-		}
+		val, err := ps.Int(name)
+		assert.Nil(t, err)
+		assert.Equal(t, value, val)
 	}
-	if val, err := ps.Int("noKey"); err == nil {
-		t.Errorf("Expected an error for not found key; got %d", val)
-	}
+	_, err := ps.Int("noKey")
+	assert.NotNil(t, err)
 }
 
 func TestParams_Int64(t *testing.T) {
@@ -82,13 +81,12 @@ func TestParams_Int64(t *testing.T) {
 		"param3": 1,
 	}
 	for name, value := range tests {
-		if val, err := ps.Int64(name); err != nil || val != value {
-			t.Errorf("Wrong value for %s: Got %d; Want %d", name, val, value)
-		}
+		val, err := ps.Int64(name)
+		assert.Nil(t, err)
+		assert.Equal(t, value, val)
 	}
-	if val, err := ps.Int64("noKey"); err == nil {
-		t.Errorf("Expected an error for not found key; got %d", val)
-	}
+	_, err := ps.Int64("noKey")
+	assert.NotNil(t, err)
 }
 
 func TestParams_Uint64(t *testing.T) {
@@ -101,13 +99,12 @@ func TestParams_Uint64(t *testing.T) {
 		"param2": 1,
 	}
 	for name, value := range tests {
-		if val, err := ps.Uint64(name); err != nil || val != value {
-			t.Errorf("Wrong value for %s: Got %d; Want %d", name, val, value)
-		}
+		val, err := ps.Uint64(name)
+		assert.Nil(t, err)
+		assert.Equal(t, value, val)
 	}
-	if val, err := ps.Uint64("noKey"); err == nil {
-		t.Errorf("Expected an error for not found key; got %d", val)
-	}
+	_, err := ps.Uint64("noKey")
+	assert.NotNil(t, err)
 }
 
 func TestParams_Float(t *testing.T) {
@@ -122,13 +119,12 @@ func TestParams_Float(t *testing.T) {
 		"param3": 1.9,
 	}
 	for name, value := range tests {
-		if val, err := ps.Float64(name); err != nil || val != value {
-			t.Errorf("Wrong value for %s: Got %f; Want %f", name, val, value)
-		}
+		val, err := ps.Float64(name)
+		assert.Nil(t, err)
+		assert.Equal(t, value, val)
 	}
-	if val, err := ps.Float64("noKey"); err == nil {
-		t.Errorf("Expected an error for not found key; got %f", val)
-	}
+	_, err := ps.Float64("noKey")
+	assert.NotNil(t, err)
 }
 
 func TestParams_Bool(t *testing.T) {
@@ -161,11 +157,10 @@ func TestParams_Bool(t *testing.T) {
 		"param12": false,
 	}
 	for name, value := range tests {
-		if val, err := ps.Bool(name); err != nil || val != value {
-			t.Errorf("Wrong value for %s: Got %t; Want %t", name, val, value)
-		}
+		val, err := ps.Bool(name)
+		assert.Nil(t, err)
+		assert.Equal(t, value, val)
 	}
-	if val, err := ps.Bool("noKey"); err == nil {
-		t.Errorf("Expected an error for not found key; got %t", val)
-	}
+	_, err := ps.Bool("noKey")
+	assert.NotNil(t, err)
 }
