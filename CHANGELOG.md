@@ -3,6 +3,9 @@ Change Log
 
 under development
 -----------------
+
+v1.12.1 May 5, 2020
+-------------------
 - Remove `Router.paramsPool`.
 
 v1.12.0 May 4, 2020
