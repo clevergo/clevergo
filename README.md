@@ -1,7 +1,7 @@
 # CleverGo
 [![Build Status](https://travis-ci.org/clevergo/clevergo.svg?branch=master)](https://travis-ci.org/clevergo/clevergo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://pkg.go.dev/github.com/clevergo/clevergo)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
 [![Sourcegraph](https://sourcegraph.com/github.com/clevergo/clevergo/-/badge.svg)](https://sourcegraph.com/github.com/clevergo/clevergo?badge)
 [![English](https://img.shields.io/badge/doc-English-blue)](https://clevergo.tech/docs/)
