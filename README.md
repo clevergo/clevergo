@@ -4,14 +4,13 @@
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue)](https://godoc.org/github.com/clevergo/clevergo)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
 [![Sourcegraph](https://sourcegraph.com/github.com/clevergo/clevergo/-/badge.svg)](https://sourcegraph.com/github.com/clevergo/clevergo?badge)
+[![English](https://img.shields.io/badge/doc-english-blue)](https://clevergo.tech/docs/)
+[![简体中文](https://img.shields.io/badge/doc-简体中文-blue)](https://clevergo.tech/zh/docs/)
+[![繁體中文](https://img.shields.io/badge/doc-繁體中文-blue)](https://clevergo.tech/zh-hant/docs/)
 
 CleverGo is a lightweight, feature rich and trie based high performance HTTP request router.
 
-## Documentation
-
-- [English](https://clevergo.tech/docs/)
-- [简体中文](https://clevergo.tech/zh/docs/)
-- [繁體中文](https://clevergo.tech/zh-hant/docs/)
+![Benchmark](https://clevergo.tech/img/benchmark.png)
 
 ## Features
 
@@ -22,8 +21,6 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 - **Friendly to APIs:** it is easy to design RESTful APIs and versioning your APIs by route group.
 - **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
 - **[Error Handler](https://clevergo.tech/docs/error-handling):** record error and format error response.
-
-[![Benchmark](https://clevergo.tech/img/benchmark.png)](https://clevergo.tech/docs/benchmark)
 
 ## Contribute
 
