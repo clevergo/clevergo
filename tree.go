@@ -366,7 +366,7 @@ walk: // Outer loop for walking the tree
 					if ps != nil {
 						// Expand slice within preallocated capacity
 						i := len(*ps)
-						(*ps) = (*ps)[:i+1]
+						*ps = (*ps)[:i+1]
 						param := Param{
 							Key: n.path[1:],
 						}
@@ -407,7 +407,7 @@ walk: // Outer loop for walking the tree
 					if ps != nil {
 						// Expand slice within preallocated capacity
 						i := len(*ps)
-						(*ps) = (*ps)[:i+1]
+						*ps = (*ps)[:i+1]
 						param := Param{
 							Key: n.path[2:],
 						}
