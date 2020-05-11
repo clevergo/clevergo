@@ -92,7 +92,7 @@ func TestContext_NotFound(t *testing.T) {
 func TestContext_Redirect(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
-	assert.Nil(t, ctx.Redirect("/redirect", http.StatusPermanentRedirect))
+	assert.Nil(t, ctx.Redirect(http.StatusPermanentRedirect, "/redirect"))
 	assert.Equal(t, http.StatusPermanentRedirect, w.Code)
 }
 func TestContext_Error(t *testing.T) {
@@ -107,7 +107,7 @@ func TestContext_Error(t *testing.T) {
 	for _, test := range tests {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
-		assert.Nil(t, ctx.Error(test.msg, test.code))
+		assert.Nil(t, ctx.Error(test.code, test.msg))
 		assert.Equal(t, fmt.Sprintln(test.msg), w.Body.String())
 		assert.Equal(t, test.code, w.Code)
 	}

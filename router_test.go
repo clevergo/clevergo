@@ -662,7 +662,7 @@ type testErrorHandler struct {
 }
 
 func (eh testErrorHandler) Handle(ctx *Context, err error) {
-	ctx.Error(err.Error(), eh.status)
+	ctx.Error(eh.status, err.Error())
 }
 
 func TestRouter_ErrorHandler(t *testing.T) {

@@ -88,7 +88,7 @@ func (ctx *Context) reset() {
 }
 
 // Error is a shortcut of http.Error.
-func (ctx *Context) Error(msg string, code int) error {
+func (ctx *Context) Error(code int, msg string) error {
 	http.Error(ctx.Response, msg, code)
 	return nil
 }
@@ -100,7 +100,7 @@ func (ctx *Context) NotFound() error {
 }
 
 // Redirect is a shortcut of http.Redirect.
-func (ctx *Context) Redirect(url string, code int) error {
+func (ctx *Context) Redirect(code int, url string) error {
 	http.Redirect(ctx.Response, ctx.Request, url, code)
 	return nil
 }
