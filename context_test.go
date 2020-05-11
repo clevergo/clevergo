@@ -85,14 +85,14 @@ func TestContext_WriteString(t *testing.T) {
 func TestContext_NotFound(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := newContext(w, nil)
-	ctx.NotFound()
+	assert.Nil(t, ctx.NotFound())
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestContext_Redirect(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
-	ctx.Redirect("/redirect", http.StatusPermanentRedirect)
+	assert.Nil(t, ctx.Redirect("/redirect", http.StatusPermanentRedirect))
 	assert.Equal(t, http.StatusPermanentRedirect, w.Code)
 }
 func TestContext_Error(t *testing.T) {
@@ -107,7 +107,7 @@ func TestContext_Error(t *testing.T) {
 	for _, test := range tests {
 		w := httptest.NewRecorder()
 		ctx := newContext(w, nil)
-		ctx.Error(test.msg, test.code)
+		assert.Nil(t, ctx.Error(test.msg, test.code))
 		assert.Equal(t, fmt.Sprintln(test.msg), w.Body.String())
 		assert.Equal(t, test.code, w.Code)
 	}
@@ -641,7 +641,7 @@ func TestContext_ServeFile(t *testing.T) {
 	w1 := httptest.NewRecorder()
 	w2 := httptest.NewRecorder()
 	ctx := newContext(w2, httptest.NewRequest(http.MethodGet, "/", nil))
-	ctx.ServeFile("foo")
+	assert.Nil(t, ctx.ServeFile("foo"))
 	http.ServeFile(w1, httptest.NewRequest(http.MethodGet, "/", nil), "foo")
 	assert.Equal(t, w1, w2)
 }
@@ -652,7 +652,7 @@ func TestContext_ServeContent(t *testing.T) {
 	ctx := newContext(w2, httptest.NewRequest(http.MethodGet, "/", nil))
 	now := time.Now()
 	buf := bytes.NewReader([]byte("bar"))
-	ctx.ServeContent("foo", now, buf)
+	assert.Nil(t, ctx.ServeContent("foo", now, buf))
 	http.ServeContent(w1, httptest.NewRequest(http.MethodGet, "/", nil), "foo", now, buf)
 	assert.Equal(t, w1, w2)
 }
@@ -678,7 +678,7 @@ func TestContext_SendFile(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx := newContext(w, nil)
 	buf := bytes.NewReader([]byte("bar"))
-	ctx.SendFile("foo.txt", buf)
+	assert.Nil(t, ctx.SendFile("foo.txt", buf))
 	assert.Equal(t, "bar", w.Body.String())
 	assert.Equal(t, w.Header().Get("Content-Disposition"), `attachment; filename="foo.txt"`)
 }

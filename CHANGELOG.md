@@ -3,6 +3,7 @@ Change Log
 
 under development
 -----------------
+- `Context.Error`, `Context.NotFound`, `Context.Redirect`, `Context.ServeFile`, `Context.ServeContent` return a nil error.
 
 v1.12.1 May 5, 2020
 -------------------

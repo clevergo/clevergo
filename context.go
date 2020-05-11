@@ -88,28 +88,33 @@ func (ctx *Context) reset() {
 }
 
 // Error is a shortcut of http.Error.
-func (ctx *Context) Error(msg string, code int) {
+func (ctx *Context) Error(msg string, code int) error {
 	http.Error(ctx.Response, msg, code)
+	return nil
 }
 
 // NotFound is a shortcut of http.NotFound.
-func (ctx *Context) NotFound() {
+func (ctx *Context) NotFound() error {
 	http.NotFound(ctx.Response, ctx.Request)
+	return nil
 }
 
 // Redirect is a shortcut of http.Redirect.
-func (ctx *Context) Redirect(url string, code int) {
+func (ctx *Context) Redirect(url string, code int) error {
 	http.Redirect(ctx.Response, ctx.Request, url, code)
+	return nil
 }
 
 // ServeFile is a shortcut of http.ServeFile.
-func (ctx *Context) ServeFile(name string) {
+func (ctx *Context) ServeFile(name string) error {
 	http.ServeFile(ctx.Response, ctx.Request, name)
+	return nil
 }
 
 // ServeContent is a shortcut of http.ServeContent.
-func (ctx *Context) ServeContent(name string, modtime time.Time, content io.ReadSeeker) {
+func (ctx *Context) ServeContent(name string, modtime time.Time, content io.ReadSeeker) error {
 	http.ServeContent(ctx.Response, ctx.Request, name, modtime, content)
+	return nil
 }
 
 // SetContentType sets the content type header.
