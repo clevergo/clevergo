@@ -400,7 +400,7 @@ func (r *Router) handleRequest(ctx *Context) (err error) {
 				} else {
 					path = path + "/"
 				}
-				ctx.Redirect(path, code)
+				ctx.Redirect(code, path)
 				return
 			}
 
@@ -411,7 +411,7 @@ func (r *Router) handleRequest(ctx *Context) (err error) {
 					r.RedirectTrailingSlash,
 				)
 				if found {
-					ctx.Redirect(fixedPath, code)
+					ctx.Redirect(code, fixedPath)
 					return
 				}
 			}
@@ -458,8 +458,8 @@ func (r *Router) HandleError(ctx *Context, err error) {
 
 	switch e := err.(type) {
 	case StatusError:
-		ctx.Error(err.Error(), e.Status())
+		ctx.Error(e.Status(), err.Error())
 	default:
-		ctx.Error(err.Error(), http.StatusInternalServerError)
+		ctx.Error(http.StatusInternalServerError, err.Error())
 	}
 }
