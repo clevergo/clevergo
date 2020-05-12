@@ -3,6 +3,9 @@ Change Log
 
 under development
 -----------------
+
+v1.12.2 May 13, 2020
+--------------------
 - `Context.Error`, `Context.NotFound`, `Context.Redirect`, `Context.ServeFile`, `Context.ServeContent` return a nil error.
 - `Context.Error(msg string, code int)` was changed as `Context.Error(code int, msg string)`.
 - `Context.Redirect(url string, code int)` was changed as `Context.Redirect(code int, url string)`.
