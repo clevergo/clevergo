@@ -358,6 +358,11 @@ func (ctx *Context) Blob(code int, contentType string, bs []byte) (err error) {
 	return
 }
 
+// Context returns the context of request.
+func (ctx *Context) Context() context.Context {
+	return ctx.Request.Context()
+}
+
 // FormValue is a shortcut of http.Request.FormValue.
 func (ctx *Context) FormValue(key string) string {
 	return ctx.Request.FormValue(key)
