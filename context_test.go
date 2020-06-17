@@ -6,6 +6,7 @@ package clevergo
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -532,6 +533,24 @@ func TestContext_HTMLBlob(t *testing.T) {
 		assert.Equal(t, test.code, w.Code)
 		assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 		assert.Equal(t, test.bs, w.Body.Bytes())
+	}
+}
+
+func TestContext_Context(t *testing.T) {
+	cases := []struct {
+		key   int
+		value string
+	}{
+		{0, "0"},
+		{1, "1"},
+	}
+	for _, test := range cases {
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req = req.WithContext(context.WithValue(req.Context(), test.key, test.value))
+		c := newContext(nil, req)
+		ctx := c.Context()
+		assert.Equal(t, req.Context(), ctx)
+		assert.Equal(t, test.value, ctx.Value(test.key))
 	}
 }
 
