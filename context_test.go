@@ -604,14 +604,14 @@ func (r *fakeRenderer) Render(w io.Writer, name string, data interface{}, ctx *C
 
 func TestContext_Render(t *testing.T) {
 	w := httptest.NewRecorder()
-	router := NewRouter()
+	app := New()
 	ctx := newContext(w, nil)
-	ctx.router = router
+	ctx.app = app
 
 	err := ctx.Render(http.StatusOK, "foo", nil)
 	assert.Equal(t, ErrRendererNotRegister, err)
 
-	router.Renderer = new(fakeRenderer)
+	app.Renderer = new(fakeRenderer)
 
 	err = ctx.Render(http.StatusOK, "", nil)
 	assert.EqualError(t, err, "empty template name")
@@ -623,17 +623,17 @@ func TestContext_Render(t *testing.T) {
 }
 
 func TestContext_RouteURL(t *testing.T) {
-	router := NewRouter()
-	router.Get("/", echoHandler("foo"), RouteName("foo"))
+	app := New()
+	app.Get("/", echoHandler("foo"), RouteName("foo"))
 	ctx := newContext(nil, nil)
-	ctx.router = router
+	ctx.app = app
 
 	actual, _ := ctx.RouteURL("foo")
-	expected, _ := router.URL("foo")
+	expected, _ := app.RouteURL("foo")
 	assert.Equal(t, expected, actual)
 
 	_, actualErr := ctx.RouteURL("bar")
-	_, expectedErr := router.URL("bar")
+	_, expectedErr := app.RouteURL("bar")
 	assert.Equal(t, expectedErr, actualErr)
 }
 
@@ -697,15 +697,15 @@ type fakeForm struct {
 
 func TestContext_Decode(t *testing.T) {
 	ctx := newContext(nil, httptest.NewRequest(http.MethodPost, "/", nil))
-	ctx.router = NewRouter()
+	ctx.app = New()
 	v := new(fakeForm)
 	assert.Equal(t, ErrDecoderNotRegister, ctx.Decode(v))
 
 	decodeErr := errors.New("decoder error")
-	ctx.router.Decoder = &fakeDecoder{err: decodeErr}
+	ctx.app.Decoder = &fakeDecoder{err: decodeErr}
 	assert.Equal(t, decodeErr, ctx.Decode(v))
 
-	ctx.router.Decoder = &fakeDecoder{}
+	ctx.app.Decoder = &fakeDecoder{}
 	assert.Nil(t, ctx.Decode(v))
 }
 

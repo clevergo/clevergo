@@ -1,5 +1,5 @@
-module github.com/clevergo/clevergo
+module clevergo.tech/clevergo
 
-go 1.7
+go 1.13
 
 require github.com/stretchr/testify v1.5.1

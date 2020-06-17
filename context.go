@@ -48,14 +48,14 @@ var contextPool = sync.Pool{
 	},
 }
 
-func getContext(router *Router, w http.ResponseWriter, r *http.Request) *Context {
+func getContext(app *Application, w http.ResponseWriter, r *http.Request) *Context {
 	ctx := contextPool.Get().(*Context)
 	ctx.reset()
-	ctx.router = router
+	ctx.app = app
 	ctx.Response = w
 	ctx.Request = r
-	if cap(ctx.Params) < int(router.maxParams) {
-		ctx.Params = make(Params, 0, router.maxParams)
+	if cap(ctx.Params) < int(app.maxParams) {
+		ctx.Params = make(Params, 0, app.maxParams)
 	}
 	return ctx
 }
@@ -66,7 +66,7 @@ func putContext(ctx *Context) {
 
 // Context contains incoming request, route, params and manages outgoing response.
 type Context struct {
-	router   *Router
+	app      *Application
 	Params   Params
 	Route    *Route
 	Request  *http.Request
@@ -328,7 +328,7 @@ func (ctx *Context) HTMLBlob(code int, bs []byte) error {
 
 // Render renders a template with data, and sends HTML response with status code.
 func (ctx *Context) Render(code int, name string, data interface{}) (err error) {
-	if ctx.router.Renderer == nil {
+	if ctx.app.Renderer == nil {
 		return ErrRendererNotRegister
 	}
 
@@ -336,7 +336,7 @@ func (ctx *Context) Render(code int, name string, data interface{}) (err error) 
 	defer func() {
 		putBuffer(buf)
 	}()
-	if err = ctx.router.Renderer.Render(buf, name, data, ctx); err != nil {
+	if err = ctx.app.Renderer.Render(buf, name, data, ctx); err != nil {
 		return err
 	}
 	return ctx.Blob(code, headerContentTypeHTML, buf.Bytes())
@@ -398,7 +398,7 @@ func (ctx *Context) DefaultQuery(key, defaultVlue string) string {
 
 // RouteURL returns the URL of the naming route.
 func (ctx *Context) RouteURL(name string, args ...string) (*url.URL, error) {
-	return ctx.router.URL(name, args...)
+	return ctx.app.RouteURL(name, args...)
 }
 
 // BasicAuth is a shortcut of http.Request.BasicAuth.
@@ -415,10 +415,10 @@ func (ctx *Context) SendFile(filename string, r io.Reader) (err error) {
 
 // Decode decodes request's input, stores it in the value pointed to by v.
 func (ctx *Context) Decode(v interface{}) (err error) {
-	if ctx.router.Decoder == nil {
+	if ctx.app.Decoder == nil {
 		return ErrDecoderNotRegister
 	}
-	return ctx.router.Decoder.Decode(ctx.Request, v)
+	return ctx.app.Decoder.Decode(ctx.Request, v)
 }
 
 // SetHeader is a shortcut of http.ResponseWriter.Header().Set.

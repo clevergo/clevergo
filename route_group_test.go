@@ -26,25 +26,25 @@ func TestNewRouteGroup(t *testing.T) {
 		{"/users/", "/users", false},
 	}
 
-	router := NewRouter()
+	app := New()
 	for _, test := range tests {
 		if test.shouldPanic {
 			recv := catchPanic(func() {
-				newRouteGroup(router, test.path)
+				newRouteGroup(app, test.path)
 			})
 			assert.NotNil(t, recv)
 			continue
 		}
 
-		route := newRouteGroup(router, test.path)
+		route := newRouteGroup(app, test.path)
 		assert.Equal(t, test.expectedPath, route.path)
 		assert.Equal(t, test.expectedPath, route.name)
 	}
 }
 
 func ExampleRouteGroup() {
-	router := NewRouter()
-	api := router.Group("/api", RouteGroupMiddleware(echoMiddleware("api")))
+	app := New()
+	api := app.Group("/api", RouteGroupMiddleware(echoMiddleware("api")))
 
 	v1 := api.Group("/v1", RouteGroupMiddleware(
 		echoMiddleware("v1"),
@@ -72,12 +72,12 @@ func ExampleRouteGroup() {
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/users/foo", nil)
-	router.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 	fmt.Println(w.Body.String())
 
 	w = httptest.NewRecorder()
 	req = httptest.NewRequest(http.MethodGet, "/api/v2/users/bar", nil)
-	router.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 	fmt.Println(w.Body.String())
 
 	// Output:
