@@ -368,6 +368,11 @@ func (ctx *Context) PostFormValue(key string) string {
 	return ctx.Request.PostFormValue(key)
 }
 
+// Host returns http.Request.Host.
+func (ctx *Context) Host() string {
+	return ctx.Request.Host
+}
+
 // QueryString returns the raw query of request URL.
 func (ctx *Context) QueryString() string {
 	return ctx.Request.URL.RawQuery

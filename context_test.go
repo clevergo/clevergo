@@ -553,6 +553,22 @@ func TestContext_PostFormValue(t *testing.T) {
 	}
 }
 
+func TestContext_Host(t *testing.T) {
+	cases := []struct {
+		host string
+	}{
+		{""},
+		{"example.com"},
+		{"foobar.com"},
+	}
+	for _, test := range cases {
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req.Host = test.host
+		ctx := newContext(nil, req)
+		assert.Equal(t, req.Host, ctx.Host())
+	}
+}
+
 func TestContext_QueryParams(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/?foo=bar&fizz=buzz", nil)
 	ctx := newContext(nil, req)
