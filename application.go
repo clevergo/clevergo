@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -65,6 +66,8 @@ type Renderer interface {
 // Application is a http.Handler which can be used to dispatch requests to different
 // handler functions via configurable routes
 type Application struct {
+	Server *http.Server
+
 	trees map[string]*node
 
 	// Named routes.
@@ -464,4 +467,36 @@ func (app *Application) HandleError(c *Context, err error) {
 	default:
 		c.Error(http.StatusInternalServerError, err.Error())
 	}
+}
+
+func (app *Application) initServer() {
+	if app.Server == nil {
+		app.Server = &http.Server{}
+	}
+	app.Server.Handler = app
+}
+
+// Run starts a HTTP server with the given address.
+func (app *Application) Run(addr string) error {
+	app.initServer()
+	app.Server.Addr = addr
+	return app.Server.ListenAndServe()
+}
+
+// RunTLS starts a HTTPS server with the given address, certfile and keyfile.
+func (app *Application) RunTLS(addr, certFile, keyFile string) error {
+	app.initServer()
+	app.Server.Addr = addr
+	return app.Server.ListenAndServeTLS(certFile, keyFile)
+}
+
+// RunUnix starts a HTTP Server which listening and serving HTTP requests
+// through the specified unix socket with the given address.
+func (app *Application) RunUnix(addr string) error {
+	app.initServer()
+	l, err := net.Listen("unix", addr)
+	if err != nil {
+		return err
+	}
+	return app.Server.Serve(l)
 }
