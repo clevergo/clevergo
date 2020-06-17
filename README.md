@@ -7,9 +7,13 @@
 
 CleverGo is a lightweight, feature rich and trie based high performance HTTP request router.
 
+```shell
+go get clevergo.tech/clevergo
+```
+
 ![Benchmark](https://clevergo.tech/img/benchmark.png)
 
-## Documentations
+## Documentation
 
 - [English](https://clevergo.tech/docs/)
 - [简体中文](https://clevergo.tech/zh/docs/)
@@ -29,10 +33,10 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 
 Contributions are welcome.
 
-- Give it a :star: and spread the package.
+- Star it and spread the package.
 - [File an issue](https://github.com/clevergo/clevergo/issues/new) to ask questions, request features or report bugs.
 - Fork and make a pull request.
-- Improve documentations.
+- Improve [documentations](https://github.com/clevergo/website).
 
 ### Contributors
 
