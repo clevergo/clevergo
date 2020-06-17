@@ -15,15 +15,15 @@ import (
 
 func ExampleParams() {
 	router := New()
-	router.Get("/post/:year/:month/:title", func(ctx *Context) error {
+	router.Get("/post/:year/:month/:title", func(c *Context) error {
 		// converts param value to int.
-		year, _ := ctx.Params.Int("year")
-		month, _ := ctx.Params.Int("month")
+		year, _ := c.Params.Int("year")
+		month, _ := c.Params.Int("month")
 		// ps.Int64("name") // converts to int64.
 		// ps.Uint64("name") // converts to uint64.
 		// ps.Float64("name") // converts to float64.
 		// ps.Bool("name") // converts to boolean.
-		fmt.Printf("%s posted on %04d-%02d\n", ctx.Params.String("title"), year, month)
+		fmt.Printf("%s posted on %04d-%02d\n", c.Params.String("title"), year, month)
 		return nil
 	})
 	req := httptest.NewRequest(http.MethodGet, "/post/2020/01/foo", nil)

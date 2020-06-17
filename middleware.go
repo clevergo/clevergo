@@ -17,9 +17,9 @@ type MiddlewareFunc func(Handle) Handle
 // WrapH wraps a HTTP handler and returns a middleware.
 func WrapH(h http.Handler) MiddlewareFunc {
 	return func(handle Handle) Handle {
-		return func(ctx *Context) error {
-			h.ServeHTTP(ctx.Response, ctx.Request)
-			return handle(ctx)
+		return func(c *Context) error {
+			h.ServeHTTP(c.Response, c.Request)
+			return handle(c)
 		}
 	}
 }
@@ -29,15 +29,15 @@ func WrapHH(fn func(http.Handler) http.Handler) MiddlewareFunc {
 	nextHandler := new(middlewareHandler)
 	handler := fn(nextHandler)
 	return func(handle Handle) Handle {
-		return func(ctx *Context) error {
+		return func(c *Context) error {
 			state := getMiddlewareState()
 			defer func() {
 				putMiddlewareState(state)
 			}()
-			state.ctx = ctx
+			state.ctx = c
 			state.next = handle
-			ctx.WithValue(nextHandler, state)
-			handler.ServeHTTP(ctx.Response, ctx.Request)
+			c.WithValue(nextHandler, state)
+			handler.ServeHTTP(c.Response, c.Request)
 			return state.err
 		}
 	}
@@ -64,13 +64,13 @@ var middlewareStatePool = sync.Pool{
 }
 
 func getMiddlewareState() *middlewareState {
-	ctx := middlewareStatePool.Get().(*middlewareState)
-	ctx.reset()
-	return ctx
+	state := middlewareStatePool.Get().(*middlewareState)
+	state.reset()
+	return state
 }
 
-func putMiddlewareState(ctx *middlewareState) {
-	middlewareStatePool.Put(ctx)
+func putMiddlewareState(state *middlewareState) {
+	middlewareStatePool.Put(state)
 }
 
 type middlewareState struct {
@@ -99,8 +99,8 @@ type recovery struct {
 	logger *log.Logger
 }
 
-func (r *recovery) handle(ctx *Context, err interface{}) {
-	ctx.Response.WriteHeader(http.StatusInternalServerError)
+func (r *recovery) handle(c *Context, err interface{}) {
+	c.Response.WriteHeader(http.StatusInternalServerError)
 	r.logf(err)
 	if r.debug {
 		r.logf(debug.Stack())
@@ -117,13 +117,13 @@ func (r *recovery) logf(v interface{}) {
 }
 
 func (r *recovery) middleware(next Handle) Handle {
-	return func(ctx *Context) error {
+	return func(c *Context) error {
 		defer func() {
 			if err := recover(); err != nil {
-				r.handle(ctx, err)
+				r.handle(c, err)
 			}
 		}()
-		return next(ctx)
+		return next(c)
 	}
 }
 

@@ -23,7 +23,7 @@ var (
 
 // ErrorHandler is a handler to handle error returns from handle.
 type ErrorHandler interface {
-	Handle(ctx *Context, err error)
+	Handle(c *Context, err error)
 }
 
 // StatusError implements Error interface.

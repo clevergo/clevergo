@@ -34,10 +34,10 @@ func TestApplication(t *testing.T) {
 	app := New()
 
 	routed := false
-	app.Handle(http.MethodGet, "/user/:name", func(ctx *Context) error {
+	app.Handle(http.MethodGet, "/user/:name", func(c *Context) error {
 		routed = true
 		expected := Params{Param{"name", "gopher"}}
-		assert.Equal(t, expected, ctx.Params)
+		assert.Equal(t, expected, c.Params)
 		return nil
 	})
 
@@ -62,31 +62,31 @@ func TestApplicationAPI(t *testing.T) {
 	httpHandler := handlerStruct{&handler}
 
 	app := New()
-	app.Get("/GET", func(ctx *Context) error {
+	app.Get("/GET", func(c *Context) error {
 		get = true
 		return nil
 	})
-	app.Head("/GET", func(ctx *Context) error {
+	app.Head("/GET", func(c *Context) error {
 		head = true
 		return nil
 	})
-	app.Options("/GET", func(ctx *Context) error {
+	app.Options("/GET", func(c *Context) error {
 		options = true
 		return nil
 	})
-	app.Post("/POST", func(ctx *Context) error {
+	app.Post("/POST", func(c *Context) error {
 		post = true
 		return nil
 	})
-	app.Put("/PUT", func(ctx *Context) error {
+	app.Put("/PUT", func(c *Context) error {
 		put = true
 		return nil
 	})
-	app.Patch("/PATCH", func(ctx *Context) error {
+	app.Patch("/PATCH", func(c *Context) error {
 		patch = true
 		return nil
 	})
-	app.Delete("/DELETE", func(ctx *Context) error {
+	app.Delete("/DELETE", func(c *Context) error {
 		delete = true
 		return nil
 	})
@@ -136,8 +136,8 @@ func TestApplicationAPI(t *testing.T) {
 
 func TestApplicationAny(t *testing.T) {
 	app := New()
-	handle := func(ctx *Context) error {
-		ctx.WriteString(ctx.Request.Method)
+	handle := func(c *Context) error {
+		c.WriteString(c.Request.Method)
 		return nil
 	}
 	nameOpt := RouteName("ping")
@@ -160,7 +160,7 @@ func TestApplicationAny(t *testing.T) {
 func TestApplicationInvalidInput(t *testing.T) {
 	app := New()
 
-	handle := func(ctx *Context) error {
+	handle := func(c *Context) error {
 		return nil
 	}
 
@@ -191,16 +191,16 @@ func TestApplicationChaining(t *testing.T) {
 	app1.NotFound = app2
 
 	fooHit := false
-	app1.Post("/foo", func(ctx *Context) error {
+	app1.Post("/foo", func(c *Context) error {
 		fooHit = true
-		ctx.Response.WriteHeader(http.StatusOK)
+		c.Response.WriteHeader(http.StatusOK)
 		return nil
 	})
 
 	barHit := false
-	app2.Post("/bar", func(ctx *Context) error {
+	app2.Post("/bar", func(c *Context) error {
 		barHit = true
-		ctx.Response.WriteHeader(http.StatusOK)
+		c.Response.WriteHeader(http.StatusOK)
 		return nil
 	})
 
@@ -223,7 +223,7 @@ func TestApplicationChaining(t *testing.T) {
 }
 
 func BenchmarkAllowed(b *testing.B) {
-	handlerFunc := func(ctx *Context) error {
+	handlerFunc := func(c *Context) error {
 		return nil
 	}
 
@@ -246,7 +246,7 @@ func BenchmarkAllowed(b *testing.B) {
 }
 
 func TestApplicationOPTIONS(t *testing.T) {
-	handlerFunc := func(ctx *Context) error {
+	handlerFunc := func(c *Context) error {
 		return nil
 	}
 
@@ -299,7 +299,7 @@ func TestApplicationOPTIONS(t *testing.T) {
 
 	// custom handler
 	var custom bool
-	app.Options("/path", func(ctx *Context) error {
+	app.Options("/path", func(c *Context) error {
 		custom = true
 		return nil
 	})
@@ -322,7 +322,7 @@ func TestApplicationOPTIONS(t *testing.T) {
 }
 
 func TestApplicationNotAllowed(t *testing.T) {
-	handlerFunc := func(ctx *Context) error {
+	handlerFunc := func(c *Context) error {
 		return nil
 	}
 
@@ -361,7 +361,7 @@ func TestApplicationNotAllowed(t *testing.T) {
 }
 
 func TestApplicationNotFound(t *testing.T) {
-	handlerFunc := func(ctx *Context) error {
+	handlerFunc := func(c *Context) error {
 		return nil
 	}
 
@@ -426,7 +426,7 @@ func TestApplicationNotFound(t *testing.T) {
 
 func TestApplicationLookup(t *testing.T) {
 	routed := false
-	wantHandle := func(ctx *Context) error {
+	wantHandle := func(c *Context) error {
 		routed = true
 		return nil
 	}
@@ -470,14 +470,14 @@ func TestApplicationParamsFromContext(t *testing.T) {
 	routed := false
 
 	wantParams := Params{Param{"name", "gopher"}}
-	handlerFunc := func(ctx *Context) error {
-		assert.Equal(t, wantParams, ctx.Params)
+	handlerFunc := func(c *Context) error {
+		assert.Equal(t, wantParams, c.Params)
 		routed = true
 		return nil
 	}
 
-	handlerFuncNil := func(ctx *Context) error {
-		assert.Len(t, ctx.Params, 0)
+	handlerFuncNil := func(c *Context) error {
+		assert.Len(t, c.Params, 0)
 		routed = true
 		return nil
 	}
@@ -499,24 +499,24 @@ func TestApplicationParamsFromContext(t *testing.T) {
 func TestApplicationMatchedRoutePath(t *testing.T) {
 	route1 := "/user/:name"
 	routed1 := false
-	handle1 := func(ctx *Context) error {
-		assert.Equal(t, route1, ctx.Route.path)
+	handle1 := func(c *Context) error {
+		assert.Equal(t, route1, c.Route.path)
 		routed1 = true
 		return nil
 	}
 
 	route2 := "/user/:name/details"
 	routed2 := false
-	handle2 := func(ctx *Context) error {
-		assert.Equal(t, route2, ctx.Route.path)
+	handle2 := func(c *Context) error {
+		assert.Equal(t, route2, c.Route.path)
 		routed2 = true
 		return nil
 	}
 
 	route3 := "/"
 	routed3 := false
-	handle3 := func(ctx *Context) error {
-		assert.Equal(t, route3, ctx.Route.path)
+	handle3 := func(c *Context) error {
+		assert.Equal(t, route3, c.Route.path)
 		routed3 = true
 		return nil
 	}
@@ -579,7 +579,7 @@ func TestApplicationNamedRoute(t *testing.T) {
 	}
 	app := New()
 	for _, test := range tests {
-		app.Handle(http.MethodGet, test.path, func(ctx *Context) error {
+		app.Handle(http.MethodGet, test.path, func(c *Context) error {
 
 			return nil
 		}, RouteName(test.name))
@@ -594,7 +594,7 @@ func TestApplicationNamedRoute(t *testing.T) {
 
 	// registers same route name.
 	recv := catchPanic(func() {
-		app.Handle(http.MethodGet, "/same", func(ctx *Context) error {
+		app.Handle(http.MethodGet, "/same", func(c *Context) error {
 			return nil
 		}, RouteName("home"))
 	})
@@ -603,7 +603,7 @@ func TestApplicationNamedRoute(t *testing.T) {
 
 func ExampleApplication_RouteURL() {
 	app := New()
-	app.Get("/hello/:name", func(ctx *Context) error {
+	app.Get("/hello/:name", func(c *Context) error {
 		return nil
 	}, RouteName("hello"))
 	// nested routes group
@@ -611,13 +611,13 @@ func ExampleApplication_RouteURL() {
 
 	v1 := api.Group("/v1")
 	// the group path will become the prefix of route name.
-	v1.Get("/users/:name", func(ctx *Context) error {
+	v1.Get("/users/:name", func(c *Context) error {
 		return nil
 	}, RouteName("user"))
 
 	// specified the name of the route group.
 	v2 := api.Group("/v2", RouteGroupName("/apiV2"))
-	v2.Get("/users/:name", func(ctx *Context) error {
+	v2.Get("/users/:name", func(c *Context) error {
 		return nil
 	}, RouteName("user"))
 
@@ -661,15 +661,15 @@ type testErrorHandler struct {
 	status int
 }
 
-func (eh testErrorHandler) Handle(ctx *Context, err error) {
-	ctx.Error(eh.status, err.Error())
+func (eh testErrorHandler) Handle(c *Context, err error) {
+	c.Error(eh.status, err.Error())
 }
 
 func TestApplication_ErrorHandler(t *testing.T) {
 	app := New()
 	app.ErrorHandler = &testErrorHandler{http.StatusInternalServerError}
-	app.Get("/error/:msg", func(ctx *Context) error {
-		return errors.New(ctx.Params.String("msg"))
+	app.Get("/error/:msg", func(c *Context) error {
+		return errors.New(c.Params.String("msg"))
 	})
 
 	msgs := []string{"foo", "bar"}
@@ -695,8 +695,8 @@ func TestApplication_HandleError(t *testing.T) {
 	}
 	for _, test := range tests {
 		w := httptest.NewRecorder()
-		ctx := newContext(w, nil)
-		app.HandleError(ctx, test.err)
+		c := newContext(w, nil)
+		app.HandleError(c, test.err)
 		assert.Equal(t, test.code, w.Code)
 		assert.Equal(t, fmt.Sprintln(test.body), w.Body.String())
 	}
@@ -706,9 +706,9 @@ func TestApplicationUseRawPath(t *testing.T) {
 	app := New()
 	app.UseRawPath = true
 	handled := false
-	handle := func(ctx *Context) error {
+	handle := func(c *Context) error {
 		expected := Params{Param{"name", "foo/bar"}}
-		assert.Equal(t, expected, ctx.Params)
+		assert.Equal(t, expected, c.Params)
 		handled = true
 		return nil
 	}
@@ -722,9 +722,9 @@ func TestApplicationUseRawPathMixed(t *testing.T) {
 	app := New()
 	app.UseRawPath = true
 	handled := false
-	handle := func(ctx *Context) error {
+	handle := func(c *Context) error {
 		expected := Params{Param{"date", "2020/03/23"}, Param{"slug", "hello world"}}
-		assert.Equal(t, expected, ctx.Params)
+		assert.Equal(t, expected, c.Params)
 		handled = true
 		return nil
 	}
@@ -738,9 +738,9 @@ func TestApplicationUseRawPathCatchAll(t *testing.T) {
 	app := New()
 	app.UseRawPath = true
 	handled := false
-	handle := func(ctx *Context) error {
+	handle := func(c *Context) error {
 		expected := Params{Param{"slug", "/2020/03/23-hello world"}}
-		assert.Equal(t, expected, ctx.Params)
+		assert.Equal(t, expected, c.Params)
 		handled = true
 		return nil
 	}

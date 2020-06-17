@@ -14,7 +14,7 @@ import (
 )
 
 func TestPathSkipper(t *testing.T) {
-	tests := []struct {
+	cases := []struct {
 		pattern string
 		cases   []struct {
 			target   string
@@ -60,11 +60,11 @@ func TestPathSkipper(t *testing.T) {
 			},
 		},
 	}
-	for _, test := range tests {
+	for _, test := range cases {
 		skipper := PathSkipper(test.pattern)
-		for _, c := range test.cases {
-			ctx := newContext(nil, httptest.NewRequest(http.MethodGet, c.target, nil))
-			assert.Equal(t, c.expected, skipper(ctx), fmt.Sprintf("pattern: %q, target: %q", test.pattern, c.target))
+		for _, testCase := range test.cases {
+			c := newContext(nil, httptest.NewRequest(http.MethodGet, testCase.target, nil))
+			assert.Equal(t, testCase.expected, skipper(c), fmt.Sprintf("pattern: %q, target: %q", test.pattern, testCase.target))
 		}
 	}
 }
