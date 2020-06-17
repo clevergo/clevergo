@@ -15,11 +15,11 @@ import (
 )
 
 func TestRouteGroupURL(t *testing.T) {
-	router := NewRouter()
-	router.Handle(http.MethodGet, "/", echoHandler(""), RouteName("home"))
-	router.Handle(http.MethodGet, "/users/:id", echoHandler(""), RouteName("user"))
-	router.Handle(http.MethodGet, "/posts/:year/:month/:title", echoHandler(""), RouteName("post"))
-	router.Handle(http.MethodGet, "/static/*filepath", echoHandler(""), RouteName("static"))
+	app := New()
+	app.Handle(http.MethodGet, "/", echoHandler(""), RouteName("home"))
+	app.Handle(http.MethodGet, "/users/:id", echoHandler(""), RouteName("user"))
+	app.Handle(http.MethodGet, "/posts/:year/:month/:title", echoHandler(""), RouteName("post"))
+	app.Handle(http.MethodGet, "/static/*filepath", echoHandler(""), RouteName("static"))
 
 	var tests = []struct {
 		name        string
@@ -50,7 +50,7 @@ func TestRouteGroupURL(t *testing.T) {
 		{"static", []string{"filepath", "css/app.css"}, "/static/css/app.css", false},
 	}
 	for _, test := range tests {
-		url, err := router.URL(test.name, test.args...)
+		url, err := app.RouteURL(test.name, test.args...)
 		if test.shouldError {
 			assert.NotNil(t, err)
 			continue
@@ -66,8 +66,8 @@ func TestRouteGroupAPI(t *testing.T) {
 
 	httpHandler := handlerStruct{&handler}
 
-	router := NewRouter()
-	api := router.Group("/api")
+	app := New()
+	api := app.Group("/api")
 	api.Get("/GET", func(ctx *Context) error {
 		get = true
 		return nil
@@ -104,39 +104,39 @@ func TestRouteGroupAPI(t *testing.T) {
 	w := new(mockResponseWriter)
 
 	r, _ := http.NewRequest(http.MethodGet, "/api/GET", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, get, "routing GET failed")
 
 	r, _ = http.NewRequest(http.MethodHead, "/api/GET", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, head, "routing HEAD failed")
 
 	r, _ = http.NewRequest(http.MethodOptions, "/api/GET", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, options, "routing GEOPTIONST failed")
 
 	r, _ = http.NewRequest(http.MethodPost, "/api/POST", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, post, "routing POST failed")
 
 	r, _ = http.NewRequest(http.MethodPut, "/api/PUT", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, put, "routing PUT failed")
 
 	r, _ = http.NewRequest(http.MethodPatch, "/api/PATCH", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, patch, "routing PATCH failed")
 
 	r, _ = http.NewRequest(http.MethodDelete, "/api/DELETE", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, delete, "routing DELETE failed")
 
 	r, _ = http.NewRequest(http.MethodGet, "/api/Handler", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, handler, "routing Handler failed")
 
 	r, _ = http.NewRequest(http.MethodGet, "/api/HandlerFunc", nil)
-	router.ServeHTTP(w, r)
+	app.ServeHTTP(w, r)
 	assert.True(t, handlerFunc, "routing HandlerFunc failed")
 }
 
@@ -145,18 +145,18 @@ func TestRouteMiddleware(t *testing.T) {
 	m2 := echoMiddleware("m2")
 	handler := echoHandler("hello")
 
-	router := NewRouter()
-	router.Handle(http.MethodGet, "/", handler)
-	router.Handle(http.MethodGet, "/middleware", handler, RouteMiddleware(m1, m2))
+	app := New()
+	app.Handle(http.MethodGet, "/", handler)
+	app.Handle(http.MethodGet, "/middleware", handler, RouteMiddleware(m1, m2))
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	router.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 	assert.Equal(t, "hello", w.Body.String())
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest(http.MethodGet, "/middleware", nil)
-	router.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 	assert.Equal(t, "m1 m2 hello", w.Body.String())
 }
 
@@ -165,36 +165,36 @@ func TestNestedRouteGroup(t *testing.T) {
 	m2 := echoMiddleware("m2")
 	handler := echoHandler("hello")
 
-	router := NewRouter()
-	api := router.Group("/api")
+	app := New()
+	api := app.Group("/api")
 	v1 := api.Group("/v1", RouteGroupMiddleware(m1))
 	v2 := api.Group("/v2", RouteGroupMiddleware(m2))
 
 	v1.Handle(http.MethodGet, "/", handler, RouteName("home"))
 	v2.Handle(http.MethodGet, "/", handler, RouteName("home"))
 
-	url, err := router.URL("/api/v1/home")
+	url, err := app.RouteURL("/api/v1/home")
 	assert.Nil(t, err)
 	assert.Equal(t, "/api/v1/", url.String())
 
-	url, err = router.URL("/api/v2/home")
+	url, err = app.RouteURL("/api/v2/home")
 	assert.Nil(t, err)
 	assert.Equal(t, "/api/v2/", url.String())
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/", nil)
-	router.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 	assert.Equal(t, "m1 hello", w.Body.String())
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v2/", nil)
-	router.ServeHTTP(w, req)
+	app.ServeHTTP(w, req)
 	assert.Equal(t, "m2 hello", w.Body.String())
 }
 
 func ExampleRoute() {
-	router := NewRouter()
-	router.Get("/posts/:page", func(ctx *Context) error {
+	app := New()
+	app.Get("/posts/:page", func(ctx *Context) error {
 		page, _ := ctx.Params.Int("page")
 		route := ctx.Route
 		prev, _ := route.URL("page", strconv.Itoa(page-1))
@@ -205,7 +205,7 @@ func ExampleRoute() {
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/posts/3", nil)
-	router.ServeHTTP(nil, req)
+	app.ServeHTTP(nil, req)
 
 	// Output:
 	// prev page url: /posts/2

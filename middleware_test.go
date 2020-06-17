@@ -76,7 +76,7 @@ func ExampleChain() {
 
 func TestRecovery(t *testing.T) {
 	m := Recovery(true)
-	router := NewRouter()
+	router := New()
 	out := &bytes.Buffer{}
 	log.SetOutput(out)
 	router.Use(m)
@@ -93,7 +93,7 @@ func TestRecoveryLogger(t *testing.T) {
 	out := &bytes.Buffer{}
 	logger := log.New(out, "recovery", 0)
 	r := RecoveryLogger(true, logger)
-	router := NewRouter()
+	router := New()
 	router.Use(r)
 	router.Get("/", func(_ *Context) error {
 		panic("foobar")

@@ -26,13 +26,13 @@ func RouteGroupMiddleware(middlewares ...MiddlewareFunc) RouteGroupOption {
 // RouteGroup implements an nested route group,
 // see https://github.com/julienschmidt/httprouter/pull/89.
 type RouteGroup struct {
-	parent      *Router
+	parent      *Application
 	path        string
 	name        string
 	middlewares []MiddlewareFunc
 }
 
-func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *RouteGroup {
+func newRouteGroup(app *Application, path string, opts ...RouteGroupOption) *RouteGroup {
 	if path[0] != '/' {
 		panic("path must begin with '/' in path '" + path + "'")
 	}
@@ -42,7 +42,7 @@ func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *Route
 		path = path[:len(path)-1]
 	}
 
-	route := &RouteGroup{parent: parent, path: path, name: path}
+	route := &RouteGroup{parent: app, path: path, name: path}
 	for _, opt := range opts {
 		opt(route)
 	}
@@ -50,8 +50,8 @@ func newRouteGroup(parent *Router, path string, opts ...RouteGroupOption) *Route
 	return route
 }
 
-// Group implements IRouter.Group.
-func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) IRouter {
+// Group implements Router.Group.
+func (r *RouteGroup) Group(path string, opts ...RouteGroupOption) Router {
 	router := newRouteGroup(r.parent, r.subPath(path), opts...)
 
 	// inherit middlewares.
@@ -81,57 +81,57 @@ func (r *RouteGroup) combineOptions(opts []RouteOption) []RouteOption {
 	return opts
 }
 
-// Handle implements IRouter.Handle.
+// Handle implements Router.Handle.
 func (r *RouteGroup) Handle(method, path string, handle Handle, opts ...RouteOption) {
 	r.parent.Handle(method, r.subPath(path), handle, r.combineOptions(opts)...)
 }
 
-// Handler implements IRouter.Handler.
+// Handler implements Router.Handler.
 func (r *RouteGroup) Handler(method, path string, handler http.Handler, opts ...RouteOption) {
 	r.Handle(method, path, HandleHandler(handler), opts...)
 }
 
-// HandlerFunc implements IRouter.HandlerFunc.
+// HandlerFunc implements Router.HandlerFunc.
 func (r *RouteGroup) HandlerFunc(method, path string, f http.HandlerFunc, opts ...RouteOption) {
 	r.Handle(method, path, HandleHandlerFunc(f), opts...)
 }
 
-// Get implements IRouter.Get.
+// Get implements Router.Get.
 func (r *RouteGroup) Get(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodGet, path, handle, opts...)
 }
 
-// Head implements IRouter.Head.
+// Head implements Router.Head.
 func (r *RouteGroup) Head(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodHead, path, handle, opts...)
 }
 
-// Options implements IRouter.Options.
+// Options implements Router.Options.
 func (r *RouteGroup) Options(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodOptions, path, handle, opts...)
 }
 
-// Post implements IRouter.Post.
+// Post implements Router.Post.
 func (r *RouteGroup) Post(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodPost, path, handle, opts...)
 }
 
-// Put implements IRouter.Put.
+// Put implements Router.Put.
 func (r *RouteGroup) Put(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodPut, path, handle, opts...)
 }
 
-// Patch implements IRouter.Patch.
+// Patch implements Router.Patch.
 func (r *RouteGroup) Patch(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodPatch, path, handle, opts...)
 }
 
-// Delete implements IRouter.Delete.
+// Delete implements Router.Delete.
 func (r *RouteGroup) Delete(path string, handle Handle, opts ...RouteOption) {
 	r.Handle(http.MethodDelete, path, handle, opts...)
 }
 
-// Any implements IRouter.Any.
+// Any implements Router.Any.
 func (r *RouteGroup) Any(path string, handle Handle, opts ...RouteOption) {
 	r.parent.Any(r.subPath(path), handle, r.combineOptions(opts)...)
 }
