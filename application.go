@@ -33,20 +33,20 @@ var requestMethods = []string{
 }
 
 // Handle is a function which handle incoming request and manage outgoing response.
-type Handle func(ctx *Context) error
+type Handle func(c *Context) error
 
 // HandleHandler converts http.Handler to Handle.
 func HandleHandler(handler http.Handler) Handle {
-	return func(ctx *Context) error {
-		handler.ServeHTTP(ctx.Response, ctx.Request)
+	return func(c *Context) error {
+		handler.ServeHTTP(c.Response, c.Request)
 		return nil
 	}
 }
 
 // HandleHandlerFunc converts http.HandlerFunc to Handle.
 func HandleHandlerFunc(f http.HandlerFunc) Handle {
-	return func(ctx *Context) error {
-		f(ctx.Response, ctx.Request)
+	return func(c *Context) error {
+		f(c.Response, c.Request)
 		return nil
 	}
 }
@@ -59,7 +59,7 @@ type Decoder interface {
 
 // Renderer is an interface for template engine.
 type Renderer interface {
-	Render(w io.Writer, name string, data interface{}, ctx *Context) error
+	Render(w io.Writer, name string, data interface{}, c *Context) error
 }
 
 // Application is a http.Handler which can be used to dispatch requests to different
@@ -290,9 +290,9 @@ func (app *Application) ServeFiles(path string, root http.FileSystem, opts ...Ro
 
 	fileServer := http.FileServer(root)
 
-	app.Get(path, func(ctx *Context) error {
-		ctx.Request.URL.Path = ctx.Params.String("filepath")
-		fileServer.ServeHTTP(ctx.Response, ctx.Request)
+	app.Get(path, func(c *Context) error {
+		c.Request.URL.Path = c.Params.String("filepath")
+		fileServer.ServeHTTP(c.Response, c.Request)
 		return nil
 	}, opts...)
 }
@@ -363,35 +363,35 @@ func (app *Application) allowed(path, reqMethod string) (allow string) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (app *Application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := getContext(app, w, r)
-	defer putContext(ctx)
+	c := getContext(app, w, r)
+	defer putContext(c)
 
 	var err error
 	if app.handle != nil {
-		err = app.handle(ctx)
+		err = app.handle(c)
 	} else {
-		err = app.handleRequest(ctx)
+		err = app.handleRequest(c)
 	}
 	if err != nil {
-		app.HandleError(ctx, err)
+		app.HandleError(c, err)
 	}
 }
 
-func (app *Application) handleRequest(ctx *Context) (err error) {
-	path := ctx.Request.URL.Path
-	if app.UseRawPath && ctx.Request.URL.RawPath != "" {
-		path = ctx.Request.URL.RawPath
+func (app *Application) handleRequest(c *Context) (err error) {
+	path := c.Request.URL.Path
+	if app.UseRawPath && c.Request.URL.RawPath != "" {
+		path = c.Request.URL.RawPath
 	}
 
-	if root := app.trees[ctx.Request.Method]; root != nil {
-		if route, tsr := root.getValue(path, &ctx.Params, app.UseRawPath); route != nil {
-			ctx.Route = route
-			err = route.handle(ctx)
+	if root := app.trees[c.Request.Method]; root != nil {
+		if route, tsr := root.getValue(path, &c.Params, app.UseRawPath); route != nil {
+			c.Route = route
+			err = route.handle(c)
 			return
-		} else if ctx.Request.Method != http.MethodConnect && path != "/" {
+		} else if c.Request.Method != http.MethodConnect && path != "/" {
 			// Moved Permanently, request with Get method
 			code := http.StatusMovedPermanently
-			if ctx.Request.Method != http.MethodGet {
+			if c.Request.Method != http.MethodGet {
 				// Permanent Redirect, request with same method
 				code = http.StatusPermanentRedirect
 			}
@@ -402,7 +402,7 @@ func (app *Application) handleRequest(ctx *Context) (err error) {
 				} else {
 					path = path + "/"
 				}
-				ctx.Redirect(code, path)
+				c.Redirect(code, path)
 				return
 			}
 
@@ -413,27 +413,27 @@ func (app *Application) handleRequest(ctx *Context) (err error) {
 					app.RedirectTrailingSlash,
 				)
 				if found {
-					ctx.Redirect(code, fixedPath)
+					c.Redirect(code, fixedPath)
 					return
 				}
 			}
 		}
 	}
 
-	if ctx.Request.Method == http.MethodOptions && app.HandleOPTIONS {
+	if c.Request.Method == http.MethodOptions && app.HandleOPTIONS {
 		// Handle OPTIONS requests
 		if allow := app.allowed(path, http.MethodOptions); allow != "" {
-			ctx.Response.Header().Set("Allow", allow)
+			c.Response.Header().Set("Allow", allow)
 			if app.GlobalOPTIONS != nil {
-				app.GlobalOPTIONS.ServeHTTP(ctx.Response, ctx.Request)
+				app.GlobalOPTIONS.ServeHTTP(c.Response, c.Request)
 			}
 			return
 		}
 	} else if app.HandleMethodNotAllowed { // Handle 405
-		if allow := app.allowed(path, ctx.Request.Method); allow != "" {
-			ctx.Response.Header().Set("Allow", allow)
+		if allow := app.allowed(path, c.Request.Method); allow != "" {
+			c.Response.Header().Set("Allow", allow)
 			if app.MethodNotAllowed != nil {
-				app.MethodNotAllowed.ServeHTTP(ctx.Response, ctx.Request)
+				app.MethodNotAllowed.ServeHTTP(c.Response, c.Request)
 				return
 			}
 			return ErrMethodNotAllowed
@@ -442,7 +442,7 @@ func (app *Application) handleRequest(ctx *Context) (err error) {
 
 	// Handle 404
 	if app.NotFound != nil {
-		app.NotFound.ServeHTTP(ctx.Response, ctx.Request)
+		app.NotFound.ServeHTTP(c.Response, c.Request)
 		return
 	}
 
@@ -450,9 +450,9 @@ func (app *Application) handleRequest(ctx *Context) (err error) {
 }
 
 // HandleError handles error.
-func (app *Application) HandleError(ctx *Context, err error) {
+func (app *Application) HandleError(c *Context, err error) {
 	if app.ErrorHandler != nil {
-		app.ErrorHandler.Handle(ctx, err)
+		app.ErrorHandler.Handle(c, err)
 		return
 	}
 
@@ -460,8 +460,8 @@ func (app *Application) HandleError(ctx *Context, err error) {
 
 	switch e := err.(type) {
 	case StatusError:
-		ctx.Error(e.Status(), err.Error())
+		c.Error(e.Status(), err.Error())
 	default:
-		ctx.Error(http.StatusInternalServerError, err.Error())
+		c.Error(http.StatusInternalServerError, err.Error())
 	}
 }

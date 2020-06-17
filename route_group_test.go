@@ -50,8 +50,8 @@ func ExampleRouteGroup() {
 		echoMiddleware("v1"),
 		echoMiddleware("authenticate"),
 	))
-	v1.Get("/users/:name", func(ctx *Context) error {
-		ctx.WriteString(fmt.Sprintf("user: %s", ctx.Params.String("name")))
+	v1.Get("/users/:name", func(c *Context) error {
+		c.WriteString(fmt.Sprintf("user: %s", c.Params.String("name")))
 		return nil
 	}, RouteMiddleware(
 		echoMiddleware("fizz1"),
@@ -62,8 +62,8 @@ func ExampleRouteGroup() {
 		echoMiddleware("v2"),
 		echoMiddleware("authenticate"),
 	))
-	v2.Get("/users/:name", func(ctx *Context) error {
-		ctx.WriteString(fmt.Sprintf("user: %s", ctx.Params.String("name")))
+	v2.Get("/users/:name", func(c *Context) error {
+		c.WriteString(fmt.Sprintf("user: %s", c.Params.String("name")))
 		return nil
 	}, RouteMiddleware(
 		echoMiddleware("buzz1"),

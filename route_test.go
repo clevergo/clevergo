@@ -68,31 +68,31 @@ func TestRouteGroupAPI(t *testing.T) {
 
 	app := New()
 	api := app.Group("/api")
-	api.Get("/GET", func(ctx *Context) error {
+	api.Get("/GET", func(c *Context) error {
 		get = true
 		return nil
 	})
-	api.Head("/GET", func(ctx *Context) error {
+	api.Head("/GET", func(c *Context) error {
 		head = true
 		return nil
 	})
-	api.Options("/GET", func(ctx *Context) error {
+	api.Options("/GET", func(c *Context) error {
 		options = true
 		return nil
 	})
-	api.Post("/POST", func(ctx *Context) error {
+	api.Post("/POST", func(c *Context) error {
 		post = true
 		return nil
 	})
-	api.Put("/PUT", func(ctx *Context) error {
+	api.Put("/PUT", func(c *Context) error {
 		put = true
 		return nil
 	})
-	api.Patch("/PATCH", func(ctx *Context) error {
+	api.Patch("/PATCH", func(c *Context) error {
 		patch = true
 		return nil
 	})
-	api.Delete("/DELETE", func(ctx *Context) error {
+	api.Delete("/DELETE", func(c *Context) error {
 		delete = true
 		return nil
 	})
@@ -194,9 +194,9 @@ func TestNestedRouteGroup(t *testing.T) {
 
 func ExampleRoute() {
 	app := New()
-	app.Get("/posts/:page", func(ctx *Context) error {
-		page, _ := ctx.Params.Int("page")
-		route := ctx.Route
+	app.Get("/posts/:page", func(c *Context) error {
+		page, _ := c.Params.Int("page")
+		route := c.Route
 		prev, _ := route.URL("page", strconv.Itoa(page-1))
 		next, _ := route.URL("page", strconv.Itoa(page+1))
 		fmt.Printf("prev page url: %s\n", prev)

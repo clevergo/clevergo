@@ -18,8 +18,8 @@ import (
 )
 
 func echoHandler(s string) Handle {
-	return func(ctx *Context) error {
-		ctx.WriteString(s)
+	return func(c *Context) error {
+		c.WriteString(s)
 
 		return nil
 	}
@@ -27,17 +27,17 @@ func echoHandler(s string) Handle {
 
 func echoMiddleware(s string) MiddlewareFunc {
 	return func(next Handle) Handle {
-		return func(ctx *Context) error {
-			ctx.WriteString(s + " ")
-			return next(ctx)
+		return func(c *Context) error {
+			c.WriteString(s + " ")
+			return next(c)
 		}
 	}
 }
 
 func terminatedMiddleware() MiddlewareFunc {
 	return func(next Handle) Handle {
-		return func(ctx *Context) error {
-			ctx.WriteString("terminated")
+		return func(c *Context) error {
+			c.WriteString("terminated")
 			return nil
 		}
 	}
@@ -126,14 +126,14 @@ func TestWrapHH(t *testing.T) {
 	var handled bool
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	ctx := newContext(w, req)
+	c := newContext(w, req)
 	expectedErr := errors.New("foo")
-	actualErr := WrapHH(fn)(func(ctx *Context) error {
+	actualErr := WrapHH(fn)(func(c *Context) error {
 		handled = true
-		foo, _ := ctx.Value(foo).(string)
+		foo, _ := c.Value(foo).(string)
 		assert.Equal(t, "bar", foo)
 		return expectedErr
-	})(ctx)
+	})(c)
 	assert.True(t, handled, "WrapHH failed")
 	assert.Equal(t, expectedErr, actualErr)
 }
