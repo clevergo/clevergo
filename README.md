@@ -3,7 +3,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/clevergo.tech/clevergo?tab=doc)
 [![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat-square)](https://github.com/clevergo/clevergo/releases)
-[![Sourcegraph](https://sourcegraph.com/github.com/clevergo/clevergo/-/badge.svg)](https://sourcegraph.com/github.com/clevergo/clevergo?badge)
 
 CleverGo is a lightweight, feature rich and trie based high performance HTTP request router.
 
