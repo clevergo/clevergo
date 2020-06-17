@@ -119,7 +119,7 @@ func (ctx *Context) ServeContent(name string, modtime time.Time, content io.Read
 
 // SetContentType sets the content type header.
 func (ctx *Context) SetContentType(v string) {
-	ctx.Response.Header().Set("Content-Type", v)
+	ctx.SetHeader(headerContentType, v)
 }
 
 // SetContentTypeHTML sets the content type as HTML.
