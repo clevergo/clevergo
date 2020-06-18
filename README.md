@@ -28,6 +28,10 @@ go get clevergo.tech/clevergo
 - **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
 - **[Error Handler](https://clevergo.tech/docs/error-handling):** record error and format error response.
 
+## Examples
+
+Checkout [example](https://github.com/clevergo/examples) for details.
+
 ## Contribute
 
 Contributions are welcome.
@@ -36,11 +40,6 @@ Contributions are welcome.
 - [File an issue](https://github.com/clevergo/clevergo/issues/new) to ask questions, request features or report bugs.
 - Fork and make a pull request.
 - Improve [documentations](https://github.com/clevergo/website).
-
-### Contributors
-
-This project exists thanks to all the people who contribute.
-<a href="https://github.com/clevergo/clevergo/graphs/contributors"><img src="https://opencollective.com/clevergo/contributors.svg?width=890&button=false" /></a>
 
 ## Credit
 
