@@ -633,6 +633,31 @@ func TestApplicationServeFiles(t *testing.T) {
 	assert.True(t, mfs.opened, "serving file failed")
 }
 
+func TestApplicationServeHTTP(t *testing.T) {
+	expectedErr := errors.New("error")
+	cases := []struct {
+		target string
+		code   int
+	}{
+		{"/", http.StatusOK},
+		{"/404", http.StatusNotFound},
+		{"/error", http.StatusInternalServerError},
+	}
+	app := Pure()
+	app.Get("/", func(c *Context) error {
+		return c.String(http.StatusOK, "hello")
+	})
+	app.Get("/error", func(c *Context) error {
+		return expectedErr
+	})
+	for _, test := range cases {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodGet, test.target, nil)
+		app.ServeHTTP(w, r)
+		assert.Equal(t, test.code, w.Code)
+	}
+}
+
 func TestApplicationNamedRoute(t *testing.T) {
 	tests := []struct {
 		path        string

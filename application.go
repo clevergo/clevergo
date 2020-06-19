@@ -153,11 +153,11 @@ type Application struct {
 }
 
 // Make sure the Router conforms with the http.Handler interface
-var _ http.Handler = New()
+var _ http.Handler = Pure()
 
-// New returns a new initialized Router.
+// Pure returns a new initialized application.
 // Path auto-correction, including trailing slashes, is enabled by default.
-func New() *Application {
+func Pure() *Application {
 	return &Application{
 		ShutdownTimeout:        5 * time.Second,
 		ShutdownSignals:        []os.Signal{os.Interrupt, syscall.SIGINT, syscall.SIGTERM},
@@ -167,6 +167,13 @@ func New() *Application {
 		HandleOPTIONS:          true,
 		Logger:                 defaultLogger,
 	}
+}
+
+// New returns an application which enable recovery, error handler and logging middleware by default.
+func New() *Application {
+	app := Pure()
+	app.Use(Logging(), ErrorHandler(), Recovery())
+	return app
 }
 
 // RouteURL creates an url with the given route name and arguments.
