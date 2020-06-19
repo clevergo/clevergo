@@ -82,7 +82,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// defer os.RemoveAll(tmpDir) // clean up
+	defer os.RemoveAll(tmpDir) // clean up
 
 	certFile = filepath.Join(tmpDir, "cert.pem")
 	if err := ioutil.WriteFile(certFile, certFileData, 0666); err != nil {
