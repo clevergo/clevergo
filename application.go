@@ -137,9 +137,6 @@ type Application struct {
 	// is called.
 	MethodNotAllowed http.Handler
 
-	// Error Handler.
-	ErrorHandler ErrorHandler
-
 	// If enabled, use the request.URL.RawPath instead of request.URL.Path.
 	UseRawPath bool
 
@@ -168,7 +165,7 @@ func New() *Application {
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
-		Logger:                 log.New(),
+		Logger:                 defaultLogger,
 	}
 }
 
@@ -393,7 +390,13 @@ func (app *Application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = app.handleRequest(c)
 	}
 	if err != nil {
-		app.HandleError(c, err)
+		app.Logger.Error(err)
+		switch e := err.(type) {
+		case StatusError:
+			c.Error(e.Status(), err.Error())
+		default:
+			c.Error(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+		}
 	}
 }
 
@@ -467,23 +470,6 @@ func (app *Application) handleRequest(c *Context) (err error) {
 	}
 
 	return ErrNotFound
-}
-
-// HandleError handles error.
-func (app *Application) HandleError(c *Context, err error) {
-	if app.ErrorHandler != nil {
-		app.ErrorHandler.Handle(c, err)
-		return
-	}
-
-	app.Logger.Errorf("%s\n", err)
-
-	switch e := err.(type) {
-	case StatusError:
-		c.Error(e.Status(), err.Error())
-	default:
-		c.Error(http.StatusInternalServerError, err.Error())
-	}
 }
 
 func (app *Application) initServer() {

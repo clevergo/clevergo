@@ -731,9 +731,8 @@ func (eh testErrorHandler) Handle(c *Context, err error) {
 	c.Error(eh.status, err.Error())
 }
 
-func TestApplication_ErrorHandler(t *testing.T) {
+func TestApplicationServeError(t *testing.T) {
 	app := New()
-	app.ErrorHandler = &testErrorHandler{http.StatusInternalServerError}
 	app.Get("/error/:msg", func(c *Context) error {
 		return errors.New(c.Params.String("msg"))
 	})
@@ -744,27 +743,7 @@ func TestApplication_ErrorHandler(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/error/"+msg, nil)
 		app.ServeHTTP(w, req)
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assert.Equal(t, fmt.Sprintln(msg), w.Body.String())
-	}
-}
-
-func TestApplication_HandleError(t *testing.T) {
-	app := New()
-	tests := []struct {
-		err  error
-		body string
-		code int
-	}{
-		{errors.New("foo"), "foo", http.StatusInternalServerError},
-		{ErrNotFound, ErrNotFound.Error(), ErrNotFound.Code},
-		{ErrMethodNotAllowed, ErrMethodNotAllowed.Error(), ErrMethodNotAllowed.Code},
-	}
-	for _, test := range tests {
-		w := httptest.NewRecorder()
-		c := newContext(w, nil)
-		app.HandleError(c, test.err)
-		assert.Equal(t, test.code, w.Code)
-		assert.Equal(t, fmt.Sprintln(test.body), w.Body.String())
+		assert.Equal(t, fmt.Sprintln(http.StatusText(http.StatusInternalServerError)), w.Body.String())
 	}
 }
 

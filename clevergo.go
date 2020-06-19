@@ -5,5 +5,11 @@
 // Package clevergo is a trie based high performance HTTP request router.
 package clevergo
 
+import "clevergo.tech/log"
+
 // Map is an alias of map[string]interface{}.
 type Map map[string]interface{}
+
+var (
+	defaultLogger = log.New()
+)
