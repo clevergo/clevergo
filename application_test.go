@@ -887,7 +887,7 @@ func TestApplicationRunTLS(t *testing.T) {
 	<-started
 
 	// listen on same address
-	assert.NotNil(t, app.RunTLS(addr, certFile, keyFile))
+	app.RunTLS(addr, certFile, keyFile)
 
 	req, _ := http.NewRequest(http.MethodGet, "https://localhost:12345/", nil)
 	resp := httptest.NewRecorder()
