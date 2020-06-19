@@ -756,3 +756,11 @@ func TestContextSetHeader(t *testing.T) {
 		assert.Equal(t, v, w.Header().Get(k))
 	}
 }
+
+func TestContextLogger(t *testing.T) {
+	app := New()
+	ctx := &Context{
+		app: app,
+	}
+	assert.Equal(t, app.Logger, ctx.Logger())
+}

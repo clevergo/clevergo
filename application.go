@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"clevergo.tech/log"
 )
 
 // errors
@@ -150,6 +151,8 @@ type Application struct {
 
 	// Request input decoder.
 	Decoder Decoder
+
+	Logger log.Logger
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -165,6 +168,7 @@ func New() *Application {
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
+		Logger:                 log.New(),
 	}
 }
 
@@ -472,7 +476,7 @@ func (app *Application) HandleError(c *Context, err error) {
 		return
 	}
 
-	log.Println(err)
+	app.Logger.Errorf("%s\n", err)
 
 	switch e := err.(type) {
 	case StatusError:
@@ -526,14 +530,14 @@ func (app *Application) serve(ln net.Listener, address string, certFile, keyFile
 	signal.Notify(stop, app.ShutdownSignals...)
 
 	go func() {
-		log.Printf("Listening on %s.\n", app.Server.Addr)
+		app.Logger.Infof("Listening on %s.\n", app.Server.Addr)
 		if certFile != "" && keyFile != "" {
 			err = app.Server.ServeTLS(ln, certFile, keyFile)
 		} else {
 			err = app.Server.Serve(ln)
 		}
 		if err != nil && err != http.ErrServerClosed {
-			log.Println(err)
+			app.Logger.Errorf("Failed to start server: %s.\n", err)
 		}
 		stop <- syscall.SIGTERM
 	}()
@@ -542,7 +546,7 @@ func (app *Application) serve(ln net.Listener, address string, certFile, keyFile
 
 	ctx, cancel := context.WithTimeout(context.Background(), app.ShutdownTimeout)
 	defer cancel()
-	log.Println("Shutting down server...")
+	app.Logger.Infof("Shutting down server...\n")
 	err = app.Server.Shutdown(ctx)
 	return
 }

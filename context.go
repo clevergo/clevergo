@@ -15,6 +15,8 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
+	"clevergo.tech/log"
 )
 
 const (
@@ -434,4 +436,9 @@ func (c *Context) Decode(v interface{}) (err error) {
 // SetHeader is a shortcut of http.ResponseWriter.Header().Set.
 func (c *Context) SetHeader(key, value string) {
 	c.Response.Header().Set(key, value)
+}
+
+// Logger returns the logger of application.
+func (c *Context) Logger() log.Logger {
+	return c.app.Logger
 }
