@@ -118,3 +118,15 @@ func TestWrapHH(t *testing.T) {
 	assert.True(t, handled, "WrapHH failed")
 	assert.Equal(t, expectedErr, actualErr)
 }
+
+func TestServerHeader(t *testing.T) {
+	handle := func(c *Context) error {
+		return nil
+	}
+	for _, value := range []string{"foo", "bar"} {
+		m := ServerHeader(value)
+		w := httptest.NewRecorder()
+		m(handle)(newContext(w, nil))
+		assert.Equal(t, value, w.Header().Get("Server"))
+	}
+}

@@ -117,3 +117,13 @@ func Recovery() MiddlewareFunc {
 	r := &recovery{}
 	return r.middleware
 }
+
+// ServerHeader is a middleware that sets Server header.
+func ServerHeader(value string) MiddlewareFunc {
+	return func(next Handle) Handle {
+		return func(c *Context) error {
+			c.SetHeader("Server", value)
+			return next(c)
+		}
+	}
+}
