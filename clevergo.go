@@ -10,6 +10,12 @@ import "clevergo.tech/log"
 // Map is an alias of map[string]interface{}.
 type Map map[string]interface{}
 
-var (
-	defaultLogger = log.New()
-)
+var defaultLogger log.Logger = log.New()
+
+// SetLogger sets default logger.
+func SetLogger(logger log.Logger) {
+	if logger == nil {
+		panic("logger must not be empty")
+	}
+	defaultLogger = logger
+}
