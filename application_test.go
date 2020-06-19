@@ -97,7 +97,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestApplication(t *testing.T) {
-	app := New()
+	app := Pure()
 
 	routed := false
 	app.Handle(http.MethodGet, "/user/:name", func(c *Context) error {
@@ -127,7 +127,7 @@ func TestApplicationAPI(t *testing.T) {
 
 	httpHandler := handlerStruct{&handler}
 
-	app := New()
+	app := Pure()
 	app.Get("/GET", func(c *Context) error {
 		get = true
 		return nil
@@ -201,7 +201,7 @@ func TestApplicationAPI(t *testing.T) {
 }
 
 func TestApplicationAny(t *testing.T) {
-	app := New()
+	app := Pure()
 	handle := func(c *Context) error {
 		c.WriteString(c.Request.Method)
 		return nil
@@ -224,7 +224,7 @@ func TestApplicationAny(t *testing.T) {
 }
 
 func TestApplicationInvalidInput(t *testing.T) {
-	app := New()
+	app := Pure()
 
 	handle := func(c *Context) error {
 		return nil
@@ -252,8 +252,8 @@ func TestApplicationInvalidInput(t *testing.T) {
 }
 
 func TestApplicationChaining(t *testing.T) {
-	app1 := New()
-	app2 := New()
+	app1 := Pure()
+	app2 := Pure()
 	app1.NotFound = app2
 
 	fooHit := false
@@ -293,7 +293,7 @@ func BenchmarkAllowed(b *testing.B) {
 		return nil
 	}
 
-	app := New()
+	app := Pure()
 	app.Post("/path", handlerFunc)
 	app.Get("/path", handlerFunc)
 
@@ -316,7 +316,7 @@ func TestApplicationOPTIONS(t *testing.T) {
 		return nil
 	}
 
-	app := New()
+	app := Pure()
 	app.Post("/path", handlerFunc)
 
 	// test not allowed
@@ -392,7 +392,7 @@ func TestApplicationNotAllowed(t *testing.T) {
 		return nil
 	}
 
-	app := New()
+	app := Pure()
 	app.Post("/path", handlerFunc)
 
 	// test not allowed
@@ -431,7 +431,7 @@ func TestApplicationNotFound(t *testing.T) {
 		return nil
 	}
 
-	app := New()
+	app := Pure()
 	app.Get("/path", handlerFunc)
 	app.Get("/dir/", handlerFunc)
 	app.Get("/", handlerFunc)
@@ -482,7 +482,7 @@ func TestApplicationNotFound(t *testing.T) {
 	assert.Equal(t, "map[Location:[/path]]", fmt.Sprint(w.Header()))
 
 	// Test special case where no node for the prefix "/" exists
-	app = New()
+	app = Pure()
 	app.Get("/a", handlerFunc)
 	r, _ = http.NewRequest(http.MethodGet, "/", nil)
 	w = httptest.NewRecorder()
@@ -498,7 +498,7 @@ func TestApplicationLookup(t *testing.T) {
 	}
 	wantParams := Params{Param{"name", "gopher"}}
 
-	app := New()
+	app := Pure()
 
 	// try empty trees first
 	route, _, tsr := app.Lookup(http.MethodGet, "/nope")
@@ -547,7 +547,7 @@ func TestApplicationParamsFromContext(t *testing.T) {
 		routed = true
 		return nil
 	}
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, "/user", handlerFuncNil)
 	app.Handle(http.MethodGet, "/user/:name", handlerFunc)
 
@@ -587,7 +587,7 @@ func TestApplicationMatchedRoutePath(t *testing.T) {
 		return nil
 	}
 
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, route1, handle1)
 	app.Handle(http.MethodGet, route2, handle2)
 	app.Handle(http.MethodGet, route3, handle3)
@@ -618,7 +618,7 @@ func (mfs *mockFileSystem) Open(name string) (http.File, error) {
 }
 
 func TestApplicationServeFiles(t *testing.T) {
-	app := New()
+	app := Pure()
 	mfs := &mockFileSystem{}
 
 	recv := catchPanic(func() {
@@ -668,7 +668,7 @@ func TestApplicationNamedRoute(t *testing.T) {
 		{"/", "home", nil, "/"},
 		{"/users/:id", "user", []string{"id", "foo"}, "/users/foo"},
 	}
-	app := New()
+	app := Pure()
 	for _, test := range tests {
 		app.Handle(http.MethodGet, test.path, func(c *Context) error {
 
@@ -693,7 +693,7 @@ func TestApplicationNamedRoute(t *testing.T) {
 }
 
 func ExampleApplication_RouteURL() {
-	app := New()
+	app := Pure()
 	app.Get("/hello/:name", func(c *Context) error {
 		return nil
 	}, RouteName("hello"))
@@ -739,7 +739,7 @@ func ExampleApplication_RouteURL() {
 }
 
 func ExampleApplication_ServeFiles() {
-	app := New()
+	app := Pure()
 
 	app.ServeFiles("/static/*filepath", http.Dir("/path/to/static"))
 
@@ -757,7 +757,7 @@ func (eh testErrorHandler) Handle(c *Context, err error) {
 }
 
 func TestApplicationServeError(t *testing.T) {
-	app := New()
+	app := Pure()
 	app.Get("/error/:msg", func(c *Context) error {
 		return errors.New(c.Params.String("msg"))
 	})
@@ -773,7 +773,7 @@ func TestApplicationServeError(t *testing.T) {
 }
 
 func TestApplicationUseRawPath(t *testing.T) {
-	app := New()
+	app := Pure()
 	app.UseRawPath = true
 	handled := false
 	handle := func(c *Context) error {
@@ -789,7 +789,7 @@ func TestApplicationUseRawPath(t *testing.T) {
 }
 
 func TestApplicationUseRawPathMixed(t *testing.T) {
-	app := New()
+	app := Pure()
 	app.UseRawPath = true
 	handled := false
 	handle := func(c *Context) error {
@@ -805,7 +805,7 @@ func TestApplicationUseRawPathMixed(t *testing.T) {
 }
 
 func TestApplicationUseRawPathCatchAll(t *testing.T) {
-	app := New()
+	app := Pure()
 	app.UseRawPath = true
 	handled := false
 	handle := func(c *Context) error {
@@ -821,7 +821,7 @@ func TestApplicationUseRawPathCatchAll(t *testing.T) {
 }
 
 func TestApplicationUse(t *testing.T) {
-	app := New()
+	app := Pure()
 	app.Use(
 		echoMiddleware("m1"),
 		echoMiddleware("m2"),
@@ -842,7 +842,7 @@ func TestApplicationUse(t *testing.T) {
 func TestApplicationRun(t *testing.T) {
 	addr := ":8080"
 	body := "Run"
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
 
 	started := make(chan bool)
@@ -871,7 +871,7 @@ func TestApplicationRun(t *testing.T) {
 func TestApplicationRunTLS(t *testing.T) {
 	addr := ":12345"
 	body := "RunTLS"
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
 
 	// invalid certificate and key file
@@ -903,7 +903,7 @@ func TestApplicationRunTLS(t *testing.T) {
 func TestApplicationRunUnix(t *testing.T) {
 	addr := filepath.Join(tmpDir, "socket.sock")
 	body := "RunUnix"
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
 
 	started := make(chan bool)
@@ -938,7 +938,7 @@ func TestApplicationRunUnix(t *testing.T) {
 }
 func TestApplicationRunUnixError(t *testing.T) {
 	addr := "/invalid/socket/addr"
-	app := New()
+	app := Pure()
 	err := app.RunUnix(addr)
 	if err == nil {
 		t.Error("expected error, got nil")

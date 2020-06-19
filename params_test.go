@@ -14,7 +14,7 @@ import (
 )
 
 func ExampleParams() {
-	router := New()
+	router := Pure()
 	router.Get("/post/:year/:month/:title", func(c *Context) error {
 		// converts param value to int.
 		year, _ := c.Params.Int("year")

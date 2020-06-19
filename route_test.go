@@ -15,7 +15,7 @@ import (
 )
 
 func TestRouteGroupURL(t *testing.T) {
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(""), RouteName("home"))
 	app.Handle(http.MethodGet, "/users/:id", echoHandler(""), RouteName("user"))
 	app.Handle(http.MethodGet, "/posts/:year/:month/:title", echoHandler(""), RouteName("post"))
@@ -66,7 +66,7 @@ func TestRouteGroupAPI(t *testing.T) {
 
 	httpHandler := handlerStruct{&handler}
 
-	app := New()
+	app := Pure()
 	api := app.Group("/api")
 	api.Get("/GET", func(c *Context) error {
 		get = true
@@ -145,7 +145,7 @@ func TestRouteMiddleware(t *testing.T) {
 	m2 := echoMiddleware("m2")
 	handler := echoHandler("hello")
 
-	app := New()
+	app := Pure()
 	app.Handle(http.MethodGet, "/", handler)
 	app.Handle(http.MethodGet, "/middleware", handler, RouteMiddleware(m1, m2))
 
@@ -165,7 +165,7 @@ func TestNestedRouteGroup(t *testing.T) {
 	m2 := echoMiddleware("m2")
 	handler := echoHandler("hello")
 
-	app := New()
+	app := Pure()
 	api := app.Group("/api")
 	v1 := api.Group("/v1", RouteGroupMiddleware(m1))
 	v2 := api.Group("/v2", RouteGroupMiddleware(m2))
@@ -193,7 +193,7 @@ func TestNestedRouteGroup(t *testing.T) {
 }
 
 func ExampleRoute() {
-	app := New()
+	app := Pure()
 	app.Get("/posts/:page", func(c *Context) error {
 		page, _ := c.Params.Int("page")
 		route := c.Route
