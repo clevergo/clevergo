@@ -7,6 +7,8 @@ package clevergo
 import (
 	"errors"
 	"net/http"
+
+	"clevergo.tech/log"
 )
 
 // Error defines an HTTP response error.
@@ -17,13 +19,52 @@ type Error interface {
 
 // Errors
 var (
-	ErrNotFound         = StatusError{http.StatusNotFound, errors.New("404 page not found")}
+	ErrNotFound         = StatusError{http.StatusNotFound, errors.New(http.StatusText(http.StatusNotFound))}
 	ErrMethodNotAllowed = StatusError{http.StatusMethodNotAllowed, errors.New(http.StatusText(http.StatusMethodNotAllowed))}
 )
 
-// ErrorHandler is a handler to handle error returns from handle.
-type ErrorHandler interface {
-	Handle(c *Context, err error)
+// ErrorHandlerOption is a function that receives an error handler instance.
+type ErrorHandlerOption func(*errorHandler)
+
+// ErrorHandlerLogger is an option that sets error handler logger.
+func ErrorHandlerLogger(logger log.Logger) ErrorHandlerOption {
+	return func(h *errorHandler) {
+		h.logger = logger
+	}
+}
+
+type errorHandler struct {
+	logger log.Logger
+}
+
+func (h *errorHandler) middleware(next Handle) Handle {
+	return func(c *Context) (err error) {
+		if err := next(c); err != nil {
+			h.handleError(c, err)
+		}
+		return nil
+	}
+}
+
+func (h *errorHandler) handleError(c *Context, err error) {
+	h.logger.Error(err)
+	switch e := err.(type) {
+	case Error:
+		c.Error(e.Status(), err.Error())
+	default:
+		c.Error(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+	}
+}
+
+// ErrorHandler returns a error handler middleware with the given options.
+func ErrorHandler(opts ...ErrorHandlerOption) MiddlewareFunc {
+	h := &errorHandler{
+		logger: defaultLogger,
+	}
+	for _, opt := range opts {
+		opt(h)
+	}
+	return h.middleware
 }
 
 // StatusError implements Error interface.
