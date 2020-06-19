@@ -169,10 +169,10 @@ func Pure() *Application {
 	}
 }
 
-// New returns an application which enable recovery, error handler and logging middleware by default.
+// New returns an application which enable recovery, error handler, server header and logging middleware by default.
 func New() *Application {
 	app := Pure()
-	app.Use(Logging(), ErrorHandler(), Recovery())
+	app.Use(Logging(), ErrorHandler(), Recovery(), ServerHeader("CleverGo"))
 	return app
 }
 
