@@ -27,7 +27,6 @@ go get clevergo.tech/clevergo
 - **[Route Group](https://clevergo.tech/docs/routing/route-group):** as known as subrouter.
 - **Friendly to APIs:** it is easy to design RESTful APIs and versioning your APIs by route group.
 - **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
-- **[Error Handler](https://clevergo.tech/docs/error-handling):** record error and format error response.
 
 ## Examples
 
