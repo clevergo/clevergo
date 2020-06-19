@@ -10,6 +10,8 @@ import "clevergo.tech/log"
 // Map is an alias of map[string]interface{}.
 type Map map[string]interface{}
 
+const serverName = "CleverGo"
+
 var defaultLogger log.Logger = log.New()
 
 // SetLogger sets default logger.
