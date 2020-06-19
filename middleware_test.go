@@ -9,11 +9,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	stdlog "log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"clevergo.tech/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,7 +79,7 @@ func TestRecovery(t *testing.T) {
 	m := Recovery(true)
 	router := New()
 	out := &bytes.Buffer{}
-	log.SetOutput(out)
+	stdlog.SetOutput(out)
 	router.Use(m)
 	router.Get("/", func(_ *Context) error {
 		panic("foobar")
@@ -91,8 +92,8 @@ func TestRecovery(t *testing.T) {
 
 func TestRecoveryLogger(t *testing.T) {
 	out := &bytes.Buffer{}
-	logger := log.New(out, "recovery", 0)
-	r := RecoveryLogger(true, logger)
+	stdlog.SetOutput(out)
+	r := RecoveryLogger(true, log.New())
 	router := New()
 	router.Use(r)
 	router.Get("/", func(_ *Context) error {
