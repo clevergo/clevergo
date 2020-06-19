@@ -103,5 +103,5 @@ type PanicError struct {
 
 // Error implements error interface.
 func (e PanicError) Error() string {
-	return fmt.Sprintf("%s\n%s\n", e.Data, e.Stack)
+	return fmt.Sprintf("Panic: %v\n%s\n", e.Data, e.Stack)
 }
