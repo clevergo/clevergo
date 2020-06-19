@@ -392,7 +392,7 @@ func (app *Application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.Logger.Error(err)
 		switch e := err.(type) {
-		case StatusError:
+		case Error:
 			c.Error(e.Status(), err.Error())
 		default:
 			c.Error(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
