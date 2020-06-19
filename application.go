@@ -5,6 +5,7 @@
 package clevergo
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,7 +13,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 )
 
 // errors
@@ -67,6 +72,12 @@ type Renderer interface {
 // handler functions via configurable routes
 type Application struct {
 	Server *http.Server
+
+	// Graceful shutdown timeout.
+	ShutdownTimeout time.Duration
+
+	// Graceful shutdown signals.
+	ShutdownSignals []os.Signal
 
 	trees map[string]*node
 
@@ -148,6 +159,8 @@ var _ http.Handler = New()
 // Path auto-correction, including trailing slashes, is enabled by default.
 func New() *Application {
 	return &Application{
+		ShutdownTimeout:        5 * time.Second,
+		ShutdownSignals:        []os.Signal{os.Interrupt, syscall.SIGINT, syscall.SIGTERM},
 		RedirectTrailingSlash:  true,
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
@@ -477,26 +490,60 @@ func (app *Application) initServer() {
 }
 
 // Run starts a HTTP server with the given address.
-func (app *Application) Run(addr string) error {
-	app.initServer()
-	app.Server.Addr = addr
-	return app.Server.ListenAndServe()
+func (app *Application) Run(address string) error {
+	ln, err := net.Listen("tcp", address)
+	if err != nil {
+		return err
+	}
+	return app.serve(ln, address, "", "")
 }
 
 // RunTLS starts a HTTPS server with the given address, certfile and keyfile.
-func (app *Application) RunTLS(addr, certFile, keyFile string) error {
-	app.initServer()
-	app.Server.Addr = addr
-	return app.Server.ListenAndServeTLS(certFile, keyFile)
+func (app *Application) RunTLS(address, certFile, keyFile string) error {
+	ln, err := net.Listen("tcp", address)
+	if err != nil {
+		return err
+	}
+	defer ln.Close()
+	return app.serve(ln, address, certFile, keyFile)
 }
 
 // RunUnix starts a HTTP Server which listening and serving HTTP requests
 // through the specified unix socket with the given address.
-func (app *Application) RunUnix(addr string) error {
-	app.initServer()
-	l, err := net.Listen("unix", addr)
+func (app *Application) RunUnix(address string) error {
+	ln, err := net.Listen("unix", address)
 	if err != nil {
 		return err
 	}
-	return app.Server.Serve(l)
+	return app.serve(ln, address, "", "")
+}
+
+func (app *Application) serve(ln net.Listener, address string, certFile, keyFile string) (err error) {
+	app.initServer()
+	app.Server.Addr = address
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, app.ShutdownSignals...)
+
+	go func() {
+		log.Printf("Listening on %s.\n", app.Server.Addr)
+		var e error
+		if certFile != "" && keyFile != "" {
+			e = app.Server.ServeTLS(ln, certFile, keyFile)
+		} else {
+			e = app.Server.Serve(ln)
+		}
+		if e != nil && e != http.ErrServerClosed {
+			err = e
+		}
+		stop <- syscall.SIGTERM
+	}()
+
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), app.ShutdownTimeout)
+	defer cancel()
+	log.Println("Shutting down server...")
+	err = app.Server.Shutdown(ctx)
+	return
 }

@@ -82,14 +82,14 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.RemoveAll(tmpDir) // clean up
+	// defer os.RemoveAll(tmpDir) // clean up
 
 	certFile = filepath.Join(tmpDir, "cert.pem")
 	if err := ioutil.WriteFile(certFile, certFileData, 0666); err != nil {
 		log.Fatal(err)
 	}
 	keyFile = filepath.Join(tmpDir, "key.pem")
-	if err := ioutil.WriteFile(certFile, keyFileData, 0666); err != nil {
+	if err := ioutil.WriteFile(keyFile, keyFileData, 0666); err != nil {
 		log.Fatal(err)
 	}
 
@@ -836,7 +836,7 @@ func TestApplicationUse(t *testing.T) {
 }
 
 func TestApplicationRun(t *testing.T) {
-	addr := ":12345"
+	addr := ":8080"
 	body := "Run"
 	app := New()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
@@ -844,18 +844,24 @@ func TestApplicationRun(t *testing.T) {
 	started := make(chan bool)
 	go func() {
 		started <- true
-		app.Run(addr)
+		assert.Nil(t, app.Run(addr))
 	}()
 
+	var tested bool
+	defer func() {
+		assert.True(t, tested)
+	}()
 	<-started
-	defer app.Server.Close()
+
+	// listen on same address
+	assert.NotNil(t, app.Run(addr))
 
 	req := httptest.NewRequest(http.MethodGet, "http://"+addr+"/", nil)
 	resp := httptest.NewRecorder()
 	app.ServeHTTP(resp, req)
-	if resp.Body.String() != body {
-		t.Errorf("expected body %q, got %q", body, resp.Body.String())
-	}
+	assert.Equal(t, body, resp.Body.String())
+
+	tested = true
 }
 
 func TestApplicationRunTLS(t *testing.T) {
@@ -864,21 +870,31 @@ func TestApplicationRunTLS(t *testing.T) {
 	app := New()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
 
+	// invalid certificate and key file
+	app.RunTLS(addr, "invalidcert.pem", keyFile)
+
 	started := make(chan bool)
 	go func() {
 		started <- true
-		app.RunTLS(addr, certFile, keyFile)
+		assert.Nil(t, app.RunTLS(addr, certFile, keyFile))
+	}()
+
+	var tested bool
+	defer func() {
+		assert.True(t, tested)
 	}()
 
 	<-started
-	defer app.Server.Close()
+
+	// listen on same address
+	assert.NotNil(t, app.RunTLS(addr, certFile, keyFile))
 
 	req, _ := http.NewRequest(http.MethodGet, "https://localhost:12345/", nil)
 	resp := httptest.NewRecorder()
 	app.ServeHTTP(resp, req)
-	if resp.Body.String() != body {
-		t.Errorf("expected body %q, got %q", body, resp.Body.String())
-	}
+	assert.Equal(t, body, resp.Body.String())
+
+	tested = true
 }
 func TestApplicationRunUnix(t *testing.T) {
 	addr := filepath.Join(tmpDir, "socket.sock")
@@ -889,11 +905,15 @@ func TestApplicationRunUnix(t *testing.T) {
 	started := make(chan bool)
 	go func() {
 		started <- true
-		app.RunUnix(addr)
+		assert.Nil(t, app.RunUnix(addr))
+	}()
+
+	var tested bool
+	defer func() {
+		assert.True(t, tested)
 	}()
 
 	<-started
-	defer app.Server.Close()
 
 	client := http.Client{
 		Transport: &http.Transport{
@@ -905,16 +925,12 @@ func TestApplicationRunUnix(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, "http://unix", nil)
 	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("failed to read from unix socket: %s", err)
-	}
+	assert.Nil(t, err)
 	actualBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("failed to read response body: %s", err)
-	}
-	if string(actualBody) != body {
-		t.Errorf("expected body %q, got %q", body, string(actualBody))
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, body, string(actualBody))
+
+	tested = true
 }
 func TestApplicationRunUnixError(t *testing.T) {
 	addr := "/invalid/socket/addr"
