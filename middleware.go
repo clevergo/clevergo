@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"runtime/debug"
 	"sync"
-
-	"clevergo.tech/log"
 )
 
 // MiddlewareFunc is a function that receives a handle and returns a handle.
@@ -95,55 +93,27 @@ func Chain(handle Handle, middlewares ...MiddlewareFunc) Handle {
 	return handle
 }
 
-// RecoveryOption is a function that receives a recovery instance.
-type RecoveryOption func(*recovery)
-
-// RecoveryDebug is an option that enables or disables debug mode.
-func RecoveryDebug(debug bool) RecoveryOption {
-	return func(r *recovery) {
-		r.debug = debug
-	}
-}
-
-// RecoveryLogger is an option that sets recovery logger.
-func RecoveryLogger(logger log.Logger) RecoveryOption {
-	return func(r *recovery) {
-		r.logger = logger
-	}
-}
-
 type recovery struct {
-	debug  bool
-	logger log.Logger
-}
-
-func (r *recovery) handle(c *Context, err interface{}) {
-	c.Response.WriteHeader(http.StatusInternalServerError)
-	r.logger.Error(err)
-	if r.debug {
-		r.logger.Error(debug.Stack())
-	}
 }
 
 func (r *recovery) middleware(next Handle) Handle {
-	return func(c *Context) error {
+	return func(c *Context) (err error) {
 		defer func() {
-			if err := recover(); err != nil {
-				r.handle(c, err)
+			if data := recover(); data != nil {
+				err = PanicError{
+					Context: c,
+					Data:    data,
+					Stack:   debug.Stack(),
+				}
 			}
 		}()
-		return next(c)
+		err = next(c)
+		return
 	}
 }
 
 // Recovery returns a recovery middleware with debug enabled by default.
-func Recovery(opts ...RecoveryOption) MiddlewareFunc {
-	r := &recovery{
-		debug:  true,
-		logger: defaultLogger,
-	}
-	for _, opt := range opts {
-		opt(r)
-	}
+func Recovery() MiddlewareFunc {
+	r := &recovery{}
 	return r.middleware
 }

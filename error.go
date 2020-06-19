@@ -6,6 +6,7 @@ package clevergo
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"clevergo.tech/log"
@@ -86,4 +87,21 @@ func (e StatusError) Error() string {
 // Status implements Error.Status.
 func (e StatusError) Status() int {
 	return e.Code
+}
+
+// PanicError is an error that contains panic infomation.
+type PanicError struct {
+	// Context.
+	Context *Context
+
+	// Recovery data.
+	Data interface{}
+
+	// Debug stack.
+	Stack []byte
+}
+
+// Error implements error interface.
+func (e PanicError) Error() string {
+	return fmt.Sprintf("%s\n%s\n", e.Data, e.Stack)
 }

@@ -57,3 +57,13 @@ func TestErrorHandler(t *testing.T) {
 		assert.Equal(t, test.body, resp.Body.String())
 	}
 }
+
+func TestPanicErrorError(t *testing.T) {
+	err := PanicError{
+		Data:  "foo",
+		Stack: []byte("bar"),
+	}
+	msg := err.Error()
+	assert.Contains(t, msg, "foo")
+	assert.Contains(t, msg, "bar")
+}

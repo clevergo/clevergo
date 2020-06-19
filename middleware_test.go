@@ -5,16 +5,13 @@
 package clevergo
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	stdlog "log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"clevergo.tech/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,35 +72,17 @@ func ExampleChain() {
 	// m1 m2 hello
 }
 
-func TestRecoveryDebug(t *testing.T) {
-	m := &recovery{}
-	for _, debug := range []bool{true, false} {
-		RecoveryDebug(debug)(m)
-		assert.Equal(t, debug, m.debug)
-	}
-}
-
-func TestRecoveryLogger(t *testing.T) {
-	m := &recovery{}
-	for _, logger := range []log.Logger{nil, defaultLogger} {
-		RecoveryLogger(logger)(m)
-		assert.Equal(t, logger, m.logger)
-	}
-}
-
 func TestRecovery(t *testing.T) {
-	m := Recovery(RecoveryLogger(defaultLogger))
-	router := New()
-	out := &bytes.Buffer{}
-	stdlog.SetOutput(out)
-	router.Use(m)
-	router.Get("/", func(_ *Context) error {
+	m := Recovery()
+	handle := m(func(_ *Context) error {
 		panic("foobar")
 	})
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/", nil))
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, out.String(), "foobar")
+	ctx := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	err := handle(ctx).(PanicError)
+	assert.Equal(t, ctx, err.Context)
+	assert.Equal(t, "foobar", err.Data)
+	assert.NotNil(t, err.Stack)
 }
 
 func TestWrapH(t *testing.T) {
