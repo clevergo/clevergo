@@ -18,5 +18,5 @@ before_install:
 script:
   - travis_retry go test -v -covermode=count -coverprofile=coverage.out
   - travis_retry go vet ./...
-  - travis_retry test -z "$(gofmt -d -s . | tee /dev/stderr)"
+  - travis_retry test -z "$(gofmt -d -s .)"
   - travis_retry $HOME/gopath/bin/goveralls  -coverprofile=coverage.out -service=travis-ci
