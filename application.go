@@ -527,14 +527,13 @@ func (app *Application) serve(ln net.Listener, address string, certFile, keyFile
 
 	go func() {
 		log.Printf("Listening on %s.\n", app.Server.Addr)
-		var e error
 		if certFile != "" && keyFile != "" {
-			e = app.Server.ServeTLS(ln, certFile, keyFile)
+			err = app.Server.ServeTLS(ln, certFile, keyFile)
 		} else {
-			e = app.Server.Serve(ln)
+			err = app.Server.Serve(ln)
 		}
-		if e != nil && e != http.ErrServerClosed {
-			err = e
+		if err != nil && err != http.ErrServerClosed {
+			log.Println(err)
 		}
 		stop <- syscall.SIGTERM
 	}()
