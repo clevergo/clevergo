@@ -8,7 +8,7 @@
 CleverGo is a lightweight, feature rich and trie based high performance HTTP request router.
 
 ```shell
-go get clevergo.tech/clevergo
+go get -u clevergo.tech/clevergo
 ```
 
 ![Benchmark](https://clevergo.tech/img/benchmark.png)
