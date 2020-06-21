@@ -26,6 +26,8 @@ go get -u clevergo.tech/clevergo
 - **[Route Group](https://clevergo.tech/docs/routing/route-group):** as known as subrouter.
 - **Friendly to APIs:** it is easy to design RESTful APIs and versioning your APIs by route group.
 - **[Middleware](https://clevergo.tech/docs/middleware):** plug middleware in route group or particular route, supports global middleware as well. Compatible with most of third-party middleware.
+- **[Logger](https://clevergo.tech/docs/logger):** a generic logger interface, supports [zap](https://github.com/uber-go/zap) and [logrus](http://github.com/sirupsen/logrus). Logger can be used in middleware or handler.
+- ...
 
 ## Examples
 
