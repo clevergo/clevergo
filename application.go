@@ -152,7 +152,7 @@ type Application struct {
 	Logger log.Logger
 }
 
-// Make sure the Router conforms with the http.Handler interface
+// Make sure the Application conforms with the http.Handler interface
 var _ http.Handler = (*Application)(nil)
 
 // Pure returns a new initialized application.
