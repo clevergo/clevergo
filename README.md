@@ -11,16 +11,15 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 go get -u clevergo.tech/clevergo
 ```
 
-![Benchmark](https://clevergo.tech/img/benchmark.png)
-
-## Documentation
-
 - [English](https://clevergo.tech/docs/)
 - [简体中文](https://clevergo.tech/zh/docs/)
 - [繁體中文](https://clevergo.tech/zh-hant/docs/)
 
+[![Benchmark](https://clevergo.tech/img/benchmark.png)](https://clevergo.tech/docs/benchmark)
+
 ## Features
 
+- **Full features of HTTP router**.
 - **High Performance:** extremely fast, see [Benchmark](https://clevergo.tech/docs/benchmark).
 - **Gradual learning curve:** you can learn the entire usages by going through the [documentation](#documentation) in half an hour.
 - **[Reverse Route Generation](https://clevergo.tech/docs/routing/url-generation):** allow generating URLs by named route or matched route.
