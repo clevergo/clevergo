@@ -153,7 +153,7 @@ type Application struct {
 }
 
 // Make sure the Router conforms with the http.Handler interface
-var _ http.Handler = Pure()
+var _ http.Handler = (*Application)(nil)
 
 // Pure returns a new initialized application.
 // Path auto-correction, including trailing slashes, is enabled by default.
