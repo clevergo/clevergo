@@ -300,6 +300,12 @@ func (c *Context) Stringf(code int, format string, a ...interface{}) error {
 	return c.String(code, fmt.Sprintf(format, a...))
 }
 
+// StringBlob sends blob HTML response with status code, it also sets
+// Content-Type as "text/plain; charset=utf-8".
+func (c *Context) StringBlob(code int, bs []byte) error {
+	return c.Blob(code, headerContentTypeText, bs)
+}
+
 // XML sends XML response with status code, it also sets
 // Content-Type as "application/xml".
 func (c *Context) XML(code int, data interface{}) error {

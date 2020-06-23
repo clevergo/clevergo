@@ -436,6 +436,24 @@ func TestContext_Stringf(t *testing.T) {
 	}
 }
 
+func TestContext_StringBlob(t *testing.T) {
+	tests := []struct {
+		code int
+		s    string
+	}{
+		{200, "foobar"},
+		{500, "error"},
+	}
+	for _, test := range tests {
+		w := httptest.NewRecorder()
+		c := newContext(w, nil)
+		c.StringBlob(test.code, []byte(test.s))
+		assert.Equal(t, test.code, w.Code)
+		assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
+		assert.Equal(t, test.s, w.Body.String())
+	}
+}
+
 func TestContext_XML(t *testing.T) {
 	tests := []struct {
 		code      int
