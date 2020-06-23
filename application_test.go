@@ -6,6 +6,7 @@ package clevergo
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -16,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -847,25 +849,21 @@ func TestApplicationRun(t *testing.T) {
 
 	started := make(chan bool)
 	go func() {
-		started <- true
-		assert.Nil(t, app.Run(addr))
+		<-started
+		time.Sleep(time.Second)
+
+		assert.NotNil(t, app.Run(addr))
+
+		resp, err := http.Get("http://localhost:8080")
+		assert.Nil(t, err)
+		actualBody, _ := ioutil.ReadAll(resp.Body)
+		assert.Equal(t, body, string(actualBody))
+
+		app.Server.Close()
 	}()
 
-	var tested bool
-	defer func() {
-		assert.True(t, tested)
-	}()
-	<-started
-
-	// listen on same address
-	assert.NotNil(t, app.Run(addr))
-
-	req := httptest.NewRequest(http.MethodGet, "http://"+addr+"/", nil)
-	resp := httptest.NewRecorder()
-	app.ServeHTTP(resp, req)
-	assert.Equal(t, body, resp.Body.String())
-
-	tested = true
+	started <- true
+	assert.Nil(t, app.Run(addr))
 }
 
 func TestApplicationRunTLS(t *testing.T) {
@@ -874,31 +872,24 @@ func TestApplicationRunTLS(t *testing.T) {
 	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
 
-	// invalid certificate and key file
-	app.RunTLS(addr, "invalidcert.pem", keyFile)
-
 	started := make(chan bool)
 	go func() {
-		started <- true
-		assert.Nil(t, app.RunTLS(addr, certFile, keyFile))
+		<-started
+		time.Sleep(time.Second)
+
+		assert.NotNil(t, app.RunTLS(addr, certFile, keyFile))
+
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		resp, err := http.Get("https://localhost:12345/")
+		assert.Nil(t, err)
+		actualBody, _ := ioutil.ReadAll(resp.Body)
+		assert.Equal(t, body, string(actualBody))
+
+		app.Server.Close()
 	}()
 
-	var tested bool
-	defer func() {
-		assert.True(t, tested)
-	}()
-
-	<-started
-
-	// listen on same address
-	app.RunTLS(addr, certFile, keyFile)
-
-	req, _ := http.NewRequest(http.MethodGet, "https://localhost:12345/", nil)
-	resp := httptest.NewRecorder()
-	app.ServeHTTP(resp, req)
-	assert.Equal(t, body, resp.Body.String())
-
-	tested = true
+	started <- true
+	assert.Nil(t, app.RunTLS(addr, certFile, keyFile))
 }
 func TestApplicationRunUnix(t *testing.T) {
 	addr := filepath.Join(tmpDir, "socket.sock")
@@ -908,33 +899,29 @@ func TestApplicationRunUnix(t *testing.T) {
 
 	started := make(chan bool)
 	go func() {
-		started <- true
-		assert.Nil(t, app.RunUnix(addr))
-	}()
+		<-started
+		time.Sleep(time.Second)
 
-	var tested bool
-	defer func() {
-		assert.True(t, tested)
-	}()
-
-	<-started
-
-	client := http.Client{
-		Transport: &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", addr)
+		client := http.Client{
+			Transport: &http.Transport{
+				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+					return net.Dial("unix", addr)
+				},
 			},
-		},
-	}
+		}
 
-	req, _ := http.NewRequest(http.MethodGet, "http://unix", nil)
-	resp, err := client.Do(req)
-	assert.Nil(t, err)
-	actualBody, err := ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err)
-	assert.Equal(t, body, string(actualBody))
+		req, _ := http.NewRequest(http.MethodGet, "http://unix", nil)
+		resp, err := client.Do(req)
+		assert.Nil(t, err)
+		actualBody, err := ioutil.ReadAll(resp.Body)
+		assert.Nil(t, err)
+		assert.Equal(t, body, string(actualBody))
 
-	tested = true
+		app.Server.Close()
+	}()
+
+	started <- true
+	assert.Nil(t, app.RunUnix(addr))
 }
 func TestApplicationRunUnixError(t *testing.T) {
 	addr := "/invalid/socket/addr"

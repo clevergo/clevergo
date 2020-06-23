@@ -80,6 +80,9 @@ type Application struct {
 	// Graceful shutdown signals.
 	ShutdownSignals []os.Signal
 
+	certFile string
+	keyFile  string
+
 	trees map[string]*node
 
 	// Named routes.
@@ -492,17 +495,20 @@ func (app *Application) Run(address string) error {
 	if err != nil {
 		return err
 	}
-	return app.serve(ln, address, "", "")
+	return app.Serve(ln)
 }
 
 // RunTLS starts a HTTPS server with the given address, certfile and keyfile.
 func (app *Application) RunTLS(address, certFile, keyFile string) error {
+	app.certFile = certFile
+	app.keyFile = keyFile
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
 	}
 	defer ln.Close()
-	return app.serve(ln, address, certFile, keyFile)
+
+	return app.Serve(ln)
 }
 
 // RunUnix starts a HTTP Server which listening and serving HTTP requests
@@ -512,27 +518,24 @@ func (app *Application) RunUnix(address string) error {
 	if err != nil {
 		return err
 	}
-	return app.serve(ln, address, "", "")
+	return app.Serve(ln)
 }
 
-func (app *Application) serve(ln net.Listener, address string, certFile, keyFile string) (err error) {
+// Serve accepts incoming connections on the Listener ln.
+func (app *Application) Serve(ln net.Listener) (err error) {
 	app.initServer()
-	app.Server.Addr = address
-
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, app.ShutdownSignals...)
 
 	go func() {
-		app.Logger.Infof("Listening on %s.\n", app.Server.Addr)
-		if certFile != "" && keyFile != "" {
-			err = app.Server.ServeTLS(ln, certFile, keyFile)
+		app.Logger.Infof("Listening on %s.\n", ln.Addr().String())
+		if app.certFile != "" && app.keyFile != "" {
+			err = app.Server.ServeTLS(ln, app.certFile, app.keyFile)
 		} else {
 			err = app.Server.Serve(ln)
 		}
-		if err != nil && err != http.ErrServerClosed {
-			app.Logger.Errorf("Failed to start server: %s.\n", err)
-		}
-		stop <- syscall.SIGTERM
+		app.Logger.Errorf("Failed to start server: %s.\n", err)
+		stop <- os.Interrupt
 	}()
 
 	<-stop
