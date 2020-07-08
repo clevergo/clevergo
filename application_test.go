@@ -16,6 +16,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -620,19 +621,16 @@ func (mfs *mockFileSystem) Open(name string) (http.File, error) {
 }
 
 func TestApplicationServeFiles(t *testing.T) {
-	app := Pure()
 	mfs := &mockFileSystem{}
 
-	recv := catchPanic(func() {
-		app.ServeFiles("/noFilepath", mfs)
-	})
-	assert.NotNil(t, recv, "registering path not ending with '*filepath' did not panic")
-
-	app.ServeFiles("/*filepath", mfs)
-	w := new(mockResponseWriter)
-	r, _ := http.NewRequest(http.MethodGet, "/favicon.ico", nil)
-	app.ServeHTTP(w, r)
-	assert.True(t, mfs.opened, "serving file failed")
+	for _, path := range []string{"/", "/static", "/static/"} {
+		app := Pure()
+		app.ServeFiles(path, mfs)
+		w := new(mockResponseWriter)
+		r, _ := http.NewRequest(http.MethodGet, strings.TrimSuffix(path, "/")+"/favicon.ico", nil)
+		app.ServeHTTP(w, r)
+		assert.True(t, mfs.opened, "serving file failed")
+	}
 }
 
 func TestApplicationServeHTTP(t *testing.T) {
@@ -743,7 +741,7 @@ func ExampleApplication_RouteURL() {
 func ExampleApplication_ServeFiles() {
 	app := Pure()
 
-	app.ServeFiles("/static/*filepath", http.Dir("/path/to/static"))
+	app.ServeFiles("/static/", http.Dir("/path/to/static"))
 
 	// sometimes, it is useful to treat http.FileServer as NotFoundHandler,
 	// such as "/favicon.ico".

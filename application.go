@@ -301,23 +301,10 @@ func (app *Application) HandlerFunc(method, path string, f http.HandlerFunc, opt
 }
 
 // ServeFiles serves files from the given file system root.
-// The path must end with "/*filepath", files are then served from the local
-// path /defined/root/dir/*filepath.
-// For example if root is "/etc" and *filepath is "passwd", the local file
-// "/etc/passwd" would be served.
-// Internally a http.FileServer is used, therefore http.NotFound is used instead
-// of the Router's NotFound handler.
-// To use the operating system's file system implementation,
-// use http.Dir:
-//     router.ServeFiles("/src/*filepath", http.Dir("/var/www"))
 func (app *Application) ServeFiles(path string, root http.FileSystem, opts ...RouteOption) {
-	if len(path) < 10 || path[len(path)-10:] != "/*filepath" {
-		panic("path must end with /*filepath in path '" + path + "'")
-	}
-
 	fileServer := http.FileServer(root)
 
-	app.Get(path, func(c *Context) error {
+	app.Get(strings.TrimSuffix(path, "/")+"/*filepath", func(c *Context) error {
 		c.Request.URL.Path = c.Params.String("filepath")
 		fileServer.ServeHTTP(c.Response, c.Request)
 		return nil
