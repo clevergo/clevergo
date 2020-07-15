@@ -5,6 +5,7 @@
 package clevergo
 
 import (
+	"bytes"
 	"net/http"
 	"time"
 
@@ -38,8 +39,11 @@ type logging struct {
 
 func (l *logging) middleware(next Handle) Handle {
 	return func(c *Context) error {
-		resp := newLoggingResponse(c.Response)
+		resp := newBufferedResponse(c.Response)
 		defer func(w http.ResponseWriter) {
+			if err := resp.emit(); err != nil {
+				l.logger.Errorf("failed to emit response: %s", err.Error())
+			}
 			l.print(c.Request, resp)
 			c.Response = w
 		}(c.Response)
@@ -48,29 +52,47 @@ func (l *logging) middleware(next Handle) Handle {
 	}
 }
 
-func (l *logging) print(req *http.Request, resp *loggingResponse) {
-	l.logger.Infof("| %d | %-10s | %s %s %s", resp.code, resp.duration(), req.Method, req.RequestURI, req.Proto)
+func (l *logging) print(req *http.Request, resp *bufferedResponse) {
+	l.logger.Infof("| %d | %-10s | %s %s %s", resp.statusCode, resp.duration(), req.Method, req.RequestURI, req.Proto)
 }
 
-type loggingResponse struct {
+type bufferedResponse struct {
 	http.ResponseWriter
-	code  int
-	start time.Time
+	wroteHeader bool
+	statusCode  int
+	buf         bytes.Buffer
+	start       time.Time
 }
 
-func newLoggingResponse(w http.ResponseWriter) *loggingResponse {
-	return &loggingResponse{
+func newBufferedResponse(w http.ResponseWriter) *bufferedResponse {
+	return &bufferedResponse{
 		ResponseWriter: w,
-		code:           http.StatusOK,
+		statusCode:     http.StatusOK,
 		start:          time.Now(),
 	}
 }
 
-func (resp *loggingResponse) WriteHeader(code int) {
-	resp.code = code
-	resp.ResponseWriter.WriteHeader(code)
+func (resp *bufferedResponse) WriteHeader(statusCode int) {
+	if resp.wroteHeader {
+		resp.wroteHeader = true
+		resp.statusCode = statusCode
+		resp.ResponseWriter.WriteHeader(statusCode)
+	}
 }
 
-func (resp *loggingResponse) duration() time.Duration {
+func (resp *bufferedResponse) Write(p []byte) (int, error) {
+	return resp.buf.Write(p)
+}
+
+func (resp *bufferedResponse) WriteString(s string) (int, error) {
+	return resp.buf.WriteString(s)
+}
+
+func (resp *bufferedResponse) duration() time.Duration {
 	return time.Since(resp.start)
+}
+
+func (resp *bufferedResponse) emit() error {
+	_, err := resp.buf.WriteTo(resp.ResponseWriter)
+	return err
 }
