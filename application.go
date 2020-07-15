@@ -387,7 +387,7 @@ func (app *Application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = app.handleRequest(c)
 	}
 	if err != nil {
-		app.Logger.Error(err)
+		app.Logger.Errorf("clevergo: %s", err.Error())
 		switch e := err.(type) {
 		case Error:
 			c.Error(e.Status(), err.Error())
@@ -515,13 +515,13 @@ func (app *Application) Serve(ln net.Listener) (err error) {
 	signal.Notify(stop, app.ShutdownSignals...)
 
 	go func() {
-		app.Logger.Infof("Listening on %s.\n", ln.Addr().String())
+		app.Logger.Infof("clevergo: listening on %s.\n", ln.Addr().String())
 		if app.certFile != "" && app.keyFile != "" {
 			err = app.Server.ServeTLS(ln, app.certFile, app.keyFile)
 		} else {
 			err = app.Server.Serve(ln)
 		}
-		app.Logger.Errorf("Failed to start server: %s.\n", err)
+		app.Logger.Errorf("clevergo: failed to start server: %s.\n", err)
 		stop <- os.Interrupt
 	}()
 
@@ -529,7 +529,7 @@ func (app *Application) Serve(ln net.Listener) (err error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), app.ShutdownTimeout)
 	defer cancel()
-	app.Logger.Infof("Shutting down server...\n")
+	app.Logger.Infof("clevergo: shutting down server...\n")
 	err = app.Server.Shutdown(ctx)
 	return
 }

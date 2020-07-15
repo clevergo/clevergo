@@ -48,7 +48,7 @@ func (h *errorHandler) middleware(next Handle) Handle {
 }
 
 func (h *errorHandler) handleError(c *Context, err error) {
-	h.logger.Error(err)
+	h.logger.Errorf("clevergo: error handler catches an error: %s", err.Error())
 	switch e := err.(type) {
 	case Error:
 		c.Error(e.Status(), err.Error())
