@@ -93,6 +93,6 @@ func (resp *bufferedResponse) duration() time.Duration {
 }
 
 func (resp *bufferedResponse) emit() error {
-	_, err := resp.buf.WriteTo(resp.ResponseWriter)
+	_, err := resp.ResponseWriter.Write(resp.buf.Bytes())
 	return err
 }

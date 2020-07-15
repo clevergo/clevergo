@@ -5,7 +5,9 @@
 package clevergo
 
 import (
+	"bytes"
 	"errors"
+	stdlog "log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,6 +44,28 @@ func TestLogging(t *testing.T) {
 	}
 }
 
+func TestBufferedResponseWrite(t *testing.T) {
+	data := []byte("foobar")
+	w := &bufferedResponse{}
+	w.Write(data)
+	assert.Equal(t, data, w.buf.Bytes())
+}
+
+func TestBufferedResponseWriteString(t *testing.T) {
+	data := "foobar"
+	w := &bufferedResponse{}
+	w.WriteString(data)
+	assert.Equal(t, data, w.buf.String())
+}
+
+func TestBufferedResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	resp := newBufferedResponse(w)
+	assert.Equal(t, w, resp.ResponseWriter)
+	assert.Equal(t, http.StatusOK, resp.statusCode)
+	assert.False(t, resp.wroteHeader)
+}
+
 func TestBufferedResponseWriteHeader(t *testing.T) {
 	w := httptest.NewRecorder()
 	resp := newBufferedResponse(w)
@@ -51,4 +75,30 @@ func TestBufferedResponseWriteHeader(t *testing.T) {
 
 	resp.WriteHeader(http.StatusOK)
 	assert.Equal(t, http.StatusNotFound, resp.statusCode)
+}
+
+type nullWriter struct {
+	err error
+}
+
+func (*nullWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (*nullWriter) WriteHeader(statusCode int) {
+}
+
+func (w *nullWriter) Write(p []byte) (int, error) {
+	return 0, w.err
+}
+
+func TestBufferedResponseEmit(t *testing.T) {
+	output := &bytes.Buffer{}
+	stdlog.SetOutput(output)
+
+	expectedErr := errors.New("failed to write response")
+	w := &nullWriter{expectedErr}
+	c := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	Logging()(fakeHandler("buffered response test"))(c)
+	assert.Contains(t, output.String(), expectedErr.Error())
 }
