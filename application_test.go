@@ -840,7 +840,7 @@ func TestApplicationUse(t *testing.T) {
 }
 
 func TestApplicationRun(t *testing.T) {
-	addr := ":8080"
+	addr := ":12121"
 	body := "Run"
 	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
@@ -852,7 +852,7 @@ func TestApplicationRun(t *testing.T) {
 
 		assert.NotNil(t, app.Run(addr))
 
-		resp, err := http.Get("http://localhost:8080")
+		resp, err := http.Get("http://localhost:12121")
 		assert.Nil(t, err)
 		actualBody, _ := ioutil.ReadAll(resp.Body)
 		assert.Equal(t, body, string(actualBody))
@@ -865,7 +865,7 @@ func TestApplicationRun(t *testing.T) {
 }
 
 func TestApplicationRunTLS(t *testing.T) {
-	addr := ":12345"
+	addr := ":13131"
 	body := "RunTLS"
 	app := Pure()
 	app.Handle(http.MethodGet, "/", echoHandler(body))
@@ -878,7 +878,7 @@ func TestApplicationRunTLS(t *testing.T) {
 		assert.NotNil(t, app.RunTLS(addr, certFile, keyFile))
 
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		resp, err := http.Get("https://localhost:12345/")
+		resp, err := http.Get("https://localhost:13131/")
 		assert.Nil(t, err)
 		actualBody, _ := ioutil.ReadAll(resp.Body)
 		assert.Equal(t, body, string(actualBody))
