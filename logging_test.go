@@ -41,3 +41,14 @@ func TestLogging(t *testing.T) {
 		assert.True(t, handled)
 	}
 }
+
+func TestBufferedResponseWriteHeader(t *testing.T) {
+	w := httptest.NewRecorder()
+	resp := newBufferedResponse(w)
+	resp.WriteHeader(http.StatusNotFound)
+	assert.Equal(t, http.StatusNotFound, resp.statusCode)
+	assert.True(t, resp.wroteHeader)
+
+	resp.WriteHeader(http.StatusOK)
+	assert.Equal(t, http.StatusNotFound, resp.statusCode)
+}

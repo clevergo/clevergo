@@ -73,7 +73,7 @@ func newBufferedResponse(w http.ResponseWriter) *bufferedResponse {
 }
 
 func (resp *bufferedResponse) WriteHeader(statusCode int) {
-	if resp.wroteHeader {
+	if !resp.wroteHeader {
 		resp.wroteHeader = true
 		resp.statusCode = statusCode
 		resp.ResponseWriter.WriteHeader(statusCode)
