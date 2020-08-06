@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"clevergo.tech/log"
 )
 
 // Error defines an HTTP response error.
@@ -24,18 +22,7 @@ var (
 	ErrMethodNotAllowed = StatusError{http.StatusMethodNotAllowed, errors.New(http.StatusText(http.StatusMethodNotAllowed))}
 )
 
-// ErrorHandlerOption is a function that receives an error handler instance.
-type ErrorHandlerOption func(*errorHandler)
-
-// ErrorHandlerLogger is an option that sets error handler logger.
-func ErrorHandlerLogger(logger log.Logger) ErrorHandlerOption {
-	return func(h *errorHandler) {
-		h.logger = logger
-	}
-}
-
 type errorHandler struct {
-	logger log.Logger
 }
 
 func (h *errorHandler) middleware(next Handle) Handle {
@@ -48,7 +35,7 @@ func (h *errorHandler) middleware(next Handle) Handle {
 }
 
 func (h *errorHandler) handleError(c *Context, err error) {
-	h.logger.Errorf("clevergo: error handler catches an error: %s", err.Error())
+	c.Logger().Errorf("clevergo: error handler catches an error: %s", err.Error())
 	switch e := err.(type) {
 	case Error:
 		c.Error(e.Status(), err.Error())
@@ -57,14 +44,9 @@ func (h *errorHandler) handleError(c *Context, err error) {
 	}
 }
 
-// ErrorHandler returns a error handler middleware with the given options.
-func ErrorHandler(opts ...ErrorHandlerOption) MiddlewareFunc {
-	h := &errorHandler{
-		logger: defaultLogger,
-	}
-	for _, opt := range opts {
-		opt(h)
-	}
+// ErrorHandler returns a error handler middleware.
+func ErrorHandler() MiddlewareFunc {
+	h := &errorHandler{}
 	return h.middleware
 }
 

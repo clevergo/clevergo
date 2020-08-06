@@ -29,15 +29,8 @@ func TestNewError(t *testing.T) {
 	}
 }
 
-func TestErrorHandlerLogger(t *testing.T) {
-	h := &errorHandler{}
-	assert.Nil(t, h.logger)
-	ErrorHandlerLogger(defaultLogger)(h)
-	assert.Equal(t, defaultLogger, h.logger)
-}
-
 func TestErrorHandler(t *testing.T) {
-	m := ErrorHandler(ErrorHandlerLogger(defaultLogger))
+	m := ErrorHandler()
 	cases := []struct {
 		err  error
 		code int
@@ -52,7 +45,9 @@ func TestErrorHandler(t *testing.T) {
 			return test.err
 		})
 		resp := httptest.NewRecorder()
-		assert.Nil(t, handle(newContext(resp, nil)))
+		c := newContext(resp, nil)
+		c.app = Pure()
+		assert.Nil(t, handle(c))
 		assert.Equal(t, test.code, resp.Code)
 		assert.Equal(t, test.body, resp.Body.String())
 	}
