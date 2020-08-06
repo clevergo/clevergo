@@ -42,7 +42,7 @@ func (l *logging) middleware(next Handle) Handle {
 		resp := newBufferedResponse(c.Response)
 		defer func(w http.ResponseWriter) {
 			if err := resp.emit(); err != nil {
-				l.logger.Errorf("clevergo: logging middleware failed to send buffered response: %s", err.Error())
+				c.Logger().Errorf("clevergo: logging middleware failed to send buffered response: %s", err.Error())
 			}
 			l.print(c.Request, resp)
 			c.Response = w
