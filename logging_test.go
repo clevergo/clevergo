@@ -39,7 +39,9 @@ func TestLogging(t *testing.T) {
 			return test.err
 		})
 		resp := httptest.NewRecorder()
-		assert.Equal(t, test.err, handle(newContext(resp, httptest.NewRequest(http.MethodGet, "/", nil))))
+		c := newContext(resp, httptest.NewRequest(http.MethodGet, "/", nil))
+		c.app = Pure()
+		assert.Equal(t, test.err, handle(c))
 		assert.True(t, handled)
 	}
 }
@@ -99,6 +101,7 @@ func TestBufferedResponseEmit(t *testing.T) {
 	expectedErr := errors.New("failed to write response")
 	w := &nullWriter{expectedErr}
 	c := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	c.app = Pure()
 	Logging()(fakeHandler("buffered response test"))(c)
 	assert.Contains(t, output.String(), expectedErr.Error())
 }
