@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"clevergo.tech/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -96,12 +97,11 @@ func (w *nullWriter) Write(p []byte) (int, error) {
 
 func TestBufferedResponseEmit(t *testing.T) {
 	output := &bytes.Buffer{}
-	stdlog.SetOutput(output)
-
 	expectedErr := errors.New("failed to write response")
 	w := &nullWriter{expectedErr}
 	c := newContext(w, httptest.NewRequest(http.MethodGet, "/", nil))
 	c.app = Pure()
+	c.app.Logger = log.New(output, "", stdlog.LstdFlags)
 	Logging()(fakeHandler("buffered response test"))(c)
 	assert.Contains(t, output.String(), expectedErr.Error())
 }

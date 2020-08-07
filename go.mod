@@ -3,7 +3,7 @@ module clevergo.tech/clevergo
 go 1.13
 
 require (
-	clevergo.tech/log v0.2.0
+	clevergo.tech/log v0.3.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/stretchr/testify v1.6.1

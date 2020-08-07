@@ -5,14 +5,19 @@
 // Package clevergo is a trie based high performance HTTP request router.
 package clevergo
 
-import "clevergo.tech/log"
+import (
+	stdlog "log"
+	"os"
+
+	"clevergo.tech/log"
+)
 
 // Map is an alias of map[string]interface{}.
 type Map map[string]interface{}
 
 const serverName = "CleverGo"
 
-var defaultLogger log.Logger = log.New()
+var defaultLogger log.Logger = log.New(os.Stderr, "", stdlog.LstdFlags)
 
 // SetLogger sets default logger.
 func SetLogger(logger log.Logger) {

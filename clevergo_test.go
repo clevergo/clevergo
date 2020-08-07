@@ -5,6 +5,8 @@
 package clevergo
 
 import (
+	stdlog "log"
+	"os"
 	"testing"
 
 	"clevergo.tech/log"
@@ -13,7 +15,7 @@ import (
 
 func TestSetLogger(t *testing.T) {
 	defaultLogger = nil
-	logger := log.New()
+	logger := log.New(os.Stderr, "", stdlog.LstdFlags)
 	SetLogger(logger)
 	assert.Equal(t, logger, defaultLogger)
 
