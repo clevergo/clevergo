@@ -25,7 +25,7 @@ func LoggingLogger(logger log.Logger) LoggingOption {
 // Logging returns a logging middleware with the given options.
 func Logging(opts ...LoggingOption) MiddlewareFunc {
 	l := &logging{
-		logger: defaultLogger,
+		logger: logger,
 	}
 	for _, opt := range opts {
 		opt(l)

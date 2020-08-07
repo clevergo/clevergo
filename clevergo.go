@@ -17,12 +17,4 @@ type Map map[string]interface{}
 
 const serverName = "CleverGo"
 
-var defaultLogger log.Logger = log.New(os.Stderr, "", stdlog.LstdFlags)
-
-// SetLogger sets default logger.
-func SetLogger(logger log.Logger) {
-	if logger == nil {
-		panic("logger must not be empty")
-	}
-	defaultLogger = logger
-}
+var logger log.Logger = log.New(os.Stderr, "", stdlog.LstdFlags)

@@ -19,12 +19,12 @@ import (
 func TestLoggingLogger(t *testing.T) {
 	l := &logging{}
 	assert.Nil(t, l.logger)
-	LoggingLogger(defaultLogger)(l)
-	assert.Equal(t, defaultLogger, l.logger)
+	LoggingLogger(logger)(l)
+	assert.Equal(t, logger, l.logger)
 }
 
 func TestLogging(t *testing.T) {
-	m := Logging(LoggingLogger(defaultLogger))
+	m := Logging(LoggingLogger(logger))
 	cases := []struct {
 		err error
 	}{

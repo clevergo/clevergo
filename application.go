@@ -168,7 +168,7 @@ func Pure() *Application {
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
 		HandleOPTIONS:          true,
-		Logger:                 defaultLogger,
+		Logger:                 logger,
 	}
 }
 
