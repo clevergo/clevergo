@@ -71,7 +71,7 @@ func (e StatusError) Status() int {
 	return e.Code
 }
 
-// PanicError is an error that contains panic infomation.
+// PanicError is an error that contains panic information.
 type PanicError struct {
 	// Context.
 	Context *Context
