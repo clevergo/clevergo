@@ -93,7 +93,6 @@ func (n *node) incrementChildPrio(pos int) int {
 	for ; newPos > 0 && cs[newPos-1].priority < prio; newPos-- {
 		// Swap node positions
 		cs[newPos-1], cs[newPos] = cs[newPos], cs[newPos-1]
-
 	}
 
 	// Build new index char string
@@ -113,7 +112,7 @@ func (n *node) addRoute(path string, route *Route) {
 	n.priority++
 
 	// Empty tree
-	if len(n.path) == 0 && len(n.indices) == 0 {
+	if n.path == "" && n.indices == "" {
 		n.insertChild(path, fullPath, route)
 		n.nType = root
 		return
