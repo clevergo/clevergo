@@ -475,13 +475,13 @@ func TestTreeFindCaseInsensitivePath(t *testing.T) {
 	for _, route := range routes {
 		out, found := tree.findCaseInsensitivePath(route, true)
 		assert.Truef(t, found, "Route '%s' not found!", route)
-		assert.Equalf(t, route, string(out), "Wrong result for route '%s'", route)
+		assert.Equalf(t, route, out, "Wrong result for route '%s'", route)
 	}
 	// With fixTrailingSlash = false
 	for _, route := range routes {
 		out, found := tree.findCaseInsensitivePath(route, false)
 		assert.Truef(t, found, "Route '%s' not found!", route)
-		assert.Equalf(t, route, string(out), "Wrong result for route '%s'", route)
+		assert.Equalf(t, route, out, "Wrong result for route '%s'", route)
 	}
 
 	tests := []struct {
@@ -552,7 +552,7 @@ func TestTreeFindCaseInsensitivePath(t *testing.T) {
 		out, found := tree.findCaseInsensitivePath(test.in, true)
 		assert.Equal(t, test.found, found)
 		if found {
-			assert.Equal(t, test.out, string(out))
+			assert.Equal(t, test.out, out)
 		}
 	}
 	// With fixTrailingSlash = false
@@ -560,11 +560,11 @@ func TestTreeFindCaseInsensitivePath(t *testing.T) {
 		out, found := tree.findCaseInsensitivePath(test.in, false)
 		if test.slash {
 			// test needs a trailingSlash fix. It must not be found!
-			assert.Falsef(t, found, "Found without fixTrailingSlash: %s; got %s", test.in, string(out))
+			assert.Falsef(t, found, "Found without fixTrailingSlash: %s; got %s", test.in, out)
 		} else {
 			assert.Equal(t, test.found, found)
 			if found {
-				assert.Equal(t, test.out, string(out))
+				assert.Equal(t, test.out, out)
 			}
 		}
 	}
