@@ -13,16 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func printChildren(n *node, prefix string) {
-	fmt.Printf(" %02d %s%s[%d] %v %t %d \r\n", n.priority, prefix, n.path, len(n.children), n.route, n.wildChild, n.nType)
-	for l := len(n.path); l > 0; l-- {
-		prefix += " "
-	}
-	for _, child := range n.children {
-		printChildren(child, prefix)
-	}
-}
-
 // Used as a workaround since we can't compare functions or their addresses
 var fakeHandlerValue string
 
@@ -105,8 +95,6 @@ func TestTreeAddAndGet(t *testing.T) {
 		tree.addRoute(route, newRoute(route, fakeHandler(route)))
 	}
 
-	//printChildren(tree, "")
-
 	checkRequests(t, tree, testRequests{
 		{"/a", false, "/a", nil},
 		{"/", true, "", nil},
@@ -146,8 +134,6 @@ func TestTreeWildcard(t *testing.T) {
 	for _, route := range routes {
 		tree.addRoute(route, newRoute(route, fakeHandler(route)))
 	}
-
-	//printChildren(tree, "")
 
 	checkRequests(t, tree, testRequests{
 		{"/", false, "/", nil},
@@ -204,8 +190,6 @@ func testRoutes(t *testing.T, routes []testRoute) {
 			assert.Nilf(t, recv, "unexpected panic for route '%s': %v", route.path, recv)
 		}
 	}
-
-	//printChildren(tree, "")
 }
 
 func TestTreeWildcardConflict(t *testing.T) {
@@ -267,8 +251,6 @@ func TestTreeDupliatePath(t *testing.T) {
 		})
 		assert.NotNilf(t, recv, "no panic while inserting duplicate route '%s", route)
 	}
-
-	//printChildren(tree, "")
 
 	checkRequests(t, tree, testRequests{
 		{"/", false, "/", nil},
@@ -388,8 +370,6 @@ func TestTreeTrailingSlashRedirect(t *testing.T) {
 		})
 		assert.Nilf(t, recv, "panic inserting route '%s'", route)
 	}
-
-	//printChildren(tree, "")
 
 	tsrRoutes := [...]string{
 		"/hi/",
