@@ -1,10 +1,12 @@
 # CleverGo
-[![Build Status](https://img.shields.io/travis/clevergo/clevergo?style=for-the-badge)](https://travis-ci.org/clevergo/clevergo)
-[![Coverage Status](https://img.shields.io/coveralls/github/clevergo/clevergo?style=for-the-badge)](https://coveralls.io/github/clevergo/clevergo)
-[![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo?style=for-the-badge)](https://goreportcard.com/report/github.com/clevergo/clevergo)
-[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white&style=for-the-badge)](https://pkg.go.dev/clevergo.tech/clevergo?tab=doc)
-[![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=for-the-badge)](https://github.com/clevergo/clevergo/releases)
-[![Downloads](https://img.shields.io/endpoint?url=https://pkg.clevergo.tech/api/badges/downloads/month/clevergo.tech/clevergo&style=for-the-badge)](https://pkg.clevergo.tech/clevergo.tech/clevergo)
+[![Build Status](https://img.shields.io/travis/clevergo/clevergo?style=flat)](https://travis-ci.org/clevergo/clevergo)
+[![Coverage Status](https://img.shields.io/coveralls/github/clevergo/clevergo?style=flat)](https://coveralls.io/github/clevergo/clevergo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo?style=flat)](https://goreportcard.com/report/github.com/clevergo/clevergo)
+[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white&style=flat)](https://pkg.go.dev/clevergo.tech/clevergo?tab=doc)
+[![Release](https://img.shields.io/github/release/clevergo/clevergo.svg?style=flat)](https://github.com/clevergo/clevergo/releases)
+[![Downloads](https://img.shields.io/endpoint?url=https://pkg.clevergo.tech/api/badges/downloads/total/clevergo.tech/clevergo&style=flat)](https://pkg.clevergo.tech/clevergo.tech/clevergo)
+[![Chat](https://img.shields.io/badge/chat-telegram-blue?style=flat)](https://t.me/clevergotech)
+[![Community](https://img.shields.io/badge/community-forum-blue?style=flat)](https://forum.clevergo.tech)
 
 CleverGo is a lightweight, feature rich and trie based high performance HTTP request router.
 
