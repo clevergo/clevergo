@@ -14,9 +14,8 @@ CleverGo is a lightweight, feature rich and trie based high performance HTTP req
 go get -u clevergo.tech/clevergo
 ```
 
-- [English](https://clevergo.tech/docs/)
-- [简体中文](https://clevergo.tech/zh/docs/)
-- [繁體中文](https://clevergo.tech/zh-hant/docs/)
+- [English](https://clevergo.tech/en/)
+- [简体中文](https://clevergo.tech/zh/)
 
 [![Benchmark](https://clevergo.tech/img/benchmark.png)](https://clevergo.tech/docs/benchmark)
 
