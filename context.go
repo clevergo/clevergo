@@ -334,8 +334,9 @@ func (c *Context) HTMLBlob(code int, bs []byte) error {
 	return c.Blob(code, headerContentTypeHTML, bs)
 }
 
-// Render renders a template with data, and sends HTML response with status code.
-func (c *Context) Render(code int, name string, data interface{}) (err error) {
+// Render renders a template with data, and sends response with status code and content type.
+// The content type defaults to HTML, which can be overridden by the fourth optional parameter.
+func (c *Context) Render(code int, name string, data interface{}, args ...string) (err error) {
 	if c.app.Renderer == nil {
 		return ErrRendererNotRegister
 	}
@@ -347,7 +348,12 @@ func (c *Context) Render(code int, name string, data interface{}) (err error) {
 	if err = c.app.Renderer.Render(buf, name, data, c); err != nil {
 		return err
 	}
-	return c.Blob(code, headerContentTypeHTML, buf.Bytes())
+
+	contentType := headerContentTypeHTML
+	if len(args) > 0 {
+		contentType = args[0]
+	}
+	return c.Blob(code, contentType, buf.Bytes())
 }
 
 // Emit sends a response with the given status code, content type and string body.

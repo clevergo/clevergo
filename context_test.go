@@ -673,6 +673,13 @@ func TestContext_Render(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	assert.Equal(t, "text/html; charset=utf-8", w.Header().Get("Content-Type"))
 	assert.Equal(t, "foo", w.Body.String())
+
+	w = httptest.NewRecorder()
+	c.Response = w
+	c.Render(http.StatusForbidden, "bar", nil, headerContentTypeJavaScript)
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Equal(t, headerContentTypeJavaScript, w.Header().Get("Content-Type"))
+	assert.Equal(t, "bar", w.Body.String())
 }
 
 func TestContext_RouteURL(t *testing.T) {
