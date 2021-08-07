@@ -1,5 +1,5 @@
 # CleverGo
-[![Build Status](https://img.shields.io/travis/clevergo/clevergo?style=flat-square)](https://travis-ci.org/clevergo/clevergo)
+[![Build Status](https://img.shields.io/travis/clevergo/clevergo?style=flat-square)](https://travis-ci.com/clevergo/clevergo)
 [![Coverage Status](https://img.shields.io/coveralls/github/clevergo/clevergo?style=flat-square)](https://coveralls.io/github/clevergo/clevergo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/clevergo/clevergo?style=flat-square)](https://goreportcard.com/report/github.com/clevergo/clevergo)
 [![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/clevergo.tech/clevergo?tab=doc)
